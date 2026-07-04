@@ -94,6 +94,26 @@ where
             _sf: PhantomData,
         }
     }
+
+    /// Creates an instance from a single commit, panics if a different number
+    /// was expected.
+    pub fn new_single_commit(commit: C::Commitment) -> Self {
+        let count = SF::natures().flatten_vec().into_iter().flat_map(|nature| {
+            nature
+                .into_dynamic()
+                .into()
+                .map(|nature: CommittedNature| match nature {
+                    CommittedNature::Structure => 0,
+                    CommittedNature::Witness => 1,
+                })
+        });
+        let count: usize = count.sum();
+        assert_eq!(count, 1);
+        Self {
+            commitments: vec![commit],
+            _sf: PhantomData,
+        }
+    }
 }
 
 fn witness_commits<F, SF>() -> usize
