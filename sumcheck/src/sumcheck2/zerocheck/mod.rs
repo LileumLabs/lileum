@@ -1,10 +1,10 @@
 use crate::{sumcheck2::oracles::Oracle, zerocheck::CompactPowers};
 use ark_ff::Field;
 
-pub use evals::ZerocheckNature;
 pub use reduction::{ZerocheckReduction, ZerocheckSumcheckReduction};
 pub use relation::{ZeroSumcheck, Zerocheck};
 
+//TODO: delete module
 mod evals;
 mod reduction;
 mod relation;

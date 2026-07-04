@@ -2,7 +2,7 @@ use crate::{
     sumcheck::Var,
     sumcheck2::{
         evals::{Evals, EvalsCore},
-        oracles::{EvalLocation, SumcheckFunction},
+        oracles::{partial::Nature, EvalLocation, SumcheckFunction},
     },
 };
 use ark_ff::Field;
@@ -112,6 +112,8 @@ pub enum ZerocheckNature<I> {
     Zerocheck,
     Inner(I),
 }
+
+impl<I: Clone + Copy + Debug + 'static> Nature for ZerocheckNature<I> {}
 
 impl<I: Into<EvalLocation>> From<ZerocheckNature<I>> for EvalLocation {
     fn from(val: ZerocheckNature<I>) -> Self {

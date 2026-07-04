@@ -1,12 +1,14 @@
-use crate::sumcheck::Var;
-use crate::sumcheck2::evals::Evals;
+use crate::{
+    sumcheck::Var,
+    sumcheck2::{evals::Evals, oracles::partial::Nature},
+};
 use ark_ff::Field;
 use std::fmt::Debug;
 
 /// The definition of a multivariate polynomial as some function
 /// of multilinear polynomials.
 pub trait SumcheckFunction<F: Field>: Evals {
-    type Natures: Copy + Debug;
+    type Natures: Copy + Debug + Nature;
     type Data: Clone + Debug;
 
     fn natures() -> Self::Mles<Self::Natures>;
