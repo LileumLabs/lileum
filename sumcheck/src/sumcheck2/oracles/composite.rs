@@ -554,6 +554,26 @@ where
 {
     oracle1_key: P1::VerifierKey,
     oracle2_key: P2::VerifierKey,
+    evals_per_oracle: (usize, usize),
+}
+
+impl<F, SF, P1, P2> CompositeOracleKey<F, SF, P1, P2>
+where
+    F: Field,
+    SF: SumcheckFunction<F>,
+    P1: PartialOracle<F, SF>,
+    P2: PartialOracle<F, SF>,
+{
+    /// Splits a [PartialQueryInstance] over a composite instance into the 2
+    /// instances that compose it.
+    pub fn split(
+        &self,
+        instance: PartialQueryInstance<F, CompositeOracleInstance<F, SF, P1, P2>>,
+    ) -> <PartialQueryRelation<F, SF, P1, P2> as Relation>::Instance {
+        let (evals1, evals2) = self.evals_per_oracle;
+        let (a, b) = instance.split(evals1, evals2);
+        (a, b)
+    }
 }
 
 impl<F, SF, P1, P2> From<CompositeOracle<F, SF, P1, P2>> for CompositeOracleKey<F, SF, P1, P2>
@@ -565,7 +585,9 @@ where
 {
     fn from(value: CompositeOracle<F, SF, P1, P2>) -> Self {
         let CompositeOracle {
-            partial_oracles, ..
+            partial_oracles,
+            evals_per_oracle,
+            ..
         } = value;
         let (partial_oracle1, partial_oracle2) = partial_oracles;
         let oracle1_key = P1::VerifierKey::from(partial_oracle1);
@@ -573,6 +595,7 @@ where
         Self {
             oracle1_key,
             oracle2_key,
+            evals_per_oracle,
         }
     }
 }

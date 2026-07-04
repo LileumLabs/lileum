@@ -114,7 +114,7 @@ where
     P1: PartialOracle<F, SF>,
     P2: PartialOracle<F, SF>,
 {
-    pub fn split(
+    pub(crate) fn split(
         self,
         evals1: usize,
         evals2: usize,
@@ -153,7 +153,7 @@ pub struct PartialQueryRelation<F, SF, P1, P2>(PhantomData<(F, SF, P1, P2)>);
 impl<F, SF, P1, P2> Relation for PartialQueryRelation<F, SF, P1, P2>
 where
     F: Field,
-    SF: SumcheckFunction<F, Natures = Either<P1::Nature, P2::Nature>>,
+    SF: SumcheckFunction<F>,
     P1: PartialOracle<F, SF>,
     P2: PartialOracle<F, SF>,
 {
