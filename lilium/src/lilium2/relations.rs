@@ -128,7 +128,7 @@ pub struct FlcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, cons
 pub struct FlcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
 
 pub struct FlcsInstance<F, C, const IO: usize, const S: usize>(
-    ZeroSumcheckInstance<F, FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>>,
+    pub ZeroSumcheckInstance<F, FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>>,
 )
 where
     F: Field,
