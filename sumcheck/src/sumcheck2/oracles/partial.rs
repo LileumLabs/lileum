@@ -59,7 +59,7 @@ impl DynamicNature {
     }
 }
 
-pub trait Nature: Copy + Debug + 'static {
+pub trait Nature: Copy + Debug + Into<EvalLocation> + 'static {
     /// Do not implement, the default implementation is correct
     /// for any type.
     fn into_dynamic(self) -> DynamicNature {

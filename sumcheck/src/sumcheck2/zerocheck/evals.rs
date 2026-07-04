@@ -113,7 +113,7 @@ pub enum ZerocheckNature<I> {
     Inner(I),
 }
 
-impl<I: Clone + Copy + Debug + 'static> Nature for ZerocheckNature<I> {}
+impl<I: Clone + Copy + Debug + Into<EvalLocation> + 'static> Nature for ZerocheckNature<I> {}
 
 impl<I: Into<EvalLocation>> From<ZerocheckNature<I>> for EvalLocation {
     fn from(val: ZerocheckNature<I>) -> Self {
