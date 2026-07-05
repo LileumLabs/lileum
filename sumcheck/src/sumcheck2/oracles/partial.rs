@@ -10,14 +10,22 @@ use std::{any::Any, fmt::Debug, marker::PhantomData, rc::Rc};
 use transcript::reduction2::{Message, Relation};
 
 #[derive(Clone, Debug)]
-pub struct PartialQueryInstance<F: Field, O> {
-    evals: Vec<F>,
+pub struct PartialQueryInstance<F, SF, O>
+where
+    F: Field,
+    SF: SumcheckFunction<F>,
+{
+    evals: SF::Mles<Option<F>>,
     oracle_instance: O,
     point: MultiPoint<F>,
 }
 
-impl<F: Field, O> PartialQueryInstance<F, O> {
-    pub fn new(evals: Vec<F>, oracle_instance: O, point: &MultiPoint<F>) -> Self {
+impl<F, SF, O> PartialQueryInstance<F, SF, O>
+where
+    F: Field,
+    SF: SumcheckFunction<F>,
+{
+    pub fn new(evals: SF::Mles<Option<F>>, oracle_instance: O, point: &MultiPoint<F>) -> Self {
         Self {
             evals,
             oracle_instance,
@@ -25,7 +33,7 @@ impl<F: Field, O> PartialQueryInstance<F, O> {
         }
     }
 
-    pub fn evals(&self) -> &[F] {
+    pub fn evals(&self) -> &SF::Mles<Option<F>> {
         &self.evals
     }
 
@@ -105,7 +113,7 @@ where
 
     type QueryRelation: Relation<
         Structure = Self,
-        Instance = PartialQueryInstance<F, Self::Instance>,
+        Instance = PartialQueryInstance<F, SF, Self::Instance>,
         Witness = Vec<SF::Mles<F>>,
     >;
 
@@ -119,44 +127,45 @@ where
     ) -> SF::Mles<OracleEval<F>>;
 }
 
-impl<F, SF, P1, P2> PartialQueryInstance<F, CompositeOracleInstance<F, SF, P1, P2>>
+impl<F, SF, P1, P2> PartialQueryInstance<F, SF, CompositeOracleInstance<F, SF, P1, P2>>
 where
     F: Field,
     SF: SumcheckFunction<F>,
     P1: PartialOracle<F, SF>,
     P2: PartialOracle<F, SF>,
 {
+    /// Splits a PartialQueryInstance over a composite oracle into 2 instances over the
+    /// suboracles.
     pub(crate) fn split(
         self,
-        evals1: usize,
-        evals2: usize,
-    ) -> (
-        PartialQueryInstance<F, P1::Instance>,
-        PartialQueryInstance<F, P2::Instance>,
-    ) {
-        let Self {
-            evals,
-            oracle_instance,
-            point,
-        } = self;
-        assert_eq!(evals.len(), evals1 + evals2);
-        let (evals1, evals2) = evals.split_at(evals1);
+        natures: &SF::Mles<Either<(), ()>>,
+    ) -> <PartialQueryRelation<F, SF, P1, P2> as Relation>::Instance {
+        let left = SF::combine(&self.evals, natures, |eval, nature| match nature {
+            Either::Left(()) => *eval,
+            Either::Right(()) => None,
+        });
+        let right = SF::combine(&self.evals, natures, |eval, nature| match nature {
+            Either::Left(()) => None,
+            Either::Right(()) => *eval,
+        });
+
         let CompositeOracleInstance {
             oracle1_instance,
             oracle2_instance,
-        } = oracle_instance;
+        } = self.oracle_instance;
 
-        let instance1 = PartialQueryInstance {
-            evals: evals1.to_vec(),
+        let left = PartialQueryInstance {
+            evals: left,
             oracle_instance: oracle1_instance,
-            point: point.clone(),
+            point: self.point.clone(),
         };
-        let instance2 = PartialQueryInstance {
-            evals: evals2.to_vec(),
+        let right = PartialQueryInstance {
+            evals: right,
             oracle_instance: oracle2_instance,
-            point,
+            point: self.point,
         };
-        (instance1, instance2)
+
+        (left, right)
     }
 }
 
@@ -172,8 +181,8 @@ where
     type Structure = (P1, P2);
 
     type Instance = (
-        PartialQueryInstance<F, P1::Instance>,
-        PartialQueryInstance<F, P2::Instance>,
+        PartialQueryInstance<F, SF, P1::Instance>,
+        PartialQueryInstance<F, SF, P2::Instance>,
     );
 
     type Witness = Vec<SF::Mles<F>>;

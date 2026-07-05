@@ -21,7 +21,7 @@ use transcript::reduction2::{
     VerifierTranscript,
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Either<A, B> {
     Left(A),
     Right(B),
@@ -58,7 +58,7 @@ where
     data: SF::Data,
     mles: Rc<Vec<SF::Mles<F>>>,
     vars: usize,
-    evals_per_oracle: (usize, usize),
+    evals_per_oracle: SF::Mles<Either<(), ()>>,
     partial_oracles: (P1, P2),
 }
 
@@ -78,17 +78,16 @@ where
     ) -> Self {
         let vars = mles.len().next_power_of_two().ilog2() as usize;
 
-        let evals_per_oracle = SF::natures()
-            .flatten_vec()
-            .into_iter()
-            .fold((0, 0), |acc, elem| {
-                let nature: Option<Either<P1::Nature, P2::Nature>> = elem.into();
-                match nature {
-                    Some(Either::Left(_)) => (acc.0 + 1, acc.1),
-                    Some(Either::Right(_)) => (acc.0, acc.1 + 1),
-                    None => (acc.0, acc.1),
-                }
-            });
+        let evals_per_oracle = SF::map_evals(&SF::natures(), |nature| {
+            let nature: Option<Either<P1::Nature, P2::Nature>> = (*nature).into();
+            match nature {
+                Some(Either::Left(_)) => Either::Left(()),
+                // If it belongs to neither, it is assigned to right by default.
+                // Something that could happen when nesting partial oracles, in
+                // such case the incoming eval would always be None.
+                Some(Either::Right(_)) | None => Either::Right(()),
+            }
+        });
         let partial_oracle1 = P1::build(builder1, &data, Rc::clone(&mles));
         let partial_oracle2 = P2::build(builder2, &data, Rc::clone(&mles));
         let partial_oracles = (partial_oracle1, partial_oracle2);
@@ -270,8 +269,8 @@ where
 {
     // Number of evals provided to the oracle be the prover
     // and to be verified through some reduction.
-    oracle1_evals: usize,
-    oracle2_evals: usize,
+    prover_evals: usize,
+    evals_per_oracle: SF::Mles<Either<(), ()>>,
     data: SF::Data,
     oracle1_key: P1::VerifierKey,
     oracle2_key: P2::VerifierKey,
@@ -335,32 +334,23 @@ where
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
-        builder.round::<F, ProverEvals<F>, 0>(&(key.oracle1_evals + key.oracle2_evals))
+        builder.round::<F, ProverEvals<F>, 0>(&key.prover_evals)
     }
 
     fn verifier_key(oracle: &Self, _: &(P1, P2)) -> Self::VerifierKey {
-        let mut oracle1_evals = 0;
-        let mut oracle2_evals = 0;
-        for nature in oracle.natures().flatten_vec() {
-            match nature {
-                Either::Left(nature) => {
-                    if nature.prover_provided() {
-                        oracle1_evals += 1;
-                    }
-                }
-                Either::Right(nature) => {
-                    if nature.prover_provided() {
-                        oracle2_evals += 1;
-                    }
-                }
-            }
-        }
+        let prover_evals = SF::natures()
+            .flatten_vec()
+            .into_iter()
+            .map(|nature| if nature.prover_provided() { 1 } else { 0 })
+            .sum();
+
         let data = oracle.data.clone();
         let oracle1_key = From::from(oracle.partial_oracles.0.clone());
         let oracle2_key = From::from(oracle.partial_oracles.1.clone());
+        let evals_per_oracle = oracle.evals_per_oracle.clone();
         CompositeReductionKey {
-            oracle1_evals,
-            oracle2_evals,
+            prover_evals,
+            evals_per_oracle,
             data,
             oracle1_key,
             oracle2_key,
@@ -391,9 +381,6 @@ where
         let evals = EvalsExt::eval(&witness, &point);
         assert_eq!(eval, SF::function(&key.data, &evals));
 
-        //NOTE: The call to P1::evals isn't strictcly necessary, but doing
-        //it this way allows to enforce several invariants about the partial
-        //oracles with what should be a negligile cost.
         let evals1 = P1::evals(&key.oracle1_key, &oracle_instance.oracle1_instance, &point);
         let evals1 = SF::combine(&evals, &evals1, |eval, query| match query {
             OracleEval::Computed(e) => {
@@ -403,8 +390,6 @@ where
             OracleEval::ProverProvided => Some(*eval),
             OracleEval::None => None,
         });
-        let evals1: Vec<F> = evals1.flatten_vec().into_iter().flatten().collect();
-        assert_eq!(evals1.len(), key.oracle1_evals);
 
         let evals2 = P2::evals(&key.oracle2_key, &oracle_instance.oracle2_instance, &point);
         let evals2 = SF::combine(&evals, &evals2, |eval, query| match query {
@@ -415,21 +400,47 @@ where
             OracleEval::ProverProvided => Some(*eval),
             OracleEval::None => None,
         });
-        let evals2: Vec<F> = evals2.flatten_vec().into_iter().flatten().collect();
 
-        assert_eq!(evals2.len(), key.oracle2_evals);
+        let check = SF::combine(
+            &key.evals_per_oracle,
+            &SF::natures(),
+            |side, nature| match side {
+                Either::Left(()) => Either::Left(nature.prover_provided()),
+                Either::Right(()) => Either::Right(nature.prover_provided()),
+            },
+        );
+        let _ = SF::combine(&check, &evals1, |check, eval| {
+            let valid = match check {
+                Either::Left(true) => eval.is_some(),
+                Either::Left(false) => eval.is_none(),
+                Either::Right(true) | Either::Right(false) => eval.is_none(),
+            };
+            assert!(valid)
+        });
+        let _ = SF::combine(&check, &evals2, |check, eval| {
+            let valid = match check {
+                Either::Right(true) => eval.is_some(),
+                Either::Right(false) => eval.is_none(),
+                Either::Left(true) | Either::Left(false) => eval.is_none(),
+            };
+            assert!(valid)
+        });
+
+        let prover_evals = SF::combine(&evals1, &evals2, |eval1, eval2| match (eval1, eval2) {
+            (None, None) => None,
+            (None, Some(e)) | (Some(e), None) => Some(*e),
+            (Some(_), Some(_)) => panic!(),
+        });
+        let prover_evals = prover_evals.flatten_vec().into_iter().flatten().collect();
+        let prover_evals = ProverEvals(prover_evals);
+        let [] = transcript.send_message(&prover_evals, &key.prover_evals);
+        let proof = prover_evals;
 
         let instance1 =
             PartialQueryInstance::new(evals1.clone(), oracle_instance.oracle1_instance, &point);
         let instance2 =
             PartialQueryInstance::new(evals2.clone(), oracle_instance.oracle2_instance, &point);
         let instance = (instance1, instance2);
-
-        let mut prover_evals = ProverEvals(evals1);
-        prover_evals.0.extend(evals2);
-        let [] = transcript.send_message(&prover_evals, &(key.oracle1_evals + key.oracle2_evals));
-
-        let proof = prover_evals;
 
         ProverOutput {
             instance,
@@ -450,34 +461,47 @@ where
             eval: expected_eval,
         } = instance;
 
-        let params = key.oracle1_evals + key.oracle2_evals;
+        let params = key.prover_evals;
         let (prover_evals, []) = transcript.receive_message(Clone::clone, &proof, &params)?;
         let ProverEvals(prover_evals) = prover_evals;
 
-        assert_eq!(prover_evals.len(), key.oracle1_evals + key.oracle2_evals);
+        assert_eq!(prover_evals.len(), key.prover_evals);
 
-        let instance1 = prover_evals[0..key.oracle1_evals].to_vec();
-        let instance2 = prover_evals[key.oracle1_evals..].to_vec();
-
-        let mut prover_evals = prover_evals.into_iter();
+        let (instance1, instance2) = {
+            let mut prover_evals = prover_evals.into_iter();
+            let evals = SF::natures().flatten_vec().into_iter().map(|nature| {
+                if nature.prover_provided() {
+                    Some(prover_evals.next().unwrap())
+                } else {
+                    None
+                }
+            });
+            let evals = SF::Mles::unflatten_vec(evals.collect());
+            assert!(prover_evals.next().is_none());
+            let evals1 = SF::combine(&key.evals_per_oracle, &evals, |side, eval| match side {
+                Either::Left(_) => *eval,
+                Either::Right(_) => None,
+            });
+            let evals2 = SF::combine(&key.evals_per_oracle, &evals, |side, eval| match side {
+                Either::Left(_) => None,
+                Either::Right(_) => *eval,
+            });
+            (evals1, evals2)
+        };
 
         let evals1 = P1::evals(&key.oracle1_key, &oracle_instance.oracle1_instance, &point);
-        let evals1 = evals1.flatten_vec().into_iter().map(|eval| match eval {
-            OracleEval::Computed(e) => Some(e),
-            // This Some(x.unwrap()) is desired in this case.
-            OracleEval::ProverProvided => Some(prover_evals.next().unwrap()),
+        let evals1 = SF::combine(&evals1, &instance1, |eval, prover_eval| match eval {
+            OracleEval::Computed(e) => Some(*e),
+            OracleEval::ProverProvided => *prover_eval,
             OracleEval::None => None,
         });
-        let evals1 = SF::Mles::unflatten_vec(evals1.collect());
-        assert_eq!(prover_evals.len(), key.oracle2_evals);
 
         let evals2 = P2::evals(&key.oracle2_key, &oracle_instance.oracle2_instance, &point);
-        let evals2 = evals2.flatten_vec().into_iter().map(|eval| match eval {
-            OracleEval::Computed(e) => Some(e),
-            OracleEval::ProverProvided => Some(prover_evals.next().unwrap()),
+        let evals2 = SF::combine(&evals2, &instance2, |eval, prover_eval| match eval {
+            OracleEval::Computed(e) => Some(*e),
+            OracleEval::ProverProvided => *prover_eval,
             OracleEval::None => None,
         });
-        let evals2 = SF::Mles::unflatten_vec(evals2.collect());
 
         let natures = SF::natures();
         let evals = SF::combine3([&evals1, &evals2], &natures, |eval1, eval2, nature| {
@@ -499,7 +523,6 @@ where
                 _ => panic!("Incorrect oracle answered query, or correct oracle fail to answer"),
             }
         });
-        assert_eq!(prover_evals.len(), 0);
 
         let eval = SF::function(&key.data, &evals);
 
@@ -526,7 +549,7 @@ where
 {
     type Structure = CompositeOracle<F, SF, P1, P2>;
 
-    type Instance = PartialQueryInstance<F, CompositeOracleInstance<F, SF, P1, P2>>;
+    type Instance = PartialQueryInstance<F, SF, CompositeOracleInstance<F, SF, P1, P2>>;
 
     type Witness = Vec<SF::Mles<F>>;
 
@@ -535,8 +558,7 @@ where
         instance: &Self::Instance,
         witness: &Self::Witness,
     ) -> bool {
-        let (evals1, evals2) = structure.evals_per_oracle;
-        let (instance1, instance2) = instance.clone().split(evals1, evals2);
+        let (instance1, instance2) = instance.clone().split(&structure.evals_per_oracle);
 
         let check1 = P1::QueryRelation::check(&structure.partial_oracles.0, &instance1, witness);
         let check2 = P2::QueryRelation::check(&structure.partial_oracles.1, &instance2, witness);
@@ -555,7 +577,7 @@ where
 {
     oracle1_key: P1::VerifierKey,
     oracle2_key: P2::VerifierKey,
-    evals_per_oracle: (usize, usize),
+    evals_per_oracle: SF::Mles<Either<(), ()>>,
 }
 
 impl<F, SF, P1, P2> CompositeOracleKey<F, SF, P1, P2>
@@ -569,11 +591,9 @@ where
     /// instances that compose it.
     pub fn split(
         &self,
-        instance: PartialQueryInstance<F, CompositeOracleInstance<F, SF, P1, P2>>,
+        instance: PartialQueryInstance<F, SF, CompositeOracleInstance<F, SF, P1, P2>>,
     ) -> <PartialQueryRelation<F, SF, P1, P2> as Relation>::Instance {
-        let (evals1, evals2) = self.evals_per_oracle;
-        let (a, b) = instance.split(evals1, evals2);
-        (a, b)
+        instance.split(&self.evals_per_oracle)
     }
 }
 

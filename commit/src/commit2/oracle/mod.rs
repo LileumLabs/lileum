@@ -283,7 +283,7 @@ where
 {
     type Structure = CommittedOracle<F, C, SF>;
 
-    type Instance = PartialQueryInstance<F, CommittedOracleInstance<F, C, SF>>;
+    type Instance = PartialQueryInstance<F, SF, CommittedOracleInstance<F, C, SF>>;
 
     type Witness = Vec<SF::Mles<F>>;
 
@@ -293,13 +293,15 @@ where
         witness: &Self::Witness,
     ) -> bool {
         let oracle_instance = instance.oracle_instance();
-        let mut expected_evals = instance.evals().iter();
-        let expected_evals = SF::natures()
-            .flatten_vec()
-            .into_iter()
-            .map(|nature| Option::from(nature).map(|_| *expected_evals.next().unwrap()))
-            .collect();
-        let expected_evals = SF::Mles::unflatten_vec(expected_evals);
+        let expected_evals = SF::combine(&SF::natures(), instance.evals(), |nature, eval| {
+            let nature: Option<CommittedNature> = nature.into_dynamic().into();
+            match (nature, eval) {
+                (None, None) => None,
+                (None, Some(_)) | (Some(_), None) => panic!(),
+                //TODO: It can be done without panic.
+                (Some(_), e @ Some(_)) => *e,
+            }
+        });
 
         let mut expected_commits = oracle_instance.commitments.clone().into_iter();
         let expected_commits = SF::natures()
@@ -361,7 +363,7 @@ where
 }
 
 fn fold_instance<F, SF, C>(
-    instance: PartialQueryInstance<F, CommittedOracleInstance<F, C, SF>>,
+    instance: PartialQueryInstance<F, SF, CommittedOracleInstance<F, C, SF>>,
     structure_commits: &[C::Commitment],
     chall: F,
 ) -> OpenInstance<F, C>
@@ -373,7 +375,10 @@ where
 {
     let eval = instance
         .evals()
-        .iter()
+        .clone()
+        .flatten_vec()
+        .into_iter()
+        .flatten()
         .fold(F::ZERO, |acc, eval| acc * chall + eval);
 
     let mut instance_commits = instance.oracle_instance().commitments.iter();
@@ -457,7 +462,7 @@ where
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,
-        instance: PartialQueryInstance<F, CommittedOracleInstance<F, C, SF>>,
+        instance: PartialQueryInstance<F, SF, CommittedOracleInstance<F, C, SF>>,
         witness: Vec<SF::Mles<F>>,
         transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
@@ -501,7 +506,7 @@ where
 
     fn verify<S: Duplex<F>>(
         key: &Self::VerifierKey,
-        instance: PartialQueryInstance<F, CommittedOracleInstance<F, C, SF>>,
+        instance: PartialQueryInstance<F, SF, CommittedOracleInstance<F, C, SF>>,
         proof: GuardedProof<Self::Proof>,
         transcript: &mut VerifierTranscript<F, S>,
     ) -> Result<OpenInstance<F, C>, Self::Error> {

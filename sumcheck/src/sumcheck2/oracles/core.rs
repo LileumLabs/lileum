@@ -11,7 +11,7 @@ use crate::{
 };
 use ark_ff::Field;
 use sponge::sponge::Duplex;
-use std::{marker::PhantomData, rc::Rc};
+use std::{convert::identity, marker::PhantomData, rc::Rc};
 use transcript::reduction2::{
     Argument, GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
@@ -361,7 +361,7 @@ where
 {
     type Structure = CoreOracle<F, SF>;
 
-    type Instance = PartialQueryInstance<F, CoreOracleInstance<F, SF>>;
+    type Instance = PartialQueryInstance<F, SF, CoreOracleInstance<F, SF>>;
 
     type Witness = Vec<SF::Mles<F>>;
 
@@ -380,22 +380,20 @@ where
 
         let coefficients = decode::<F, SF>(oracle_instance.elements.clone(), vars);
         let functions = &structure.functions;
-        let natures = SF::natures();
 
         let evals = SF::combine(functions, &coefficients, |func, coeff| {
             coeff.as_ref().map(|coeff| func(coeff, point))
         });
-        let _ = SF::combine(&evals, &natures, |eval, nature| {
-            match (eval, Option::from(*nature)) {
-                (None, None) | (Some(_), Some(_)) => {}
-                (None, Some(_)) | (Some(_), None) => {
-                    panic!()
-                }
-            };
+        let evals_valid = SF::combine(expected_evals, &evals, |expected, eval| {
+            match (expected, eval) {
+                (None, None) => true,
+                (None, Some(_)) => panic!(),
+                (Some(_), None) => false,
+                (Some(expected), Some(eval)) => expected == eval,
+            }
         });
 
-        let evals: Vec<F> = evals.flatten_vec().into_iter().flatten().collect();
-        evals == expected_evals
+        evals_valid.flatten_vec().into_iter().all(identity)
     }
 }
 
@@ -431,7 +429,7 @@ where
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,
-        instance: PartialQueryInstance<F, CoreOracleInstance<F, SF>>,
+        instance: PartialQueryInstance<F, SF, CoreOracleInstance<F, SF>>,
         witness: Vec<SF::Mles<F>>,
         _transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<(), Self::Proof> {
@@ -445,7 +443,7 @@ where
 
     fn verify<S: Duplex<F>>(
         key: &Self::VerifierKey,
-        instance: PartialQueryInstance<F, CoreOracleInstance<F, SF>>,
+        instance: PartialQueryInstance<F, SF, CoreOracleInstance<F, SF>>,
         _proof: GuardedProof<Self::Proof>,
         _transcript: &mut VerifierTranscript<F, S>,
     ) -> Result<(), Self::Error> {

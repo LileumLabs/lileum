@@ -134,7 +134,7 @@ where
 {
     type Structure = MatrixProductOracle<F, SF, N>;
 
-    type Instance = PartialQueryInstance<F, MatrixProductInstance>;
+    type Instance = PartialQueryInstance<F, SF, MatrixProductInstance>;
 
     type Witness = Vec<SF::Mles<F>>;
 

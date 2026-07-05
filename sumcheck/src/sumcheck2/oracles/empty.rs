@@ -49,7 +49,7 @@ pub struct EmptyRelation<F, SF>(PhantomData<(F, SF)>);
 impl<F: Field, SF: SumcheckFunction<F>> Relation for EmptyRelation<F, SF> {
     type Structure = ();
 
-    type Instance = PartialQueryInstance<F, EmptyInstance>;
+    type Instance = PartialQueryInstance<F, SF, EmptyInstance>;
 
     type Witness = Vec<SF::Mles<F>>;
 

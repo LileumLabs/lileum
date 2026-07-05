@@ -228,13 +228,13 @@ where
                 .map_err(|_| SparkError::CompositeOracle)?;
 
         let (core_query, committed_query) = red;
-        let core_query: PartialQueryInstance<F, CoreOracleInstance<F, _>> = core_query;
+        let core_query: PartialQueryInstance<F, _, CoreOracleInstance<F, _>> = core_query;
 
         let core_proof = GuardedProof::empty();
         CoreOracle::verify(key.oracle_key.p1_key(), core_query, core_proof, transcript)
             .map_err(|_| SparkError::CoreOracle)?;
 
-        let committed_query: PartialQueryInstance<F, CommittedOracleInstance<F, C, _>> =
+        let committed_query: PartialQueryInstance<F, _, CommittedOracleInstance<F, C, _>> =
             committed_query;
 
         let proof = GuardedProof::empty();
