@@ -4,7 +4,8 @@ use crate::{
         evals::{EvalsCore, EvalsExt},
         oracles::{
             partial::{
-                OracleEval, OracleParams, PartialOracle, PartialQueryInstance, PartialQueryRelation,
+                Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance,
+                PartialQueryRelation,
             },
             EvalLocation, Oracle, QueryRelation, SumcheckFunction,
         },
@@ -343,12 +344,12 @@ where
         for nature in oracle.natures().flatten_vec() {
             match nature {
                 Either::Left(nature) => {
-                    if P1::prover_provided(&nature) {
+                    if nature.prover_provided() {
                         oracle1_evals += 1;
                     }
                 }
                 Either::Right(nature) => {
-                    if P2::prover_provided(&nature) {
+                    if nature.prover_provided() {
                         oracle2_evals += 1;
                     }
                 }
@@ -485,11 +486,11 @@ where
                 // (None, None, Either::Right(_)) => todo!(),
                 // (None, Some(_), Either::Left(_)) => todo!(),
                 (None, Some(e), Either::Right(nature)) => {
-                    assert!(P2::prover_provided(nature));
+                    assert!(nature.prover_provided());
                     *e
                 }
                 (Some(e), None, Either::Left(nature)) => {
-                    assert!(P1::prover_provided(nature));
+                    assert!(nature.prover_provided());
                     *e
                 }
                 // (Some(_), None, Either::Right(_)) => todo!(),
@@ -650,12 +651,5 @@ where
                 _ => unreachable!(),
             }
         })
-    }
-
-    fn prover_provided(nature: &Self::Nature) -> bool {
-        match nature {
-            Either::Left(nature) => P1::prover_provided(nature),
-            Either::Right(nature) => P2::prover_provided(nature),
-        }
     }
 }

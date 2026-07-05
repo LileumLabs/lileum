@@ -270,10 +270,6 @@ where
             None => OracleEval::None,
         })
     }
-
-    fn prover_provided(_nature: &Self::Nature) -> bool {
-        true
-    }
 }
 
 pub struct CommittedQueryRelation<F, C, SF>(PhantomData<(F, C, SF)>);

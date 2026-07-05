@@ -117,7 +117,6 @@ where
         instance: &Self::Instance,
         point: &MultiPoint<F>,
     ) -> SF::Mles<OracleEval<F>>;
-    fn prover_provided(nature: &Self::Nature) -> bool;
 }
 
 impl<F, SF, P1, P2> PartialQueryInstance<F, CompositeOracleInstance<F, SF, P1, P2>>

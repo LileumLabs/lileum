@@ -349,10 +349,6 @@ where
             }
         })
     }
-
-    fn prover_provided(_nature: &Self::Nature) -> bool {
-        false
-    }
 }
 
 pub struct CoreQueryRelation<F, SF>(PhantomData<(F, SF)>);

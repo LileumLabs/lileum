@@ -122,10 +122,6 @@ where
             }
         })
     }
-
-    fn prover_provided(_: &Self::Nature) -> bool {
-        true
-    }
 }
 
 pub struct MatrixOracleQuery<F, SF, const N: usize>(PhantomData<(F, SF)>);

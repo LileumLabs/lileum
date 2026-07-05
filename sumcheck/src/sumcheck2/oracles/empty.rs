@@ -86,8 +86,4 @@ impl<F: Field, SF: SumcheckFunction<F>> PartialOracle<F, SF> for () {
     ) -> SF::Mles<OracleEval<F>> {
         SF::map_evals(&SF::natures(), |_| OracleEval::None)
     }
-
-    fn prover_provided(_nature: &Self::Nature) -> bool {
-        unreachable!()
-    }
 }
