@@ -65,6 +65,12 @@ pub trait Nature: Copy + Debug + Into<EvalLocation> + 'static {
     fn into_dynamic(self) -> DynamicNature {
         DynamicNature(Box::new(self))
     }
+
+    /// Wheter the MLE for the given nature has its evaluation provided
+    /// by the prover instead of being computed by the verifier.
+    fn prover_provided(self) -> bool {
+        false
+    }
 }
 
 impl<A: Nature, B: Nature> Nature for Either<A, B> {
@@ -74,6 +80,13 @@ impl<A: Nature, B: Nature> Nature for Either<A, B> {
         match self {
             Either::Left(x) => x.into_dynamic(),
             Either::Right(x) => x.into_dynamic(),
+        }
+    }
+
+    fn prover_provided(self) -> bool {
+        match self {
+            Either::Left(x) => x.prover_provided(),
+            Either::Right(x) => x.prover_provided(),
         }
     }
 }

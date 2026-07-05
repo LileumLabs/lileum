@@ -37,7 +37,11 @@ pub enum CommittedNature {
     Witness,
 }
 
-impl Nature for CommittedNature {}
+impl Nature for CommittedNature {
+    fn prover_provided(self) -> bool {
+        true
+    }
+}
 
 impl From<CommittedNature> for EvalLocation {
     fn from(value: CommittedNature) -> Self {

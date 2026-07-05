@@ -58,7 +58,11 @@ impl<F: Field> Message<F> for MatrixProductInstance {
 #[derive(Clone, Copy, Debug)]
 pub struct MatrixNature;
 
-impl Nature for MatrixNature {}
+impl Nature for MatrixNature {
+    fn prover_provided(self) -> bool {
+        true
+    }
+}
 
 impl From<MatrixNature> for EvalLocation {
     fn from(_: MatrixNature) -> Self {
