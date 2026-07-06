@@ -103,7 +103,7 @@ where
             //TODO: handle
             .unwrap();
 
-        let (core, committed) = CompositeOracle::verify(
+        let (core_instance, matrix_instance) = CompositeOracle::verify(
             &key.composite_key,
             instance,
             proof.map(|proof| proof.oracle_evals1),
@@ -112,8 +112,15 @@ where
         //TODO: handle
         .unwrap();
 
-        let _ = (core, committed);
-        // let (core, matrix) = key.composite_key.p2_key().split(composite);
+        CoreOracle::verify(
+            key.composite_key.p1_key(),
+            core_instance,
+            GuardedProof::empty(),
+            transcript,
+        )
+        //TODO:handle
+        .unwrap();
+        let _ = matrix_instance;
 
         todo!()
     }
