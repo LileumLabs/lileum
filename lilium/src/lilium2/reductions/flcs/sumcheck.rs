@@ -1,4 +1,4 @@
-use crate::lilium2::oracles::MatrixNature;
+use crate::lilium2::oracles2::MatrixNature;
 use ark_ff::Field;
 use ccs::{matrix::Matrix, structure::Exp};
 use commit::commit2::oracle::CommittedNature;
@@ -43,7 +43,7 @@ impl<V: Debug + Copy + Default, const IO: usize, const S: usize> Default for Flc
     }
 }
 
-type Natures = Either<CommittedNature, Either<CoreNature, MatrixNature>>;
+type Natures = Either<CoreNature, Either<CommittedNature, MatrixNature>>;
 
 #[derive(Clone, Debug)]
 pub struct FlcsData {
@@ -61,13 +61,13 @@ impl<F: Field, const IO: usize, const S: usize> SumcheckFunction<F> for FlcsEval
         use Either::*;
 
         let products = [Right(Right(MatrixNature)); IO];
-        let w = Left(CommittedNature::Witness);
+        let w = Right(Left(CommittedNature::Witness));
         //TODO:
-        let inputs = Right(Left(CoreNature::SmallInstance(Coeffs::Fixed(3))));
-        let input_selector = Right(Left(CoreNature::SmallStructure));
-        let gate_selectors = [Left(CommittedNature::Structure); S];
-        let constants = Left(CommittedNature::Structure);
-        let challenge = Right(Left(CoreNature::Challenge));
+        let inputs = Left(CoreNature::SmallInstance(Coeffs::Fixed(3)));
+        let input_selector = Left(CoreNature::SmallStructure);
+        let gate_selectors = [Right(Left(CommittedNature::Structure)); S];
+        let constants = Right(Left(CommittedNature::Structure));
+        let challenge = Left(CoreNature::Challenge);
 
         FlcsEvals {
             products,

@@ -23,7 +23,6 @@ use sumcheck::{
 use transcript::reduction2::{Message, NoError, Relation};
 
 #[derive(Clone, Debug)]
-#[allow(dead_code)]
 pub struct MatrixProductOracle<F, C, SF, const N: usize>
 where
     F: Field,
@@ -42,7 +41,6 @@ where
     SF: SumcheckFunction<F>,
     C: CommitmentScheme<F>,
 {
-    #[allow(dead_code)]
     pub fn matrices(&self) -> &[Rc<Matrix>; N] {
         &self.matrices
     }
@@ -136,7 +134,7 @@ where
 
     type Builder = Self;
 
-    type Nature = Either<MatrixNature, CommittedNature>;
+    type Nature = Either<CommittedNature, MatrixNature>;
 
     type QueryRelation = MatrixOracleQuery<F, C, SF, N>;
 
@@ -271,6 +269,5 @@ where
     }
 }
 
-#[allow(dead_code)]
 pub type FlcsOracle<F, C, SF, const IO: usize> =
     CompositeOracle<F, SF, CoreOracle<F, SF>, MatrixProductOracle<F, C, SF, IO>>;

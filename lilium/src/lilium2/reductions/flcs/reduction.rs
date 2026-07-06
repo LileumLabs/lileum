@@ -1,10 +1,10 @@
 use crate::lilium2::{
-    oracles::{FlcsOracle, MatrixProductOracle},
+    oracles2::{FlcsOracle, MatrixProductOracle},
     reductions::flcs::FlcsEvals,
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
 use ark_ff::Field;
-use commit::commit2::{oracle::CommittedOracle, CommitmentScheme, OpenInstance, OpeningRelation};
+use commit::commit2::{CommitmentScheme, OpenInstance, OpeningRelation};
 use sponge::sponge::Duplex;
 use sumcheck::sumcheck2::{
     oracles::{
@@ -21,12 +21,8 @@ use transcript::reduction2::{
 #[allow(dead_code)]
 struct FlcsReduction;
 
-type CompositeKey<F, C, const IO: usize, SF> = CompositeReductionKey<
-    F,
-    SF,
-    CommittedOracle<F, C, SF>,
-    CompositeOracle<F, SF, CoreOracle<F, SF>, MatrixProductOracle<F, SF, IO>>,
->;
+type CompositeKey<F, C, const IO: usize, SF> =
+    CompositeReductionKey<F, SF, CoreOracle<F, SF>, MatrixProductOracle<F, C, SF, IO>>;
 
 #[allow(dead_code)]
 struct VerifierKey<F, C, const IO: usize, const S: usize>
@@ -107,7 +103,7 @@ where
             //TODO: handle
             .unwrap();
 
-        let (committed, composite) = CompositeOracle::verify(
+        let (core, committed) = CompositeOracle::verify(
             &key.composite_key,
             instance,
             proof.map(|proof| proof.oracle_evals1),
@@ -116,7 +112,7 @@ where
         //TODO: handle
         .unwrap();
 
-        let _ = (committed, composite);
+        let _ = (core, committed);
         // let (core, matrix) = key.composite_key.p2_key().split(composite);
 
         todo!()

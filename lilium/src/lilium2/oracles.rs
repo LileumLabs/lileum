@@ -17,6 +17,7 @@ use sumcheck::{
 use transcript::reduction2::{Message, NoError, Relation};
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 pub struct MatrixProductOracle<F, SF, const N: usize>
 where
     F: Field,
@@ -33,6 +34,7 @@ where
     F: Field,
     SF: SumcheckFunction<F>,
 {
+    #[allow(dead_code)]
     pub fn matrices(&self) -> &[Rc<Matrix>; N] {
         &self.matrices
     }
@@ -206,6 +208,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 pub type FlcsOracle<F, C, SF, const IO: usize> = CompositeOracle<
     F,
     SF,

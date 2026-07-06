@@ -1,5 +1,5 @@
 use crate::lilium2::{
-    oracles::FlcsOracle,
+    oracles2::FlcsOracle,
     reductions::flcs::{compute_sumcheck_witness, FlcsEvals},
 };
 use ark_ff::Field;
@@ -152,12 +152,8 @@ where
         witness: &Self::Witness,
     ) -> bool {
         let oracle = &structure.oracle;
-        let a = &instance
-            .0
-            .oracle_instance()
-            .oracle2_instance
-            .oracle1_instance;
-        let matrices = oracle.inner_oracles().1.inner_oracles().1.matrices();
+        let a = &instance.0.oracle_instance().oracle1_instance;
+        let matrices = oracle.inner_oracles().1.matrices();
         let witness = compute_sumcheck_witness(&oracle.structure(), matrices, witness, a);
         ZeroSumcheck::check(oracle, &instance.0, &witness)
     }
