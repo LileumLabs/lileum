@@ -1,5 +1,5 @@
 use crate::lilium2::{
-    oracles2::FlcsOracle,
+    oracles::FlcsOracle,
     reductions::flcs::{compute_sumcheck_witness, FlcsEvals},
 };
 use ark_ff::Field;

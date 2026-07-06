@@ -1,4 +1,4 @@
-use crate::lilium2::oracles2::MatrixNature;
+use crate::lilium2::oracles::MatrixNature;
 use ark_ff::Field;
 use ccs::{matrix::Matrix, structure::Exp};
 use commit::commit2::oracle::CommittedNature;

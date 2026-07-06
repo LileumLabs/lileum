@@ -1,5 +1,5 @@
 use crate::lilium2::{
-    oracles2::{FlcsOracle, MatrixProductOracle},
+    oracles::{FlcsOracle, MatrixProductOracle},
     reductions::flcs::FlcsEvals,
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
