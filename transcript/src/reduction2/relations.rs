@@ -47,6 +47,25 @@ impl<R1: Relation, R2: Relation> Relation for CompoundRelation<R1, R2> {
     }
 }
 
+impl<R1: Relation, R2: Relation> Relation for (R1, R2) {
+    type Structure = (R1::Structure, R2::Structure);
+
+    type Instance = (R1::Instance, R2::Instance);
+
+    type Witness = (R1::Witness, R2::Witness);
+
+    fn check(
+        structure: &Self::Structure,
+        instance: &Self::Instance,
+        witness: &Self::Witness,
+    ) -> bool {
+        let (structure1, structure2) = structure;
+        let (instance1, instance2) = instance;
+        let (witness1, witness2) = witness;
+        R1::check(structure1, instance1, witness1) && R2::check(structure2, instance2, witness2)
+    }
+}
+
 pub struct FoldingRelation<R: Relation>(R);
 
 impl<R: Relation> Relation for FoldingRelation<R> {
