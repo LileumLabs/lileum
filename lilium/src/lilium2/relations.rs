@@ -152,9 +152,9 @@ where
         witness: &Self::Witness,
     ) -> bool {
         let oracle = &structure.oracle;
-        let a = &instance.0.oracle_instance().oracle1_instance;
+        let core = &instance.0.oracle_instance().oracle1_instance;
         let matrices = oracle.inner_oracles().1.matrices();
-        let witness = compute_sumcheck_witness(&oracle.structure(), matrices, witness, a);
+        let witness = compute_sumcheck_witness(&oracle.structure(), matrices, witness, core);
         ZeroSumcheck::check(oracle, &instance.0, &witness)
     }
 }
