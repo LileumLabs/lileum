@@ -1,6 +1,9 @@
 use crate::lilium2::{
     oracles::{FlcsOracle, MatrixProductOracle},
-    reductions::flcs::FlcsEvals,
+    reductions::{
+        flcs::FlcsEvals,
+        matrix_product::{self, MatrixProductReduction},
+    },
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
 use ark_ff::Field;
@@ -32,6 +35,7 @@ where
 {
     sumcheck_key: SumcheckVerifierKey<F>,
     composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S>>,
+    matrix_oracle_key: matrix_product::VerifierKey<F, C, FlcsEvals<(), IO, S>, IO>,
 }
 
 #[derive(Clone, Debug)]
@@ -120,7 +124,17 @@ where
         )
         //TODO:handle
         .unwrap();
-        let _ = matrix_instance;
+
+        let reduced = MatrixProductReduction::verify(
+            &key.matrix_oracle_key,
+            matrix_instance,
+            GuardedProof::empty(),
+            transcript,
+        )
+        //TODO:handle
+        .unwrap();
+
+        let _ = reduced;
 
         todo!()
     }
