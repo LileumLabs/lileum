@@ -8,6 +8,9 @@ use transcript::reduction2::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 
+mod function;
+mod matrix_sum;
+
 #[allow(dead_code)]
 pub struct MatrixProductReduction;
 
