@@ -66,6 +66,27 @@ impl<R1: Relation, R2: Relation> Relation for (R1, R2) {
     }
 }
 
+impl<R: Relation, const N: usize> Relation for [R; N] {
+    type Structure = [R::Structure; N];
+
+    type Instance = [R::Instance; N];
+
+    type Witness = [R::Witness; N];
+
+    fn check(
+        structure: &Self::Structure,
+        instance: &Self::Instance,
+        witness: &Self::Witness,
+    ) -> bool {
+        for ((structure, instance), witness) in structure.iter().zip(instance).zip(witness) {
+            if !R::check(structure, instance, witness) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
 pub struct FoldingRelation<R: Relation>(R);
 
 impl<R: Relation> Relation for FoldingRelation<R> {
