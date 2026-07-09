@@ -595,6 +595,14 @@ where
     ) -> <PartialQueryRelation<F, SF, P1, P2> as Relation>::Instance {
         instance.split(&self.evals_per_oracle)
     }
+
+    pub fn p1_key(&self) -> &P1::VerifierKey {
+        &self.oracle1_key
+    }
+
+    pub fn p2_key(&self) -> &P2::VerifierKey {
+        &self.oracle2_key
+    }
 }
 
 impl<F, SF, P1, P2> From<CompositeOracle<F, SF, P1, P2>> for CompositeOracleKey<F, SF, P1, P2>
