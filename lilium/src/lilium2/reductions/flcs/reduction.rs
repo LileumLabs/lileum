@@ -21,14 +21,12 @@ use transcript::reduction2::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 
-#[allow(dead_code)]
-struct FlcsReduction;
+pub struct FlcsReduction;
 
 type CompositeKey<F, C, const IO: usize, SF> =
     CompositeReductionKey<F, SF, CoreOracle<F, SF>, MatrixProductOracle<F, C, SF, IO>>;
 
-#[allow(dead_code)]
-struct VerifierKey<F, C, const IO: usize, const S: usize>
+pub struct VerifierKey<F, C, const IO: usize, const S: usize>
 where
     F: Field,
     C: CommitmentScheme<F>,
@@ -39,10 +37,10 @@ where
 }
 
 #[derive(Clone, Debug)]
-#[allow(dead_code)]
-struct Proof<F> {
+pub struct Proof<F: Field> {
     sumcheck_proof: Vec<SumcheckMessage<F>>,
     oracle_evals1: ProverEvals<F>,
+    matrix_product: matrix_product::Proof<F>,
 }
 
 impl<F, C, const I: usize, const IO: usize, const S: usize>
@@ -110,7 +108,7 @@ where
         let (core_instance, matrix_instance) = CompositeOracle::verify(
             &key.composite_key,
             instance,
-            proof.map(|proof| proof.oracle_evals1),
+            proof.clone().map(|proof| proof.oracle_evals1),
             transcript,
         )
         //TODO: handle
@@ -128,7 +126,7 @@ where
         let reduced = MatrixProductReduction::verify(
             &key.matrix_oracle_key,
             matrix_instance,
-            GuardedProof::empty(),
+            proof.map(|proof| proof.matrix_product),
             transcript,
         )
         //TODO:handle

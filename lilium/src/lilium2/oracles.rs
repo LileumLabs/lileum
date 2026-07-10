@@ -47,7 +47,7 @@ where
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct MatrixProductInstance<F: Field, C: CommitmentScheme<F>>(C::Commitment);
+pub struct MatrixProductInstance<F: Field, C: CommitmentScheme<F>>(pub(crate) C::Commitment);
 
 impl<F: Field, C: CommitmentScheme<F>> Message<F> for MatrixProductInstance<F, C> {
     type Params = OracleParams;

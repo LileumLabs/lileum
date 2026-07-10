@@ -1,13 +1,18 @@
-use crate::lilium2::reductions::matrix_product::matrix_sum::MatrixSumNature;
+use crate::lilium2::reductions::matrix_product::matrix_sum::{MatrixSumNature, MatrixSumOracle};
 use ark_ff::Field;
-use commit::commit2::oracle::CommittedNature;
+use commit::commit2::oracle::{CommittedNature, CommittedOracle};
 use std::fmt::Debug;
 use std::vec::IntoIter;
 use sumcheck::{
     sumcheck::Var,
     sumcheck2::{
         evals::{Evals, EvalsCore},
-        oracles::{composite::Either, core::CoreNature, partial::OracleEval, SumcheckFunction},
+        oracles::{
+            composite::{CompositeOracle, Either},
+            core::{CoreNature, CoreOracle},
+            partial::OracleEval,
+            SumcheckFunction,
+        },
     },
 };
 use sumcheck_derive::EvalsCore;
@@ -17,6 +22,16 @@ pub struct MatrixSumEvals<V: Clone + Debug, const N: usize> {
     matrices: [V; N],
     z: V,
     challenge: V,
+}
+
+impl<V: Clone + Debug + Default, const N: usize> Default for MatrixSumEvals<V, N> {
+    fn default() -> Self {
+        Self {
+            matrices: [(); N].map(|_| Default::default()),
+            z: Default::default(),
+            challenge: Default::default(),
+        }
+    }
 }
 
 impl<F: Field, const N: usize> MatrixSumEvals<F, N> {
@@ -38,6 +53,21 @@ impl<F: Field, const N: usize> MatrixSumEvals<OracleEval<F>, N> {
         }
     }
 }
+impl<F: Field, const N: usize> MatrixSumEvals<Vec<F>, N> {
+    pub fn coefficients(challenge: F) -> Self {
+        Self {
+            challenge: vec![challenge],
+            ..Default::default()
+        }
+    }
+}
+
+pub type Oracle<F, SF, C, const N: usize> = CompositeOracle<
+    F,
+    SF,
+    MatrixSumOracle<F, C, N>,
+    CompositeOracle<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
+>;
 
 impl<F: Field, const N: usize> SumcheckFunction<F> for MatrixSumEvals<(), N> {
     type Natures = Either<MatrixSumNature, Either<CoreNature, CommittedNature>>;
