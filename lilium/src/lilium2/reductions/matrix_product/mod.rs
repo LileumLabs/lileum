@@ -78,10 +78,24 @@ where
     type Error = ();
 
     fn transcript_pattern(
-        _key: &Self::VerifierKey,
-        _builder: TranscriptBuilder,
+        key: &Self::VerifierKey,
+        builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
-        todo!()
+        let VerifierKey {
+            sumcheck_key,
+            committed_oracle1,
+            committed_oracle2,
+            composite_key,
+            ..
+        } = key;
+        builder
+            .subprotocol::<CommittedOracle<F, C, SF>, _, _, _>(committed_oracle1)
+            .round::<F, (), 1>(&())
+            .subprotocol::<SumcheckReduction<F, Oracle<F, Func<N>, C, N>>, F, _, _>(sumcheck_key)
+            .subprotocol::<Oracle<F, Func<N>, C, N>, _, _, _>(composite_key)
+            .subprotocol::<CoreOracle<F, Func<N>>, _, _, _>(composite_key.p2_key().p1_key())
+            .subprotocol::<CommittedOracle<F, C, SF>, _, _, _>(committed_oracle2)
+            .subprotocol::<MatrixSumOracle<F, C, N>, _, _, _>(&())
     }
 
     fn verifier_key(
