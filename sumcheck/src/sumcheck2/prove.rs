@@ -211,4 +211,8 @@ impl<F: Field, O: Oracle<F>> ProverKey<F, O> {
         self.degree += 1;
         self
     }
+
+    pub fn structure(&self) -> &[<<O as Oracle<F>>::Function as Evals>::Mles<F>] {
+        &self.structure_evals
+    }
 }
