@@ -12,6 +12,51 @@ pub struct ProverOutput<R: Relation, P> {
     pub proof: P,
 }
 
+impl<R1: Relation, R2: Relation, P> ProverOutput<(R1, R2), (P, P)> {
+    pub fn combine_tuple(a: ProverOutput<R1, P>, b: ProverOutput<R2, P>) -> Self {
+        Self {
+            instance: (a.instance, b.instance),
+            witness: (a.witness, b.witness),
+            proof: (a.proof, b.proof),
+        }
+    }
+}
+
+impl<R: Relation, P> ProverOutput<R, P> {
+    pub fn map_rel<R2: Relation, F1, F2>(self, f1: F1, f2: F2) -> ProverOutput<R2, P>
+    where
+        F1: Fn(R::Instance) -> R2::Instance,
+        F2: Fn(R::Witness) -> R2::Witness,
+    {
+        let Self {
+            instance,
+            witness,
+            proof,
+        } = self;
+        let instance = f1(instance);
+        let witness = f2(witness);
+        ProverOutput {
+            instance,
+            witness,
+            proof,
+        }
+    }
+
+    pub fn map_proof<P2, F: Fn(P) -> P2>(self, f: F) -> ProverOutput<R, P2> {
+        let Self {
+            instance,
+            witness,
+            proof,
+        } = self;
+        let proof = f(proof);
+        ProverOutput {
+            instance,
+            witness,
+            proof,
+        }
+    }
+}
+
 /// A reduction from relation R1 to R2.
 pub trait Reduction<F: Field, R1: Relation, R2: Relation> {
     type ProverKey;
