@@ -117,10 +117,48 @@ where
     }
 
     fn verifier_key(
-        _structure_1: &MatrixProductOracle<F, C, SF, N>,
+        structure_1: &MatrixProductOracle<F, C, SF, N>,
         _structure_2: &([C; 2], [FlexibleSparkStructure<F>; N]),
     ) -> Self::VerifierKey {
-        todo!()
+        let vars = {
+            let rows = structure_1
+                .matrices()
+                .iter()
+                .map(|matrix| matrix.len())
+                .max()
+                .unwrap();
+            let vars = rows.next_power_of_two().ilog2();
+            vars as usize
+        };
+        let mles = vec![MatrixSumEvals::zero(); 1 << vars];
+        let mles = Rc::new(mles);
+
+        let builder1 = MatrixSumOracle::new(structure_1.matrices().clone());
+
+        let core_oracle = CoreOracle::new(MatrixSumEvals::core_oracle_functions());
+        let builder2 = (core_oracle, structure_1.pcs().clone());
+
+        let oracle = Oracle::new((), mles, builder1, builder2);
+
+        let sumcheck_key = SumcheckReduction::verifier_key(&oracle, &oracle);
+
+        let committed_oracle1 =
+            CommittedOracle::verifier_key(structure_1.committed_oracle(), structure_1.pcs());
+
+        let committed_oracle2 = CommittedOracle::verifier_key(
+            &oracle.inner_oracles().1.inner_oracles().1,
+            structure_1.pcs(),
+        );
+
+        let composite_key = Oracle::verifier_key(&oracle, oracle.inner_oracles());
+
+        VerifierKey {
+            sumcheck_key,
+            committed_oracle1,
+            committed_oracle2,
+            composite_key,
+            _phatom: PhantomData,
+        }
     }
 
     fn key_pair(

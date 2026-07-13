@@ -94,6 +94,16 @@ impl<F: Field, const N: usize> MatrixSumEvals<Vec<F>, N> {
     }
 }
 
+impl<T: Clone + Debug, const N: usize> MatrixSumEvals<Option<T>, N> {
+    pub fn core_oracle_functions() -> Self {
+        Self {
+            matrices: [(); N].map(|_| None),
+            z: None,
+            challenge: None,
+        }
+    }
+}
+
 pub type Oracle<F, SF, C, const N: usize> = CompositeOracle<
     F,
     SF,
