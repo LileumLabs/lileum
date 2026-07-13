@@ -32,7 +32,6 @@ where
     matrices: [Rc<Matrix>; N],
     vector: SF::Mles<bool>,
     committed_oracle: CommittedOracle<F, C, SF>,
-    pcs: C,
     _f: PhantomData<F>,
 }
 
@@ -44,10 +43,6 @@ where
 {
     pub fn matrices(&self) -> &[Rc<Matrix>; N] {
         &self.matrices
-    }
-
-    pub fn pcs(&self) -> &C {
-        &self.pcs
     }
 
     pub fn committed_oracle(&self) -> &CommittedOracle<F, C, SF> {

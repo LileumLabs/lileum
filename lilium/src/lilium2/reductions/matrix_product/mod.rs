@@ -118,7 +118,7 @@ where
 
     fn verifier_key(
         structure_1: &MatrixProductOracle<F, C, SF, N>,
-        _structure_2: &([C; 2], [FlexibleSparkStructure<F>; N]),
+        structure_2: &([C; 2], [FlexibleSparkStructure<F>; N]),
     ) -> Self::VerifierKey {
         let vars = {
             let rows = structure_1
@@ -136,19 +136,17 @@ where
         let builder1 = MatrixSumOracle::new(structure_1.matrices().clone());
 
         let core_oracle = CoreOracle::new(MatrixSumEvals::core_oracle_functions());
-        let builder2 = (core_oracle, structure_1.pcs().clone());
+        let [pcs, _] = &structure_2.0;
+        let builder2 = (core_oracle, pcs.clone());
 
         let oracle = Oracle::new((), mles, builder1, builder2);
 
         let sumcheck_key = SumcheckReduction::verifier_key(&oracle, &oracle);
 
-        let committed_oracle1 =
-            CommittedOracle::verifier_key(structure_1.committed_oracle(), structure_1.pcs());
+        let committed_oracle1 = CommittedOracle::verifier_key(structure_1.committed_oracle(), pcs);
 
-        let committed_oracle2 = CommittedOracle::verifier_key(
-            &oracle.inner_oracles().1.inner_oracles().1,
-            structure_1.pcs(),
-        );
+        let committed_oracle2 =
+            CommittedOracle::verifier_key(&oracle.inner_oracles().1.inner_oracles().1, pcs);
 
         let composite_key = Oracle::verifier_key(&oracle, oracle.inner_oracles());
 
