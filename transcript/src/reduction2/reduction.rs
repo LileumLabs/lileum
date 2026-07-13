@@ -25,8 +25,8 @@ impl<R1: Relation, R2: Relation, P> ProverOutput<(R1, R2), (P, P)> {
 impl<R: Relation, P> ProverOutput<R, P> {
     pub fn map_rel<R2: Relation, F1, F2>(self, f1: F1, f2: F2) -> ProverOutput<R2, P>
     where
-        F1: Fn(R::Instance) -> R2::Instance,
-        F2: Fn(R::Witness) -> R2::Witness,
+        F1: FnOnce(R::Instance) -> R2::Instance,
+        F2: FnOnce(R::Witness) -> R2::Witness,
     {
         let Self {
             instance,
@@ -42,7 +42,7 @@ impl<R: Relation, P> ProverOutput<R, P> {
         }
     }
 
-    pub fn map_proof<P2, F: Fn(P) -> P2>(self, f: F) -> ProverOutput<R, P2> {
+    pub fn map_proof<P2, F: FnOnce(P) -> P2>(self, f: F) -> ProverOutput<R, P2> {
         let Self {
             instance,
             witness,
