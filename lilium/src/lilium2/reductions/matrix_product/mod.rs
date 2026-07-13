@@ -6,7 +6,9 @@ use crate::lilium2::{
     },
 };
 use ark_ff::Field;
+use ccs::matrix::Matrix;
 use commit::commit2::{
+    self,
     oracle::{
         CommittedNature, CommittedOracle, CommittedOracleInstance,
         VerifierKey as CommittedVerifierKey,
@@ -15,7 +17,7 @@ use commit::commit2::{
 };
 use spark::spark3::{FlexibleSparkRelation, FlexibleSparkStructure, SparkInstance};
 use sponge::sponge::Duplex;
-use std::marker::PhantomData;
+use std::{marker::PhantomData, rc::Rc};
 use sumcheck::sumcheck2::{
     evals::EvalsCore,
     oracles::{
@@ -24,7 +26,8 @@ use sumcheck::sumcheck2::{
         partial::{Nature, PartialQueryInstance},
         SumcheckFunction,
     },
-    SumcheckInstance, SumcheckMessage, SumcheckReduction, SumcheckVerifierKey,
+    ProverKey as SumcheckProver, SumcheckInstance, SumcheckMessage, SumcheckReduction,
+    SumcheckVerifierKey,
 };
 use transcript::reduction2::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
@@ -53,6 +56,21 @@ pub struct VerifierKey<F: Field, C: CommitmentScheme<F>, SF, const N: usize> {
     _phatom: PhantomData<SF>,
 }
 
+pub struct ProverKey<F, C, SF, const N: usize>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    SF: SumcheckFunction<F>,
+{
+    committed_oracle1: commit2::oracle::ProverKey<F, SF, C>,
+    sumcheck_key: SumcheckProver<F, Oracle<F, Func<N>, C, N>>,
+    matrices: [Rc<Matrix>; N],
+    // Filter to select the vector MLE.
+    vector: SF::Mles<bool>,
+    composite_key: CompositeKey<F, C, N, Func<N>>,
+    committed_oracle2: commit2::oracle::ProverKey<F, MatrixSumEvals<(), N>, C>,
+}
+
 #[derive(Clone, Debug)]
 pub struct Proof<F: Field> {
     sumcheck: Vec<SumcheckMessage<F>>,
@@ -69,7 +87,7 @@ where
     C: CommitmentScheme<F>,
     SF: SumcheckFunction<F>,
 {
-    type ProverKey = ();
+    type ProverKey = ProverKey<F, C, SF, N>;
 
     type VerifierKey = VerifierKey<F, C, SF, N>;
 
@@ -113,12 +131,121 @@ where
     }
 
     fn prove<S: Duplex<F>>(
-        _key: &Self::ProverKey,
-        _instance: PartialQueryInstance<F, SF, MatrixProductInstance<F, C>>,
-        _witness: Vec<SF::Mles<F>>,
-        _transcript: &mut Transcript<F, S>,
+        key: &Self::ProverKey,
+        instance: PartialQueryInstance<F, SF, MatrixProductInstance<F, C>>,
+        witness: Vec<SF::Mles<F>>,
+        transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<Rel2<F, C, N>, Self::Proof> {
-        todo!()
+        let oracle_instance = instance.oracle_instance();
+        let MatrixProductInstance(z) = oracle_instance.clone();
+
+        //TODO: Optimize.
+        let z_witness: Vec<F> = witness
+            .iter()
+            .map(|evals| {
+                SF::combine(&key.vector, evals, |filter, eval| filter.then_some(*eval))
+                    .flatten_vec()
+                    .into_iter()
+                    .flatten()
+                    .next()
+                    .unwrap()
+            })
+            .collect();
+
+        // Run the inner CommittedOracle reduction.
+        let open_out1 = {
+            let oracle_instance = CommittedOracleInstance::<F, C, SF>::new_single_commit(z.clone());
+            let evals = SF::combine(&SF::natures(), instance.evals(), |nature, eval| {
+                let nature: Option<CommittedNature> = nature.into_dynamic().into();
+                nature.and(*eval)
+            });
+            let point = instance.point();
+            let instance = PartialQueryInstance::new(evals, oracle_instance, point);
+            CommittedOracle::prove(&key.committed_oracle1, instance, witness, transcript)
+        };
+
+        let query = {
+            let [chall] = transcript.send_message(&(), &());
+
+            let sum = sumcheck_sum::<F, SF, N>(instance.evals(), chall);
+
+            let point = instance.point();
+            let matrix_sum_instance = MatrixSumInstance::<F>::new(point.clone());
+
+            let committed_instance = CommittedOracleInstance::<F, C, Func<N>>::new_single_commit(z);
+
+            let core_instance = {
+                //TODO:
+                let vars = 3;
+                let coefficients = MatrixSumEvals::coefficients(chall);
+                CoreOracleInstance::<F, Func<N>>::new(&coefficients, vars)
+            };
+
+            let oracle_instance = CompositeOracleInstance {
+                oracle1_instance: matrix_sum_instance,
+                oracle2_instance: CompositeOracleInstance {
+                    oracle1_instance: core_instance,
+                    oracle2_instance: committed_instance,
+                },
+            };
+
+            let sumcheck_instance: SumcheckInstance<F, Oracle<F, Func<N>, C, N>> =
+                SumcheckInstance::new(sum, oracle_instance);
+
+            let structure = key.sumcheck_key.structure();
+            let matrices: [&Matrix; N] = key.matrices.each_ref().map(AsRef::as_ref);
+            let witness = MatrixSumEvals::witness(structure, matrices, &z_witness, point);
+
+            SumcheckReduction::<F, Oracle<F, MatrixSumEvals<(), N>, C, N>>::prove(
+                &key.sumcheck_key,
+                sumcheck_instance,
+                witness,
+                transcript,
+            )
+        };
+
+        let ProverOutput {
+            instance,
+            witness,
+            proof: sumcheck,
+        } = query;
+
+        let ProverOutput {
+            instance: (matrix, composite),
+            witness,
+            proof: prover_evals,
+        } = CompositeOracle::prove(&key.composite_key, instance, witness, transcript);
+
+        let proof = Proof {
+            sumcheck,
+            prover_evals,
+        };
+
+        let (core, committed) = key.composite_key.p2_key().split(composite);
+
+        let _ = CoreOracle::prove(
+            key.composite_key.p2_key().p1_key(),
+            core,
+            witness.clone(),
+            transcript,
+        );
+
+        let open_out2 = {
+            CommittedOracle::prove(
+                &key.committed_oracle2,
+                committed,
+                witness.clone(),
+                transcript,
+            )
+        };
+
+        let open_out = ProverOutput::combine_tuple(open_out1, open_out2)
+            .map_proof(|_| ())
+            .map_rel(|(a, b)| [a, b], |(a, b)| [a, b]);
+
+        let spark_out = { MatrixSumOracle::<F, C, N>::prove(&(), matrix, witness, transcript) };
+
+        ProverOutput::combine_tuple(open_out, spark_out).map_proof(|_| proof)
     }
 
     fn verify<S: Duplex<F>>(

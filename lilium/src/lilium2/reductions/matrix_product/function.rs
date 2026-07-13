@@ -1,9 +1,12 @@
 use crate::lilium2::reductions::matrix_product::matrix_sum::{MatrixSumNature, MatrixSumOracle};
 use ark_ff::Field;
+use ccs::matrix::Matrix;
 use commit::commit2::oracle::{CommittedNature, CommittedOracle};
 use std::fmt::Debug;
 use std::vec::IntoIter;
 use sumcheck::{
+    eq::eq,
+    polynomials::MultiPoint,
     sumcheck::Var,
     sumcheck2::{
         evals::{Evals, EvalsCore},
@@ -42,6 +45,34 @@ impl<F: Field, const N: usize> MatrixSumEvals<F, N> {
             challenge: F::ZERO,
         }
     }
+
+    fn matrix_partial_eval(matrix: &Matrix, rx: &[F]) -> Vec<F> {
+        let mut res = vec![F::zero(); rx.len()];
+        for (j, i) in matrix.iter() {
+            res[i] += rx[j];
+        }
+        res
+    }
+
+    pub fn witness(
+        structure: &[Self],
+        matrices: [&Matrix; N],
+        z: &[F],
+        rx: &MultiPoint<F>,
+    ) -> Vec<Self> {
+        let mut witness = structure.to_vec();
+        let rx = eq(rx);
+        for (i, matrix) in matrices.iter().enumerate() {
+            let colum_evals = Self::matrix_partial_eval(matrix, &rx);
+            for (col, eval) in witness.iter_mut().zip(colum_evals) {
+                col.matrices[i] = eval;
+            }
+        }
+        for (col, eval) in witness.iter_mut().zip(z) {
+            col.z = *eval;
+        }
+        witness
+    }
 }
 
 impl<F: Field, const N: usize> MatrixSumEvals<OracleEval<F>, N> {
@@ -53,6 +84,7 @@ impl<F: Field, const N: usize> MatrixSumEvals<OracleEval<F>, N> {
         }
     }
 }
+
 impl<F: Field, const N: usize> MatrixSumEvals<Vec<F>, N> {
     pub fn coefficients(challenge: F) -> Self {
         Self {
