@@ -185,9 +185,9 @@ where
 
     fn transcript_pattern(
         _key: &Self::VerifierKey,
-        _builder: TranscriptBuilder,
+        builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
-        todo!()
+        builder
     }
 
     fn verifier_key(
@@ -215,10 +215,38 @@ where
 
     fn verify<S: Duplex<F>>(
         _key: &Self::VerifierKey,
-        _instance: <MatrixSumQuery<F, C, N> as Relation>::Instance,
+        instance: <MatrixSumQuery<F, C, N> as Relation>::Instance,
         _proof: GuardedProof<Self::Proof>,
         _transcript: &mut VerifierTranscript<F, S>,
     ) -> Result<[SparkInstance<F>; N], Self::Error> {
-        todo!()
+        let oracle_instance = instance.oracle_instance();
+        let evals = instance.evals();
+        let rx = &oracle_instance.point;
+        let ry = instance.point();
+
+        let matrix_evals: Option<[F; N]> = evals
+            .matrices
+            .iter()
+            .cloned()
+            .collect::<Option<Vec<F>>>()
+            .map(TryInto::try_into)
+            .and_then(Result::ok);
+        //TODO: handle
+        let matrix_evals = matrix_evals.unwrap();
+
+        let point = merge_point(rx, ry);
+        let instances = matrix_evals.map(|eval| SparkInstance::new(point.clone(), eval));
+        Ok(instances)
     }
+}
+
+fn merge_point<F: Field>(rx: &MultiPoint<F>, ry: &MultiPoint<F>) -> MultiPoint<F> {
+    //TODO: maybe check lengths
+    MultiPoint::new(
+        rx.inner_ref()
+            .iter()
+            .chain(ry.inner_ref().iter())
+            .copied()
+            .collect(),
+    )
 }
