@@ -22,9 +22,9 @@ use sumcheck_derive::EvalsCore;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, EvalsCore)]
 pub struct MatrixSumEvals<V: Clone + Debug, const N: usize> {
-    matrices: [V; N],
-    z: V,
-    challenge: V,
+    pub matrices: [V; N],
+    pub z: V,
+    pub challenge: V,
 }
 
 impl<V: Clone + Debug + Default, const N: usize> Default for MatrixSumEvals<V, N> {
@@ -46,7 +46,7 @@ impl<F: Field, const N: usize> MatrixSumEvals<F, N> {
         }
     }
 
-    fn matrix_partial_eval(matrix: &Matrix, rx: &[F]) -> Vec<F> {
+    pub fn matrix_partial_eval(matrix: &Matrix, rx: &[F]) -> Vec<F> {
         let mut res = vec![F::zero(); rx.len()];
         for (j, i) in matrix.iter() {
             res[i] += rx[j];

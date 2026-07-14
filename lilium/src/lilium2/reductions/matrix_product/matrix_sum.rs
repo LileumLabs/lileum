@@ -6,6 +6,7 @@ use spark::spark3::{FlexibleSparkRelation, FlexibleSparkStructure, SparkInstance
 use sponge::sponge::Duplex;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
+    eq::eq,
     polynomials::MultiPoint,
     sumcheck2::oracles::{
         partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
@@ -120,11 +121,51 @@ impl<F: Field, C: CommitmentScheme<F>, const N: usize> Relation for MatrixSumQue
     type Witness = Vec<MatrixSumEvals<F, N>>;
 
     fn check(
-        _structure: &Self::Structure,
-        _instance: &Self::Instance,
-        _witness: &Self::Witness,
+        structure: &Self::Structure,
+        instance: &Self::Instance,
+        witness: &Self::Witness,
     ) -> bool {
-        todo!()
+        let MatrixSumEvals {
+            matrices,
+            z,
+            challenge,
+        } = instance.evals();
+        assert!(z.is_none());
+        assert!(challenge.is_none());
+
+        let matrix_evals: Option<[F; N]> = matrices
+            .iter()
+            .cloned()
+            .collect::<Option<Vec<F>>>()
+            .map(TryInto::try_into)
+            .and_then(Result::ok);
+
+        let matrix_evals: [F; N] = if let Some(e) = matrix_evals {
+            e
+        } else {
+            return false;
+        };
+
+        let rx = &instance.oracle_instance().point;
+        let ry = instance.point();
+
+        let rx = eq(rx);
+        let ry = eq(ry);
+        for (matrix, expected_eval) in structure.matrices.iter().zip(matrix_evals) {
+            //TODO: maybe compare with witness.
+            let _ = witness;
+            let partially_evaluated_matrix =
+                MatrixSumEvals::<F, N>::matrix_partial_eval(matrix, &rx);
+            let eval = ry
+                .iter()
+                .zip(partially_evaluated_matrix)
+                .fold(F::ZERO, |acc, (ry, eval)| acc + eval * ry);
+            if eval != expected_eval {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
