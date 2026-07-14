@@ -50,6 +50,7 @@ type Func<const N: usize> = MatrixSumEvals<(), N>;
 
 pub struct VerifierKey<F: Field, C: CommitmentScheme<F>, SF, const N: usize> {
     sumcheck_key: SumcheckVerifierKey<F>,
+    vars: usize,
     committed_oracle1: CommittedVerifierKey<F, C>,
     committed_oracle2: CommittedVerifierKey<F, C>,
     composite_key: CompositeKey<F, C, N, Func<N>>,
@@ -64,6 +65,7 @@ where
 {
     committed_oracle1: commit2::oracle::ProverKey<F, SF, C>,
     sumcheck_key: SumcheckProver<F, Oracle<F, Func<N>, C, N>>,
+    vars: usize,
     matrices: [Rc<Matrix>; N],
     // Filter to select the vector MLE.
     vector: SF::Mles<bool>,
@@ -152,6 +154,7 @@ where
 
         VerifierKey {
             sumcheck_key,
+            vars,
             committed_oracle1,
             committed_oracle2,
             composite_key,
@@ -170,17 +173,18 @@ where
 
         let (_, committed_oracle1) = CommittedOracle::key_pair(structure_1.committed_oracle(), pcs);
 
+        let vars = {
+            let rows = structure_1
+                .matrices()
+                .iter()
+                .map(|matrix| matrix.len())
+                .max()
+                .unwrap();
+            let vars = rows.next_power_of_two().ilog2();
+            vars as usize
+        };
+
         let (oracle, sumcheck_key) = {
-            let vars = {
-                let rows = structure_1
-                    .matrices()
-                    .iter()
-                    .map(|matrix| matrix.len())
-                    .max()
-                    .unwrap();
-                let vars = rows.next_power_of_two().ilog2();
-                vars as usize
-            };
             let mles = vec![MatrixSumEvals::zero(); 1 << vars];
             let mles = Rc::new(mles);
 
@@ -208,6 +212,7 @@ where
         let prover_key = ProverKey {
             committed_oracle1,
             sumcheck_key,
+            vars,
             matrices,
             vector,
             composite_key,
@@ -261,10 +266,8 @@ where
             let committed_instance = CommittedOracleInstance::<F, C, Func<N>>::new_single_commit(z);
 
             let core_instance = {
-                //TODO:
-                let vars = 3;
                 let coefficients = MatrixSumEvals::coefficients(chall);
-                CoreOracleInstance::<F, Func<N>>::new(&coefficients, vars)
+                CoreOracleInstance::<F, Func<N>>::new(&coefficients, key.vars)
             };
 
             let oracle_instance = CompositeOracleInstance {
@@ -367,10 +370,8 @@ where
             let committed_instance = CommittedOracleInstance::<F, C, Func<N>>::new_single_commit(z);
 
             let core_instance = {
-                //TODO:
-                let vars = 3;
                 let coefficients = MatrixSumEvals::coefficients(chall);
-                CoreOracleInstance::<F, Func<N>>::new(&coefficients, vars)
+                CoreOracleInstance::<F, Func<N>>::new(&coefficients, key.vars)
             };
 
             let oracle_instance = CompositeOracleInstance {
