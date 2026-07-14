@@ -190,27 +190,43 @@ where
         builder
     }
 
-    fn verifier_key(
-        _structure_1: &Self,
-        _structure_2: &[FlexibleSparkStructure<F>; N],
-    ) -> Self::VerifierKey {
-        todo!()
-    }
+    fn verifier_key(_: &Self, _: &[FlexibleSparkStructure<F>; N]) -> Self::VerifierKey {}
 
     fn key_pair(
-        _structure_1: &Self,
-        _structure_2: &[FlexibleSparkStructure<F>; N],
+        _: &Self,
+        _: &[FlexibleSparkStructure<F>; N],
     ) -> (Self::VerifierKey, Self::ProverKey) {
-        todo!()
+        ((), ())
     }
 
     fn prove<S: Duplex<F>>(
         _key: &Self::ProverKey,
-        _instance: <MatrixSumQuery<F, C, N> as Relation>::Instance,
+        instance: <MatrixSumQuery<F, C, N> as Relation>::Instance,
         _witness: <MatrixSumQuery<F, C, N> as Relation>::Witness,
         _transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<[FlexibleSparkRelation<F>; N], Self::Proof> {
-        todo!()
+        let oracle_instance = instance.oracle_instance();
+        let evals = instance.evals();
+        let rx = &oracle_instance.point;
+        let ry = instance.point();
+
+        let matrix_evals: Option<[F; N]> = evals
+            .matrices
+            .iter()
+            .cloned()
+            .collect::<Option<Vec<F>>>()
+            .map(TryInto::try_into)
+            .and_then(Result::ok);
+        let matrix_evals = matrix_evals.unwrap();
+
+        let point = merge_point(rx, ry);
+        let instance = matrix_evals.map(|eval| SparkInstance::new(point.clone(), eval));
+
+        ProverOutput {
+            instance,
+            witness: [(); N],
+            proof: (),
+        }
     }
 
     fn verify<S: Duplex<F>>(
@@ -235,8 +251,8 @@ where
         let matrix_evals = matrix_evals.unwrap();
 
         let point = merge_point(rx, ry);
-        let instances = matrix_evals.map(|eval| SparkInstance::new(point.clone(), eval));
-        Ok(instances)
+        let instance = matrix_evals.map(|eval| SparkInstance::new(point.clone(), eval));
+        Ok(instance)
     }
 }
 
