@@ -69,6 +69,12 @@ pub struct SparkInstance<F: Field> {
     eval: F,
 }
 
+impl<F: Field> SparkInstance<F> {
+    pub fn new(point: MultiPoint<F>, eval: F) -> Self {
+        Self { point, eval }
+    }
+}
+
 impl<F, const N: usize> Relation for StaticSparkRelation<F, N>
 where
     F: Field,
