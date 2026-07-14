@@ -160,10 +160,60 @@ where
     }
 
     fn key_pair(
-        _structure_1: &MatrixProductOracle<F, C, SF, N>,
-        _structure_2: &([C; 2], [FlexibleSparkStructure<F>; N]),
+        structure_1: &MatrixProductOracle<F, C, SF, N>,
+        structure_2: &([C; 2], [FlexibleSparkStructure<F>; N]),
     ) -> (Self::VerifierKey, Self::ProverKey) {
-        todo!()
+        //TODO: Reuse computations.
+        let verifier_key = Self::verifier_key(structure_1, structure_2);
+
+        let [pcs, _] = &structure_2.0;
+
+        let (_, committed_oracle1) = CommittedOracle::key_pair(structure_1.committed_oracle(), pcs);
+
+        let (oracle, sumcheck_key) = {
+            let vars = {
+                let rows = structure_1
+                    .matrices()
+                    .iter()
+                    .map(|matrix| matrix.len())
+                    .max()
+                    .unwrap();
+                let vars = rows.next_power_of_two().ilog2();
+                vars as usize
+            };
+            let mles = vec![MatrixSumEvals::zero(); 1 << vars];
+            let mles = Rc::new(mles);
+
+            let builder1 = MatrixSumOracle::new(structure_1.matrices().clone());
+
+            let core_oracle = CoreOracle::new(MatrixSumEvals::core_oracle_functions());
+            let [pcs, _] = &structure_2.0;
+            let builder2 = (core_oracle, pcs.clone());
+
+            let oracle = Oracle::new((), mles, builder1, builder2);
+
+            let (_, prover_key) = SumcheckReduction::key_pair(&oracle, &oracle);
+            (oracle, prover_key)
+        };
+
+        let matrices = structure_1.matrices().each_ref().map(Rc::clone);
+
+        let vector = structure_1.vector().clone();
+
+        let (_, composite_key) = Oracle::key_pair(&oracle, oracle.inner_oracles());
+
+        let (_, committed_oracle2) =
+            CommittedOracle::key_pair(&oracle.inner_oracles().1.inner_oracles().1, pcs);
+
+        let prover_key = ProverKey {
+            committed_oracle1,
+            sumcheck_key,
+            matrices,
+            vector,
+            composite_key,
+            committed_oracle2,
+        };
+        (verifier_key, prover_key)
     }
 
     fn prove<S: Duplex<F>>(

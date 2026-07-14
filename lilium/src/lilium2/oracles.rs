@@ -48,6 +48,11 @@ where
     pub fn committed_oracle(&self) -> &CommittedOracle<F, C, SF> {
         &self.committed_oracle
     }
+
+    /// A filter to select the vector MLE.
+    pub fn vector(&self) -> &SF::Mles<bool> {
+        &self.vector
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
