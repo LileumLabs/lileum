@@ -8,6 +8,7 @@ use crate::lilium2::{
 };
 use ark_ff::Field;
 use commit::commit2::{CommitmentScheme, OpenInstance, OpeningRelation};
+use spark::spark3::{flexible, FlexibleSpark};
 use sponge::sponge::Duplex;
 use sumcheck::sumcheck2::{
     oracles::{
@@ -34,13 +35,15 @@ where
     sumcheck_key: SumcheckVerifierKey<F>,
     composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S>>,
     matrix_oracle_key: matrix_product::VerifierKey<F, C, FlcsEvals<(), IO, S>, IO>,
+    spark_keys: [flexible::VerifierKey<F, C>; IO],
 }
 
 #[derive(Clone, Debug)]
-pub struct Proof<F: Field> {
+pub struct Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
     sumcheck_proof: Vec<SumcheckMessage<F>>,
     oracle_evals1: ProverEvals<F>,
     matrix_product: matrix_product::Proof<F>,
+    spark_proofs: [flexible::Proof<F, C>; IO],
 }
 
 impl<F, C, const I: usize, const IO: usize, const S: usize>
@@ -53,7 +56,7 @@ where
 
     type VerifierKey = VerifierKey<F, C, IO, S>;
 
-    type Proof = Proof<F>;
+    type Proof = Proof<F, C, IO>;
 
     type Error = ();
 
@@ -123,16 +126,33 @@ where
         //TODO:handle
         .unwrap();
 
-        let reduced = MatrixProductReduction::verify(
+        let (open_instances, spark_instances) = MatrixProductReduction::verify(
             &key.matrix_oracle_key,
             matrix_instance,
-            proof.map(|proof| proof.matrix_product),
+            proof.clone().map(|proof| proof.matrix_product),
             transcript,
         )
         //TODO:handle
         .unwrap();
 
-        let _ = reduced;
+        let [open_instance1, open_instance2] = open_instances;
+
+        let open_instance3 = {
+            let mut instances = [(); IO].map(|_| None);
+
+            for (i, (key, instance)) in key.spark_keys.iter().zip(spark_instances).enumerate() {
+                let proof = proof.clone().map(|proof| proof.spark_proofs[i].clone());
+                //TODO:handle
+                let open_instance =
+                    FlexibleSpark::verify(key, instance, proof, transcript).unwrap();
+                instances[i] = Some(open_instance);
+            }
+
+            let instances: [OpenInstance<F, C>; IO] = instances.map(Option::unwrap);
+            instances
+        };
+
+        let _ = ([open_instance1, open_instance2], open_instance3);
 
         todo!()
     }
