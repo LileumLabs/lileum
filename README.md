@@ -668,3 +668,27 @@ crates no-std.
 ## References
 
 TODO: Add references to papers and such.
+
+
+## Ownership and licensing
+
+Lileum is developed and maintained by **Lileum Labs Ltd**.
+
+Copyright © 2026 Lileum Labs Ltd.
+
+The software and associated documentation in this repository are made
+available under your choice of:
+
+- the [Apache License, Version 2.0](LICENSE-APACHE); or
+- the [MIT License](LICENSE-MIT).
+
+You may use, reproduce, modify and distribute the software in accordance
+with the terms of either license, at your option.
+
+The full license terms are set out in
+[`LICENSE-APACHE`](LICENSE-APACHE) and [`LICENSE-MIT`](LICENSE-MIT).
+
+For customers requiring enterprise-grade terms and services,
+Lileum Labs Ltd also offers commercial licenses, including professional
+services, service-level commitments and warranties.
+Please contact licensing@lileum-labs.com for licensing inquiries.
