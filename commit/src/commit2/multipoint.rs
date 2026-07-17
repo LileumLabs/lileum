@@ -4,7 +4,7 @@ use crate::commit2::{
 };
 use ark_ff::Field;
 use sponge::sponge::Duplex;
-use std::{fmt::Debug, marker::PhantomData, vec::IntoIter};
+use std::{fmt::Debug, marker::PhantomData, rc::Rc, vec::IntoIter};
 use sumcheck::{
     eq::eq,
     polynomials::MultiPoint,
@@ -125,8 +125,33 @@ where
             )
     }
 
-    fn verifier_key(_structure_1: &(C, usize), _structure_2: &C) -> Self::VerifierKey {
-        todo!()
+    fn verifier_key(structure_1: &(C, usize), _: &C) -> Self::VerifierKey {
+        let (pcs, vars) = structure_1;
+
+        let mles = vec![MultipointEvals::<F, N>::zero(); 1 << vars];
+        let mles = Rc::new(mles);
+        let eq_func: fn(&[F], &MultiPoint<F>) -> F = |eq, p| {
+            let eq = MultiPoint::new(eq.to_vec());
+            eq.eval_as_eq(p)
+        };
+        let functions = MultipointEvals {
+            committments: [None; N],
+            eqs: [Some(eq_func); N],
+            challenge: None,
+        };
+        let builder1 = CoreOracle::new(functions);
+
+        let oracle = Oracle::new((), mles, builder1, pcs.clone());
+
+        let composite = CompositeOracle::verifier_key(&oracle, oracle.inner_oracles());
+
+        let sumcheck = SumcheckReduction::verifier_key(&oracle, &oracle);
+
+        VerifierKey {
+            sumcheck,
+            vars: *vars,
+            composite,
+        }
     }
 
     fn key_pair(
