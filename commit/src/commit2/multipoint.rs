@@ -31,6 +31,37 @@ use transcript::reduction2::{
 
 pub struct MultipointBatching<F, C, const N: usize>(PhantomData<(F, C)>);
 
+impl<F, C, const N: usize> Relation for MultipointBatching<F, C, N>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    type Structure = (C, usize);
+
+    type Instance = [OpenInstance<F, C>; N];
+
+    type Witness = [Vec<F>; N];
+
+    fn check(
+        structure: &Self::Structure,
+        instance: &Self::Instance,
+        witness: &Self::Witness,
+    ) -> bool {
+        let (pcs, vars) = structure;
+
+        for (instance, witness) in instance.iter().zip(witness) {
+            let expected_vars = witness.len().next_power_of_two().ilog2() as usize;
+            if expected_vars != *vars {
+                return false;
+            }
+            if !OpeningRelation::check(pcs, instance, witness) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
 pub struct VerifierKey<F, C, SF>
 where
     F: Field,
@@ -61,37 +92,6 @@ pub enum Error {
     Composite,
     /// Error during the CoreOracle reduction.
     Core,
-}
-
-impl<F, C, const N: usize> Relation for MultipointBatching<F, C, N>
-where
-    F: Field,
-    C: CommitmentScheme<F>,
-{
-    type Structure = (C, usize);
-
-    type Instance = [OpenInstance<F, C>; N];
-
-    type Witness = [Vec<F>; N];
-
-    fn check(
-        structure: &Self::Structure,
-        instance: &Self::Instance,
-        witness: &Self::Witness,
-    ) -> bool {
-        let (pcs, vars) = structure;
-
-        for (instance, witness) in instance.iter().zip(witness) {
-            let expected_vars = witness.len().next_power_of_two().ilog2() as usize;
-            if expected_vars != *vars {
-                return false;
-            }
-            if !OpeningRelation::check(pcs, instance, witness) {
-                return false;
-            }
-        }
-        true
-    }
 }
 
 #[derive(Clone, Debug)]
