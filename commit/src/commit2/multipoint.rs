@@ -62,7 +62,7 @@ where
     }
 }
 
-pub struct VerifierKey<F, C, SF>
+pub struct VerifierKey<F, C, const N: usize, SF = MultipointEvals<(), N>>
 where
     F: Field,
     C: CommitmentScheme<F>,
@@ -73,7 +73,7 @@ where
     composite: CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
 }
 
-pub struct ProverKey<F, C, SF>
+pub struct ProverKey<F, C, const N: usize, SF = MultipointEvals<(), N>>
 where
     F: Field,
     C: CommitmentScheme<F>,
@@ -105,9 +105,9 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    type ProverKey = ProverKey<F, C, MultipointEvals<(), N>>;
+    type ProverKey = ProverKey<F, C, N>;
 
-    type VerifierKey = VerifierKey<F, C, MultipointEvals<(), N>>;
+    type VerifierKey = VerifierKey<F, C, N>;
 
     type Proof = Proof<F>;
 
