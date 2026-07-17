@@ -93,10 +93,19 @@ where
     type Error = ();
 
     fn transcript_pattern(
-        _key: &Self::VerifierKey,
-        _builder: TranscriptBuilder,
+        key: &Self::VerifierKey,
+        builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
-        todo!()
+        builder
+            .round::<F, (), 1>(&())
+            .subprotocol::<SumcheckReduction<F, Oracle<F, C, MultipointEvals<(), N>, N>>, _, _, _>(
+                &key.sumcheck,
+            )
+            .subprotocol::<CompositeOracle<F, _, _, _>, _, _, _>(&key.composite)
+            .subprotocol::<CoreOracle<F, _>, _, _, _>(&key.core_oracle)
+            .subprotocol::<CommittedOracle<F, C, MultipointEvals<(), N>>, _, _, _>(
+                &key.committed_oracle,
+            )
     }
 
     fn verifier_key(_structure_1: &(C, usize), _structure_2: &C) -> Self::VerifierKey {
