@@ -40,8 +40,6 @@ where
     sumcheck: SumcheckVerifierKey<F>,
     vars: usize,
     composite: CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
-    core_oracle: CoreOracle<F, SF>,
-    committed_oracle: oracle::VerifierKey<F, C>,
 }
 
 pub struct ProverKey<F, C, SF>
@@ -53,7 +51,6 @@ where
     vars: usize,
     sumcheck: SumcheckProverKey<F, Oracle<F, C, SF>>,
     composite: CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
-    core_oracle: CoreOracle<F, SF>,
     committed_oracle: oracle::ProverKey<F, SF, C>,
 }
 
@@ -111,15 +108,20 @@ where
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
+        let VerifierKey {
+            sumcheck,
+            composite,
+            ..
+        } = key;
         builder
             .round::<F, (), 1>(&())
             .subprotocol::<SumcheckReduction<F, Oracle<F, C, MultipointEvals<(), N>>>, _, _, _>(
-                &key.sumcheck,
+                sumcheck,
             )
-            .subprotocol::<CompositeOracle<F, _, _, _>, _, _, _>(&key.composite)
-            .subprotocol::<CoreOracle<F, _>, _, _, _>(&key.core_oracle)
+            .subprotocol::<CompositeOracle<F, _, _, _>, _, _, _>(composite)
+            .subprotocol::<CoreOracle<F, _>, _, _, _>(composite.p1_key())
             .subprotocol::<CommittedOracle<F, C, MultipointEvals<(), N>>, _, _, _>(
-                &key.committed_oracle,
+                composite.p2_key(),
             )
     }
 
@@ -182,7 +184,7 @@ where
             proof: prover_evals,
         } = reduced;
 
-        CoreOracle::prove(&key.core_oracle, core, witness.clone(), transcript);
+        CoreOracle::prove(key.composite.p1_key(), core, witness.clone(), transcript);
 
         let reduced = CommittedOracle::prove(&key.committed_oracle, committed, witness, transcript);
         let ProverOutput {
@@ -254,10 +256,16 @@ where
         .unwrap();
 
         //TODO:handle
-        CoreOracle::verify(&key.core_oracle, core, GuardedProof::empty(), transcript).unwrap();
+        CoreOracle::verify(
+            key.composite.p1_key(),
+            core,
+            GuardedProof::empty(),
+            transcript,
+        )
+        .unwrap();
 
         let Ok(open_instance) = CommittedOracle::verify(
-            &key.committed_oracle,
+            key.composite.p2_key(),
             committed,
             GuardedProof::empty(),
             transcript,
