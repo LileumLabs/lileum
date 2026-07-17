@@ -154,11 +154,38 @@ where
         }
     }
 
-    fn key_pair(
-        _structure_1: &(C, usize),
-        _structure_2: &C,
-    ) -> (Self::VerifierKey, Self::ProverKey) {
-        todo!()
+    fn key_pair(structure_1: &(C, usize), structure_2: &C) -> (Self::VerifierKey, Self::ProverKey) {
+        let verifier_key = Self::verifier_key(structure_1, structure_2);
+        let (pcs, vars) = structure_1;
+
+        let mles = vec![MultipointEvals::<F, N>::zero(); 1 << vars];
+        let mles = Rc::new(mles);
+        let eq_func: fn(&[F], &MultiPoint<F>) -> F = |eq, p| {
+            let eq = MultiPoint::new(eq.to_vec());
+            eq.eval_as_eq(p)
+        };
+        let functions = MultipointEvals {
+            committments: [None; N],
+            eqs: [Some(eq_func); N],
+            challenge: None,
+        };
+        let builder1 = CoreOracle::new(functions);
+
+        let oracle = Oracle::new((), mles, builder1, pcs.clone());
+
+        let (_, sumcheck) = SumcheckReduction::key_pair(&oracle, &oracle);
+
+        let (_, committed_oracle) =
+            CommittedOracle::key_pair(&oracle.inner_oracles().1, structure_2);
+
+        let prover_key = ProverKey {
+            vars: *vars,
+            sumcheck,
+            composite: verifier_key.composite.clone(),
+            committed_oracle,
+        };
+
+        (verifier_key, prover_key)
     }
 
     fn prove<S: Duplex<F>>(
