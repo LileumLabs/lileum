@@ -19,8 +19,8 @@ use sumcheck::{
             core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
             SumcheckFunction,
         },
-        ProverKey as SumcheckProverKey, SumcheckInstance, SumcheckMessage, SumcheckReduction,
-        SumcheckVerifierKey,
+        ProverKey as SumcheckProverKey, SumcheckError, SumcheckInstance, SumcheckMessage,
+        SumcheckReduction, SumcheckVerifierKey,
     },
 };
 use sumcheck_derive::EvalsCore;
@@ -52,6 +52,15 @@ where
     sumcheck: SumcheckProverKey<F, Oracle<F, C, SF>>,
     composite: CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
     committed_oracle: oracle::ProverKey<F, SF, C>,
+}
+
+#[derive(Clone, Debug)]
+pub enum Error {
+    Sumcheck(SumcheckError),
+    /// Error during the CompositeOracle reduction.
+    Composite,
+    /// Error during the CoreOracle reduction.
+    Core,
 }
 
 impl<F, C, const N: usize> Relation for MultipointBatching<F, C, N>
@@ -102,7 +111,7 @@ where
 
     type Proof = Proof<F>;
 
-    type Error = ();
+    type Error = Error;
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -295,8 +304,7 @@ where
             proof.clone().map(|proof| proof.sumcheck),
             transcript,
         )
-        //TODO:handle
-        .unwrap();
+        .map_err(Error::Sumcheck)?;
 
         let (core, committed) = CompositeOracle::verify(
             &key.composite,
@@ -304,17 +312,15 @@ where
             proof.map(|proof| proof.prover_evals),
             transcript,
         )
-        //TODO:handle
-        .unwrap();
+        .map_err(|()| Error::Composite)?;
 
-        //TODO:handle
         CoreOracle::verify(
             key.composite.p1_key(),
             core,
             GuardedProof::empty(),
             transcript,
         )
-        .unwrap();
+        .map_err(|()| Error::Core)?;
 
         let Ok(open_instance) = CommittedOracle::verify(
             key.composite.p2_key(),
