@@ -7,7 +7,10 @@ use crate::lilium2::{
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
 use ark_ff::Field;
-use commit::commit2::{CommitmentScheme, OpenInstance, OpeningRelation};
+use commit::commit2::{
+    multipoint::{self, MultipointBatching},
+    CommitmentScheme, OpenInstance, OpeningRelation,
+};
 use spark::spark3::{flexible, FlexibleSpark};
 use sponge::sponge::Duplex;
 use sumcheck::sumcheck2::{
@@ -36,6 +39,8 @@ where
     composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S>>,
     matrix_oracle_key: matrix_product::VerifierKey<F, C, FlcsEvals<(), IO, S>, IO>,
     spark_keys: [flexible::VerifierKey<F, C>; IO],
+    batching1: multipoint::VerifierKey<F, C, IO>,
+    batching2: multipoint::VerifierKey<F, C, 3>,
 }
 
 #[derive(Clone, Debug)]
@@ -44,6 +49,8 @@ pub struct Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
     oracle_evals1: ProverEvals<F>,
     matrix_product: matrix_product::Proof<F>,
     spark_proofs: [flexible::Proof<F, C>; IO],
+    batching1: multipoint::Proof<F>,
+    batching2: multipoint::Proof<F>,
 }
 
 impl<F, C, const I: usize, const IO: usize, const S: usize>
@@ -149,11 +156,28 @@ where
             }
 
             let instances: [OpenInstance<F, C>; IO] = instances.map(Option::unwrap);
-            instances
+
+            MultipointBatching::verify(
+                &key.batching1,
+                instances,
+                proof.clone().map(|proof| proof.batching1),
+                transcript,
+            )
+            //TODO:handle
+            .unwrap()
         };
 
-        let _ = ([open_instance1, open_instance2], open_instance3);
+        let instance = [open_instance1, open_instance2, open_instance3];
 
-        todo!()
+        let instance = MultipointBatching::verify(
+            &key.batching2,
+            instance,
+            proof.map(|proof| proof.batching2),
+            transcript,
+        )
+        //TODO:handle
+        .unwrap();
+
+        Ok(instance)
     }
 }
