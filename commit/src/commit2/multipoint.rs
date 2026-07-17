@@ -6,6 +6,7 @@ use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::{fmt::Debug, marker::PhantomData, vec::IntoIter};
 use sumcheck::{
+    eq::eq,
     polynomials::MultiPoint,
     sumcheck::Var,
     sumcheck2::{
@@ -18,7 +19,8 @@ use sumcheck::{
             core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
             SumcheckFunction,
         },
-        SumcheckInstance, SumcheckMessage, SumcheckReduction, SumcheckVerifierKey,
+        ProverKey as SumcheckProverKey, SumcheckInstance, SumcheckMessage, SumcheckReduction,
+        SumcheckVerifierKey,
     },
 };
 use sumcheck_derive::EvalsCore;
@@ -40,6 +42,19 @@ where
     composite: CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
     core_oracle: CoreOracle<F, SF>,
     committed_oracle: oracle::VerifierKey<F, C>,
+}
+
+pub struct ProverKey<F, C, SF>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    SF: SumcheckFunction<F, Natures = Either<CoreNature, CommittedNature>>,
+{
+    vars: usize,
+    sumcheck: SumcheckProverKey<F, Oracle<F, C, SF>>,
+    composite: CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
+    core_oracle: CoreOracle<F, SF>,
+    committed_oracle: oracle::ProverKey<F, SF, C>,
 }
 
 impl<F, C, const N: usize> Relation for MultipointBatching<F, C, N>
@@ -84,7 +99,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    type ProverKey = C::ProverKey;
+    type ProverKey = ProverKey<F, C, MultipointEvals<(), N>>;
 
     type VerifierKey = VerifierKey<F, C, MultipointEvals<(), N>>;
 
@@ -98,7 +113,7 @@ where
     ) -> TranscriptBuilder {
         builder
             .round::<F, (), 1>(&())
-            .subprotocol::<SumcheckReduction<F, Oracle<F, C, MultipointEvals<(), N>, N>>, _, _, _>(
+            .subprotocol::<SumcheckReduction<F, Oracle<F, C, MultipointEvals<(), N>>>, _, _, _>(
                 &key.sumcheck,
             )
             .subprotocol::<CompositeOracle<F, _, _, _>, _, _, _>(&key.composite)
@@ -120,12 +135,72 @@ where
     }
 
     fn prove<S: Duplex<F>>(
-        _key: &Self::ProverKey,
-        _instance: [OpenInstance<F, C>; N],
-        _witness: [Vec<F>; N],
-        _transcript: &mut Transcript<F, S>,
+        key: &Self::ProverKey,
+        instance: [OpenInstance<F, C>; N],
+        witness: [Vec<F>; N],
+        transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
-        todo!()
+        let [challenge] = transcript.send_message(&(), &());
+
+        let sum = instance
+            .iter()
+            .fold(F::ZERO, |acc, instance| acc * challenge + instance.eval);
+
+        let points = instance.each_ref().map(|instance| instance.point.clone());
+
+        let witness = sumcheck_witness(witness, &points);
+
+        let core_instance = core_instance(points, challenge, key.vars);
+
+        let commits = instance.each_ref().map(|instance| instance.commit.clone());
+        let commits = MultipointEvals {
+            committments: commits.map(Some),
+            eqs: [(); N].map(|_| None),
+            challenge: None,
+        };
+        let committed_instance =
+            CommittedOracleInstance::<F, C, MultipointEvals<(), N>>::new(commits);
+
+        let oracle_instance = CompositeOracleInstance {
+            oracle1_instance: core_instance,
+            oracle2_instance: committed_instance,
+        };
+        let instance = SumcheckInstance::new(sum, oracle_instance);
+
+        let reduced = SumcheckReduction::prove(&key.sumcheck, instance, witness, transcript);
+
+        let ProverOutput {
+            instance,
+            witness,
+            proof: sumcheck_proof,
+        } = reduced;
+
+        let reduced = CompositeOracle::prove(&key.composite, instance, witness, transcript);
+        let ProverOutput {
+            instance: (core, committed),
+            witness,
+            proof: prover_evals,
+        } = reduced;
+
+        CoreOracle::prove(&key.core_oracle, core, witness.clone(), transcript);
+
+        let reduced = CommittedOracle::prove(&key.committed_oracle, committed, witness, transcript);
+        let ProverOutput {
+            instance,
+            witness,
+            proof: (),
+        } = reduced;
+
+        let proof = Proof {
+            sumcheck: sumcheck_proof,
+            prover_evals,
+        };
+
+        ProverOutput {
+            instance,
+            witness,
+            proof,
+        }
     }
 
     fn verify<S: Duplex<F>>(
@@ -160,7 +235,7 @@ where
         };
         let instance = SumcheckInstance::new(sum, oracle_instance);
 
-        let red = SumcheckReduction::<F, Oracle<F, C, _, N>>::verify(
+        let red = SumcheckReduction::<F, Oracle<F, C, _>>::verify(
             &key.sumcheck,
             instance,
             proof.clone().map(|proof| proof.sumcheck),
@@ -192,8 +267,7 @@ where
     }
 }
 
-type Oracle<F, C, SF, const N: usize> =
-    CompositeOracle<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;
+type Oracle<F, C, SF> = CompositeOracle<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;
 
 fn core_instance<F: Field, const N: usize>(
     points: [MultiPoint<F>; N],
@@ -213,6 +287,16 @@ pub struct MultipointEvals<V: Clone + Debug, const N: usize> {
     committments: [V; N],
     eqs: [V; N],
     challenge: V,
+}
+
+impl<F: Field, const N: usize> MultipointEvals<F, N> {
+    pub fn zero() -> Self {
+        Self {
+            committments: [F::ZERO; N],
+            eqs: [F::ZERO; N],
+            challenge: F::ZERO,
+        }
+    }
 }
 
 impl<F: Field, const N: usize> SumcheckFunction<F> for MultipointEvals<(), N> {
@@ -246,4 +330,31 @@ impl<F: Field, const N: usize> SumcheckFunction<F> for MultipointEvals<(), N> {
                 acc * challenge + eq.clone() * commit
             })
     }
+}
+
+fn sumcheck_witness<F: Field, const N: usize>(
+    witness: [Vec<F>; N],
+    points: &[MultiPoint<F>; N],
+) -> Vec<MultipointEvals<F, N>> {
+    let len = witness[0].len();
+    for witness in &witness {
+        assert_eq!(witness.len(), len);
+    }
+    let mut res = vec![MultipointEvals::zero(); len];
+
+    for (i, witness) in witness.into_iter().enumerate() {
+        for (eval, w) in res.iter_mut().zip(witness) {
+            eval.committments[i] = w;
+        }
+    }
+
+    for (i, point) in points.iter().enumerate() {
+        let eq = eq(point);
+
+        for (eval, eq) in res.iter_mut().zip(eq) {
+            eval.eqs[i] = eq;
+        }
+    }
+
+    res
 }
