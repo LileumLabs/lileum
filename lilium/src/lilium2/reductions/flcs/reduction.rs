@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::lilium2::{
     oracles::{FlcsOracle, MatrixProductOracle},
     reductions::{
@@ -14,8 +12,9 @@ use commit::commit2::{
     multipoint::{self, MultipointBatching},
     CommitmentScheme, OpenInstance, OpeningRelation,
 };
-use spark::spark3::{flexible, FlexibleSpark};
+use spark::spark3::{flexible, FlexibleSpark, FlexibleSparkStructure};
 use sponge::sponge::Duplex;
+use std::rc::Rc;
 use sumcheck::sumcheck2::{
     oracles::{
         composite::{CompositeOracle, CompositeReductionKey, ProverEvals},
@@ -101,11 +100,43 @@ where
             .subprotocol::<MultipointBatching<F, C, 3>, _, _, _>(&key.batching2)
     }
 
-    fn verifier_key(
-        _structure_1: &FlcsStructure<F, C, IO, S>,
-        _structure_2: &C,
-    ) -> Self::VerifierKey {
-        todo!()
+    fn verifier_key(structure_1: &FlcsStructure<F, C, IO, S>, _: &C) -> Self::VerifierKey {
+        let FlcsStructure {
+            ccs_structure,
+            pcs,
+            oracle,
+        } = structure_1;
+
+        let sumcheck_key = ZerocheckSumcheckReduction::<
+            F,
+            FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>,
+        >::verifier_key(oracle, oracle);
+
+        let vars = sumcheck_key.vars();
+
+        let composite_key = CompositeOracle::verifier_key(oracle, oracle.inner_oracles());
+
+        let spark_structure = spark_structure(&ccs_structure.io_matrices);
+        let matrix_structure = ([pcs.clone(), pcs.clone()], spark_structure);
+        let matrix_oracle_key =
+            MatrixProductReduction::verifier_key(&oracle.inner_oracles().1, &matrix_structure);
+        let (_, spark_structure) = matrix_structure;
+
+        let spark_keys =
+            spark_structure.map(|structure| FlexibleSpark::verifier_key(&structure, pcs));
+
+        let batching_structure = (pcs.clone(), vars);
+        let batching1 = MultipointBatching::verifier_key(&batching_structure, pcs);
+        let batching2 = MultipointBatching::verifier_key(&batching_structure, pcs);
+
+        VerifierKey {
+            sumcheck_key,
+            composite_key,
+            matrix_oracle_key,
+            spark_keys,
+            batching1,
+            batching2,
+        }
     }
 
     fn key_pair(
@@ -310,4 +341,10 @@ where
         let matrices = &self.matrices;
         compute_sumcheck_witness(structure, matrices, witness, instance)
     }
+}
+
+fn spark_structure<F: Field, const N: usize>(
+    _matrices: &[Matrix; N],
+) -> [FlexibleSparkStructure<F>; N] {
+    todo!()
 }

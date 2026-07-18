@@ -120,9 +120,9 @@ fn eval_exp<F: Field, const IO: usize>(exp: &Exp<usize>, io: [F; IO], constant: 
 }
 
 pub struct FlcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, const S: usize> {
-    _ccs_structure: CcsStructure<F, IO, S>,
-    _pcs: C,
-    oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>,
+    pub ccs_structure: CcsStructure<F, IO, S>,
+    pub pcs: C,
+    pub oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>,
 }
 
 pub struct FlcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
