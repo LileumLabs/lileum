@@ -17,6 +17,7 @@ use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::sumcheck2::{
     oracles::{
+        self,
         composite::{CompositeOracle, CompositeReductionKey, ProverEvals},
         core::{CoreOracle, CoreOracleInstance},
     },
@@ -140,10 +141,62 @@ where
     }
 
     fn key_pair(
-        _structure_1: &FlcsStructure<F, C, IO, S>,
-        _structure_2: &C,
+        structure_1: &FlcsStructure<F, C, IO, S>,
+        structure_2: &C,
     ) -> (Self::VerifierKey, Self::ProverKey) {
-        todo!()
+        let verifier_key = <Self as Reduction<
+            F,
+            FlcsRelation<F, C, I, IO, S>,
+            OpeningRelation<F, C>,
+        >>::verifier_key(structure_1, structure_2);
+
+        let FlcsStructure {
+            ccs_structure,
+            pcs,
+            oracle,
+        } = structure_1;
+
+        let (_, sumcheck) = ZerocheckSumcheckReduction::<
+            F,
+            FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>,
+        >::key_pair(oracle, oracle);
+
+        let vars = {
+            use oracles::Oracle;
+            oracle.vars()
+        };
+
+        let composite_key = CompositeOracle::verifier_key(oracle, oracle.inner_oracles());
+
+        let matrices = structure_1
+            .ccs_structure
+            .io_matrices
+            .each_ref()
+            .map(|matrix| Rc::new(matrix.clone()));
+
+        let spark_structure = spark_structure(&ccs_structure.io_matrices);
+        let matrix_structure = ([pcs.clone(), pcs.clone()], spark_structure);
+        let (_, matrix_oracle_key) =
+            MatrixProductReduction::key_pair(&oracle.inner_oracles().1, &matrix_structure);
+        let (_, spark_structure) = matrix_structure;
+
+        let spark_keys =
+            spark_structure.map(|structure| FlexibleSpark::key_pair(&structure, pcs).1);
+
+        let batching_structure = (pcs.clone(), vars);
+        let (_, batching1) = MultipointBatching::key_pair(&batching_structure, pcs);
+        let (_, batching2) = MultipointBatching::key_pair(&batching_structure, pcs);
+
+        let prover_key = ProverKey {
+            sumcheck,
+            composite_key,
+            matrices,
+            matrix_oracle_key,
+            spark_keys,
+            batching1,
+            batching2,
+        };
+        (verifier_key, prover_key)
     }
 
     fn prove<D: Duplex<F>>(
