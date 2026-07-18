@@ -12,7 +12,10 @@ use commit::commit2::{
     multipoint::{self, MultipointBatching},
     CommitmentScheme, OpenInstance, OpeningRelation,
 };
-use spark::spark3::{flexible, FlexibleSpark, FlexibleSparkStructure};
+use spark::spark3::{
+    flexible::{self, FlexibleSparkError},
+    FlexibleSpark, FlexibleSparkStructure,
+};
 use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::sumcheck2::{
@@ -22,7 +25,7 @@ use sumcheck::sumcheck2::{
         core::{CoreOracle, CoreOracleInstance},
     },
     zerocheck::ZerocheckSumcheckReduction,
-    ProverKey as SumcheckProverKey, SumcheckMessage, SumcheckVerifierKey,
+    ProverKey as SumcheckProverKey, SumcheckError, SumcheckMessage, SumcheckVerifierKey,
 };
 use transcript::reduction2::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
@@ -70,6 +73,17 @@ pub struct Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
     batching2: multipoint::Proof<F>,
 }
 
+#[derive(Clone, Debug)]
+pub enum FlcsError {
+    Sumcheck(SumcheckError),
+    Composite,
+    Core,
+    MatrixProduct,
+    Spark(FlexibleSparkError),
+    Batching1(multipoint::Error),
+    Batching2(multipoint::Error),
+}
+
 impl<F, C, const I: usize, const IO: usize, const S: usize>
     Reduction<F, FlcsRelation<F, C, I, IO, S>, OpeningRelation<F, C>> for FlcsReduction
 where
@@ -82,7 +96,7 @@ where
 
     type Proof = Proof<F, C, IO>;
 
-    type Error = ();
+    type Error = FlcsError;
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -310,8 +324,7 @@ where
                 proof.clone().map(|proof| proof.sumcheck_proof),
                 transcript,
             )
-            //TODO: handle
-            .unwrap();
+            .map_err(FlcsError::Sumcheck)?;
 
         let (core_instance, matrix_instance) = CompositeOracle::verify(
             &key.composite_key,
@@ -319,8 +332,7 @@ where
             proof.clone().map(|proof| proof.oracle_evals1),
             transcript,
         )
-        //TODO: handle
-        .unwrap();
+        .map_err(|()| FlcsError::Composite)?;
 
         CoreOracle::verify(
             key.composite_key.p1_key(),
@@ -328,8 +340,7 @@ where
             GuardedProof::empty(),
             transcript,
         )
-        //TODO:handle
-        .unwrap();
+        .map_err(|()| FlcsError::Core)?;
 
         let (open_instances, spark_instances) = MatrixProductReduction::verify(
             &key.matrix_oracle_key,
@@ -337,8 +348,7 @@ where
             proof.clone().map(|proof| proof.matrix_product),
             transcript,
         )
-        //TODO:handle
-        .unwrap();
+        .map_err(|()| FlcsError::MatrixProduct)?;
 
         let [open_instance1, open_instance2] = open_instances;
 
@@ -347,9 +357,8 @@ where
 
             for (i, (key, instance)) in key.spark_keys.iter().zip(spark_instances).enumerate() {
                 let proof = proof.clone().map(|proof| proof.spark_proofs[i].clone());
-                //TODO:handle
-                let open_instance =
-                    FlexibleSpark::verify(key, instance, proof, transcript).unwrap();
+                let open_instance = FlexibleSpark::verify(key, instance, proof, transcript)
+                    .map_err(FlcsError::Spark)?;
                 instances[i] = Some(open_instance);
             }
 
@@ -361,8 +370,7 @@ where
                 proof.clone().map(|proof| proof.batching1),
                 transcript,
             )
-            //TODO:handle
-            .unwrap()
+            .map_err(FlcsError::Batching1)?
         };
 
         let instance = [open_instance1, open_instance2, open_instance3];
@@ -373,8 +381,7 @@ where
             proof.map(|proof| proof.batching2),
             transcript,
         )
-        //TODO:handle
-        .unwrap();
+        .map_err(FlcsError::Batching2)?;
 
         Ok(instance)
     }
