@@ -119,16 +119,20 @@ fn eval_exp<F: Field, const IO: usize>(exp: &Exp<usize>, io: [F; IO], constant: 
     }
 }
 
-pub struct FlcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, const S: usize> {
+pub struct FlcsStructure<F, C, const IO: usize, const S: usize, const I: usize>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
     pub ccs_structure: CcsStructure<F, IO, S>,
     pub pcs: C,
-    pub oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>,
+    pub oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
 }
 
 pub struct FlcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
 
-pub struct FlcsInstance<F, C, const IO: usize, const S: usize>(
-    pub ZeroSumcheckInstance<F, FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>>,
+pub struct FlcsInstance<F, C, const IO: usize, const S: usize, const I: usize>(
+    pub ZeroSumcheckInstance<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>,
 )
 where
     F: Field,
@@ -140,9 +144,9 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    type Structure = FlcsStructure<F, C, IO, S>;
+    type Structure = FlcsStructure<F, C, IO, S, I>;
 
-    type Instance = FlcsInstance<F, C, IO, S>;
+    type Instance = FlcsInstance<F, C, IO, S, I>;
 
     type Witness = Vec<F>;
 

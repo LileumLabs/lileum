@@ -17,7 +17,7 @@ use sumcheck::{
 use sumcheck_derive::EvalsCore;
 
 #[derive(Clone, Copy, Debug, EvalsCore)]
-pub struct FlcsEvals<V: Debug + Clone, const IO: usize, const S: usize> {
+pub struct FlcsEvals<V: Debug + Clone, const IO: usize, const S: usize, const I: usize> {
     /// matrix vector products M(x)z(x)
     products: [V; IO],
     w: V,
@@ -29,7 +29,9 @@ pub struct FlcsEvals<V: Debug + Clone, const IO: usize, const S: usize> {
     challenge: V,
 }
 
-impl<V: Debug + Copy + Default, const IO: usize, const S: usize> Default for FlcsEvals<V, IO, S> {
+impl<V: Debug + Copy + Default, const IO: usize, const S: usize, const I: usize> Default
+    for FlcsEvals<V, IO, S, I>
+{
     fn default() -> Self {
         Self {
             products: [Default::default(); IO],
@@ -52,7 +54,9 @@ pub struct FlcsData {
     // inputs: usize,
 }
 
-impl<F: Field, const IO: usize, const S: usize> SumcheckFunction<F> for FlcsEvals<(), IO, S> {
+impl<F: Field, const IO: usize, const S: usize, const I: usize> SumcheckFunction<F>
+    for FlcsEvals<(), IO, S, I>
+{
     type Natures = Natures;
 
     type Data = FlcsData;
@@ -62,8 +66,7 @@ impl<F: Field, const IO: usize, const S: usize> SumcheckFunction<F> for FlcsEval
 
         let products = [Right(Right(MatrixNature)); IO];
         let w = Right(Left(CommittedNature::Witness));
-        //TODO:
-        let inputs = Left(CoreNature::SmallInstance(Coeffs::Fixed(3)));
+        let inputs = Left(CoreNature::SmallInstance(Coeffs::Fixed(I)));
         let input_selector = Left(CoreNature::SmallStructure);
         let gate_selectors = [Right(Left(CommittedNature::Structure)); S];
         let constants = Right(Left(CommittedNature::Structure));
@@ -114,12 +117,12 @@ impl<F: Field, const IO: usize, const S: usize> SumcheckFunction<F> for FlcsEval
             }
         }
 
-        todo!()
+        acc
     }
 }
 
-fn eval_exp<F, V, const IO: usize, const S: usize>(
-    evals: &FlcsEvals<V, IO, S>,
+fn eval_exp<F, V, const IO: usize, const S: usize, const I: usize>(
+    evals: &FlcsEvals<V, IO, S, I>,
     exp: &Exp<usize>,
 ) -> V
 where
@@ -140,21 +143,21 @@ fn print_natures() {
     use ark_vesta::Fr;
     use sumcheck::sumcheck2::oracles::EvalLocation;
 
-    let natures = <FlcsEvals<(), 4, 3> as SumcheckFunction<Fr>>::natures();
+    let natures = <FlcsEvals<(), 4, 3, 3> as SumcheckFunction<Fr>>::natures();
     let natures = FlcsEvals::map_evals(&natures, |nature| EvalLocation::from(*nature));
     dbg!(natures);
 }
 
-pub fn compute_sumcheck_witness<F, const IO: usize, const S: usize>(
-    structure: &[FlcsEvals<F, IO, S>],
+pub fn compute_sumcheck_witness<F, const IO: usize, const S: usize, const I: usize>(
+    structure: &[FlcsEvals<F, IO, S, I>],
     matrices: &[Rc<Matrix>; IO],
     witness: &[F],
-    core_instance: &CoreOracleInstance<F, FlcsEvals<(), IO, S>>,
-) -> Vec<FlcsEvals<F, IO, S>>
+    core_instance: &CoreOracleInstance<F, FlcsEvals<(), IO, S, I>>,
+) -> Vec<FlcsEvals<F, IO, S, I>>
 where
     F: Field,
 {
-    let mut sumcheck_witness: Vec<FlcsEvals<F, IO, S>> = structure
+    let mut sumcheck_witness: Vec<FlcsEvals<F, IO, S, I>> = structure
         .iter()
         .zip(witness)
         .map(|(structure, witness)| {

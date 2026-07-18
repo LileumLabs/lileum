@@ -36,28 +36,28 @@ pub struct FlcsReduction;
 type CompositeKey<F, C, const IO: usize, SF> =
     CompositeReductionKey<F, SF, CoreOracle<F, SF>, MatrixProductOracle<F, C, SF, IO>>;
 
-pub struct VerifierKey<F, C, const IO: usize, const S: usize>
+pub struct VerifierKey<F, C, const IO: usize, const S: usize, const I: usize>
 where
     F: Field,
     C: CommitmentScheme<F>,
 {
     sumcheck_key: SumcheckVerifierKey<F>,
-    composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S>>,
-    matrix_oracle_key: matrix_product::VerifierKey<F, C, FlcsEvals<(), IO, S>, IO>,
+    composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S, I>>,
+    matrix_oracle_key: matrix_product::VerifierKey<F, C, FlcsEvals<(), IO, S, I>, IO>,
     spark_keys: [flexible::VerifierKey<F, C>; IO],
     batching1: multipoint::VerifierKey<F, C, IO>,
     batching2: multipoint::VerifierKey<F, C, 3>,
 }
 
-pub struct ProverKey<F, C, const IO: usize, const S: usize>
+pub struct ProverKey<F, C, const IO: usize, const S: usize, const I: usize>
 where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    sumcheck: SumcheckProverKey<F, FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>>,
-    composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S>>,
+    sumcheck: SumcheckProverKey<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>,
+    composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S, I>>,
     matrices: [Rc<Matrix>; IO],
-    matrix_oracle_key: matrix_product::ProverKey<F, C, FlcsEvals<(), IO, S>, IO>,
+    matrix_oracle_key: matrix_product::ProverKey<F, C, FlcsEvals<(), IO, S, I>, IO>,
     spark_keys: [flexible::ProverKey<F, C>; IO],
     batching1: multipoint::ProverKey<F, C, IO>,
     batching2: multipoint::ProverKey<F, C, 3>,
@@ -90,9 +90,9 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    type ProverKey = ProverKey<F, C, IO, S>;
+    type ProverKey = ProverKey<F, C, IO, S, I>;
 
-    type VerifierKey = VerifierKey<F, C, IO, S>;
+    type VerifierKey = VerifierKey<F, C, IO, S, I>;
 
     type Proof = Proof<F, C, IO>;
 
@@ -103,9 +103,9 @@ where
         builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
         let builder = builder
-            .subprotocol::<ZerocheckSumcheckReduction<F, FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>>, F, _, _>(&key.sumcheck_key)
-            .subprotocol::<CompositeOracle<F,FlcsEvals<(),IO,S>,_,_>,_,_,_>(&key.composite_key)
-            .subprotocol::<CoreOracle<F,FlcsEvals<(),IO,S>>,_,_,_>(key.composite_key.p1_key())
+            .subprotocol::<ZerocheckSumcheckReduction<F, FlcsOracle<F, C, FlcsEvals<(), IO, S,I>, IO>>, F, _, _>(&key.sumcheck_key)
+            .subprotocol::<CompositeOracle<F,FlcsEvals<(),IO,S,I>,_,_>,_,_,_>(&key.composite_key)
+            .subprotocol::<CoreOracle<F,FlcsEvals<(),IO,S,I>>,_,_,_>(key.composite_key.p1_key())
             .subprotocol::<MatrixProductReduction,_,_,_>(&key.matrix_oracle_key);
         let builder = key.spark_keys.iter().fold(builder, |builder, key| {
             builder.subprotocol::<FlexibleSpark<F, C>, _, _, _>(key)
@@ -115,7 +115,7 @@ where
             .subprotocol::<MultipointBatching<F, C, 3>, _, _, _>(&key.batching2)
     }
 
-    fn verifier_key(structure_1: &FlcsStructure<F, C, IO, S>, _: &C) -> Self::VerifierKey {
+    fn verifier_key(structure_1: &FlcsStructure<F, C, IO, S, I>, _: &C) -> Self::VerifierKey {
         let FlcsStructure {
             ccs_structure,
             pcs,
@@ -124,7 +124,7 @@ where
 
         let sumcheck_key = ZerocheckSumcheckReduction::<
             F,
-            FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>,
+            FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
         >::verifier_key(oracle, oracle);
 
         let vars = sumcheck_key.vars();
@@ -155,7 +155,7 @@ where
     }
 
     fn key_pair(
-        structure_1: &FlcsStructure<F, C, IO, S>,
+        structure_1: &FlcsStructure<F, C, IO, S, I>,
         structure_2: &C,
     ) -> (Self::VerifierKey, Self::ProverKey) {
         let verifier_key = <Self as Reduction<
@@ -172,7 +172,7 @@ where
 
         let (_, sumcheck) = ZerocheckSumcheckReduction::<
             F,
-            FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>,
+            FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
         >::key_pair(oracle, oracle);
 
         let vars = {
@@ -215,7 +215,7 @@ where
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
-        instance: FlcsInstance<F, C, IO, S>,
+        instance: FlcsInstance<F, C, IO, S, I>,
         witness: Vec<F>,
         transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
@@ -226,7 +226,7 @@ where
             instance,
             witness,
             proof: sumcheck_proof,
-        } = ZerocheckSumcheckReduction::<F, FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>>::prove(
+        } = ZerocheckSumcheckReduction::<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>::prove(
             &key.sumcheck,
             instance,
             witness,
@@ -311,14 +311,14 @@ where
 
     fn verify<D: Duplex<F>>(
         key: &Self::VerifierKey,
-        instance: FlcsInstance<F, C, IO, S>,
+        instance: FlcsInstance<F, C, IO, S, I>,
         proof: GuardedProof<Self::Proof>,
         transcript: &mut VerifierTranscript<F, D>,
     ) -> Result<OpenInstance<F, C>, Self::Error> {
         let instance = instance.0;
 
         let instance =
-            ZerocheckSumcheckReduction::<F, FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>>::verify(
+            ZerocheckSumcheckReduction::<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>::verify(
                 &key.sumcheck_key,
                 instance,
                 proof.clone().map(|proof| proof.sumcheck_proof),
@@ -387,7 +387,7 @@ where
     }
 }
 
-impl<F, C, const IO: usize, const S: usize> ProverKey<F, C, IO, S>
+impl<F, C, const IO: usize, const S: usize, const I: usize> ProverKey<F, C, IO, S, I>
 where
     F: Field,
     C: CommitmentScheme<F>,
@@ -395,8 +395,8 @@ where
     fn witness(
         &self,
         witness: &[F],
-        instance: &CoreOracleInstance<F, FlcsEvals<(), IO, S>>,
-    ) -> Vec<FlcsEvals<F, IO, S>> {
+        instance: &CoreOracleInstance<F, FlcsEvals<(), IO, S, I>>,
+    ) -> Vec<FlcsEvals<F, IO, S, I>> {
         let structure = self.sumcheck.structure();
         let matrices = &self.matrices;
         compute_sumcheck_witness(structure, matrices, witness, instance)
