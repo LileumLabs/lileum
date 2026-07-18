@@ -110,6 +110,10 @@ pub struct FlexibleSparkStructure<F: Field> {
 }
 
 impl<F: Field> FlexibleSparkStructure<F> {
+    pub fn new(evals: Rc<Vec<(u64, F)>>) -> Self {
+        Self { evals }
+    }
+
     pub fn eval(&self, point: MultiPoint<F>) -> F {
         let mut point = point.inner();
         point.resize(u64::BITS as usize, F::ZERO);
