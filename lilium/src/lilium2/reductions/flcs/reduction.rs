@@ -404,7 +404,21 @@ where
 }
 
 fn spark_structure<F: Field, const N: usize>(
-    _matrices: &[Matrix; N],
+    matrices: &[Matrix; N],
 ) -> [FlexibleSparkStructure<F>; N] {
-    todo!()
+    matrices.each_ref().map(|matrix| {
+        let evals = matrix.to_evals();
+        let (x_max, y_max) = evals
+            .iter()
+            .fold((0, 0), |acc, (x, y)| (acc.0.max(*x), acc.1.max(*y)));
+        assert!(x_max.highest_one().unwrap_or(0) + y_max.highest_one().unwrap_or(0) < 64);
+        let evals = evals
+            .into_iter()
+            .map(|(x, y)| {
+                let addr = x + (y << (x_max.highest_one().unwrap_or(0) + 1));
+                (addr as u64, F::ONE)
+            })
+            .collect();
+        FlexibleSparkStructure::new(Rc::new(evals))
+    })
 }
