@@ -68,10 +68,20 @@ where
     type Error = ();
 
     fn transcript_pattern(
-        _key: &Self::VerifierKey,
-        _builder: TranscriptBuilder,
+        key: &Self::VerifierKey,
+        builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
-        todo!()
+        let builder = builder
+            .subprotocol::<ZerocheckSumcheckReduction<F, FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>>, F, _, _>(&key.sumcheck_key)
+            .subprotocol::<CompositeOracle<F,FlcsEvals<(),IO,S>,_,_>,_,_,_>(&key.composite_key)
+            .subprotocol::<CoreOracle<F,FlcsEvals<(),IO,S>>,_,_,_>(key.composite_key.p1_key())
+            .subprotocol::<MatrixProductReduction,_,_,_>(&key.matrix_oracle_key);
+        let builder = key.spark_keys.iter().fold(builder, |builder, key| {
+            builder.subprotocol::<FlexibleSpark<F, C>, _, _, _>(key)
+        });
+        builder
+            .subprotocol::<MultipointBatching<F, C, IO>, _, _, _>(&key.batching1)
+            .subprotocol::<MultipointBatching<F, C, 3>, _, _, _>(&key.batching2)
     }
 
     fn verifier_key(
