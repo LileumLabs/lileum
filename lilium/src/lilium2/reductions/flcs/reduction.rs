@@ -1,12 +1,15 @@
+use std::rc::Rc;
+
 use crate::lilium2::{
     oracles::{FlcsOracle, MatrixProductOracle},
     reductions::{
-        flcs::FlcsEvals,
+        flcs::{compute_sumcheck_witness, FlcsEvals},
         matrix_product::{self, MatrixProductReduction},
     },
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
 use ark_ff::Field;
+use ccs::matrix::Matrix;
 use commit::commit2::{
     multipoint::{self, MultipointBatching},
     CommitmentScheme, OpenInstance, OpeningRelation,
@@ -16,10 +19,10 @@ use sponge::sponge::Duplex;
 use sumcheck::sumcheck2::{
     oracles::{
         composite::{CompositeOracle, CompositeReductionKey, ProverEvals},
-        core::CoreOracle,
+        core::{CoreOracle, CoreOracleInstance},
     },
     zerocheck::ZerocheckSumcheckReduction,
-    SumcheckMessage, SumcheckVerifierKey,
+    ProverKey as SumcheckProverKey, SumcheckMessage, SumcheckVerifierKey,
 };
 use transcript::reduction2::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
@@ -43,6 +46,20 @@ where
     batching2: multipoint::VerifierKey<F, C, 3>,
 }
 
+pub struct ProverKey<F, C, const IO: usize, const S: usize>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    sumcheck: SumcheckProverKey<F, FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>>,
+    composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S>>,
+    matrices: [Rc<Matrix>; IO],
+    matrix_oracle_key: matrix_product::ProverKey<F, C, FlcsEvals<(), IO, S>, IO>,
+    spark_keys: [flexible::ProverKey<F, C>; IO],
+    batching1: multipoint::ProverKey<F, C, IO>,
+    batching2: multipoint::ProverKey<F, C, 3>,
+}
+
 #[derive(Clone, Debug)]
 pub struct Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
     sumcheck_proof: Vec<SumcheckMessage<F>>,
@@ -59,7 +76,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    type ProverKey = ();
+    type ProverKey = ProverKey<F, C, IO, S>;
 
     type VerifierKey = VerifierKey<F, C, IO, S>;
 
@@ -99,12 +116,99 @@ where
     }
 
     fn prove<D: Duplex<F>>(
-        _key: &Self::ProverKey,
-        _instance: FlcsInstance<F, C, IO, S>,
-        _witness: Vec<F>,
-        _transcript: &mut Transcript<F, D>,
+        key: &Self::ProverKey,
+        instance: FlcsInstance<F, C, IO, S>,
+        witness: Vec<F>,
+        transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
-        todo!()
+        let instance = instance.0;
+
+        let witness = key.witness(&witness, &instance.oracle_instance().oracle1_instance);
+        let ProverOutput {
+            instance,
+            witness,
+            proof: sumcheck_proof,
+        } = ZerocheckSumcheckReduction::<F, FlcsOracle<F, C, FlcsEvals<(), IO, S>, IO>>::prove(
+            &key.sumcheck,
+            instance,
+            witness,
+            transcript,
+        );
+
+        let ProverOutput {
+            instance: (core, matrix),
+            witness,
+            proof: oracle_evals1,
+        } = CompositeOracle::prove(&key.composite_key, instance, witness, transcript);
+
+        CoreOracle::prove(
+            key.composite_key.p1_key(),
+            core,
+            witness.clone(),
+            transcript,
+        );
+
+        let ProverOutput {
+            instance,
+            witness,
+            proof: matrix_product,
+        } = MatrixProductReduction::prove(&key.matrix_oracle_key, matrix, witness, transcript);
+
+        let ([open_instance1, open_instance2], spark_instances) = instance;
+        let ([open_witness1, open_witness2], _) = witness;
+
+        let (out, spark_proofs) = {
+            let mut instances = [(); IO].map(|_| None);
+            let mut witnesses = [(); IO].map(|_| None);
+            let mut proofs = [(); IO].map(|_| None);
+
+            for (i, (key, instance)) in key.spark_keys.iter().zip(spark_instances).enumerate() {
+                let ProverOutput {
+                    instance,
+                    witness,
+                    proof,
+                } = FlexibleSpark::prove(key, instance, (), transcript);
+                instances[i] = Some(instance);
+                witnesses[i] = Some(witness);
+                proofs[i] = Some(proof);
+            }
+
+            let instances: [OpenInstance<F, C>; IO] = instances.map(Option::unwrap);
+            let witnesses: [Vec<F>; IO] = witnesses.map(Option::unwrap);
+
+            let out = MultipointBatching::prove(&key.batching1, instances, witnesses, transcript);
+            (out, proofs.map(Option::unwrap))
+        };
+
+        let ProverOutput {
+            instance: open_instance3,
+            witness: open_witness3,
+            proof: batching1,
+        } = out;
+
+        let instance = [open_instance1, open_instance2, open_instance3];
+        let witness = [open_witness1, open_witness2, open_witness3];
+
+        let ProverOutput {
+            instance,
+            witness,
+            proof: batching2,
+        } = MultipointBatching::prove(&key.batching2, instance, witness, transcript);
+
+        let proof = Proof {
+            sumcheck_proof,
+            oracle_evals1,
+            matrix_product,
+            spark_proofs,
+            batching1,
+            batching2,
+        };
+
+        ProverOutput {
+            instance,
+            witness,
+            proof,
+        }
     }
 
     fn verify<D: Duplex<F>>(
@@ -189,5 +293,21 @@ where
         .unwrap();
 
         Ok(instance)
+    }
+}
+
+impl<F, C, const IO: usize, const S: usize> ProverKey<F, C, IO, S>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    fn witness(
+        &self,
+        witness: &[F],
+        instance: &CoreOracleInstance<F, FlcsEvals<(), IO, S>>,
+    ) -> Vec<FlcsEvals<F, IO, S>> {
+        let structure = self.sumcheck.structure();
+        let matrices = &self.matrices;
+        compute_sumcheck_witness(structure, matrices, witness, instance)
     }
 }
