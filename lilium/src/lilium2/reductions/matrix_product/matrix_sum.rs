@@ -169,6 +169,9 @@ impl<F: Field, C: CommitmentScheme<F>, const N: usize> Relation for MatrixSumQue
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct MissingEvals;
+
 impl<F, C, const N: usize> Reduction<F, MatrixSumQuery<F, C, N>, [FlexibleSparkRelation<F>; N]>
     for MatrixSumOracle<F, C, N>
 where
@@ -181,7 +184,7 @@ where
 
     type Proof = ();
 
-    type Error = ();
+    type Error = MissingEvals;
 
     fn transcript_pattern(
         _key: &Self::VerifierKey,
@@ -247,8 +250,13 @@ where
             .collect::<Option<Vec<F>>>()
             .map(TryInto::try_into)
             .and_then(Result::ok);
-        //TODO: handle
-        let matrix_evals = matrix_evals.unwrap();
+
+        let matrix_evals = match matrix_evals {
+            Some(evals) => evals,
+            None => {
+                return Err(MissingEvals);
+            }
+        };
 
         let point = merge_point(rx, ry);
         let instance = matrix_evals.map(|eval| SparkInstance::new(point.clone(), eval));

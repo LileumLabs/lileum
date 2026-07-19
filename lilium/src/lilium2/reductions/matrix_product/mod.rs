@@ -2,7 +2,7 @@ use crate::lilium2::{
     oracles::{MatrixNature, MatrixOracleQuery, MatrixProductInstance, MatrixProductOracle},
     reductions::matrix_product::{
         function::{MatrixSumEvals, Oracle},
-        matrix_sum::{MatrixSumInstance, MatrixSumOracle},
+        matrix_sum::{MatrixSumInstance, MatrixSumOracle, MissingEvals},
     },
 };
 use ark_ff::Field;
@@ -26,8 +26,8 @@ use sumcheck::sumcheck2::{
         partial::{Nature, PartialQueryInstance},
         SumcheckFunction,
     },
-    ProverKey as SumcheckProver, SumcheckInstance, SumcheckMessage, SumcheckReduction,
-    SumcheckVerifierKey,
+    ProverKey as SumcheckProver, SumcheckError, SumcheckInstance, SumcheckMessage,
+    SumcheckReduction, SumcheckVerifierKey,
 };
 use transcript::reduction2::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
@@ -79,6 +79,13 @@ pub struct Proof<F: Field> {
     prover_evals: ProverEvals<F>,
 }
 
+#[derive(Clone, Debug)]
+pub enum Error {
+    Sumcheck(SumcheckError),
+    Composite,
+    MatrixSum(MissingEvals),
+}
+
 type Rel1<F, C, SF, const N: usize> = MatrixOracleQuery<F, C, SF, N>;
 type Rel2<F, C, const N: usize> = ([OpeningRelation<F, C>; 2], [FlexibleSparkRelation<F>; N]);
 
@@ -95,7 +102,7 @@ where
 
     type Proof = Proof<F>;
 
-    type Error = ();
+    type Error = Error;
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -392,8 +399,7 @@ where
                 sumcheck_proof,
                 transcript,
             )
-            //TODO:handle
-            .unwrap()
+            .map_err(Error::Sumcheck)?
         };
 
         let (matrix, composite) = CompositeOracle::verify(
@@ -402,8 +408,7 @@ where
             proof.map(|proof| proof.prover_evals),
             transcript,
         )
-        //TODO:handle
-        .unwrap();
+        .map_err(|()| Error::Composite)?;
 
         let (core, committed) = key.composite_key.p2_key().split(composite);
 
@@ -421,7 +426,8 @@ where
 
         let spark_instances = {
             let proof = GuardedProof::empty();
-            MatrixSumOracle::<F, C, N>::verify(&(), matrix, proof, transcript).unwrap()
+            MatrixSumOracle::<F, C, N>::verify(&(), matrix, proof, transcript)
+                .map_err(Error::MatrixSum)?
         };
 
         Ok(([open_instance1, open_instance2], spark_instances))

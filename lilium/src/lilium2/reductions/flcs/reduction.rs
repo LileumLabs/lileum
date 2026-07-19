@@ -78,7 +78,7 @@ pub enum FlcsError {
     Sumcheck(SumcheckError),
     Composite,
     Core,
-    MatrixProduct,
+    MatrixProduct(matrix_product::Error),
     Spark(FlexibleSparkError),
     Batching1(multipoint::Error),
     Batching2(multipoint::Error),
@@ -348,7 +348,7 @@ where
             proof.clone().map(|proof| proof.matrix_product),
             transcript,
         )
-        .map_err(|()| FlcsError::MatrixProduct)?;
+        .map_err(FlcsError::MatrixProduct)?;
 
         let [open_instance1, open_instance2] = open_instances;
 
