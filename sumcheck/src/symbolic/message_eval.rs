@@ -224,7 +224,7 @@ impl<F: Field> MessageEvaluator<F, u8> {
     /// Truncates stack to length 0, then extends it
     /// with the provided elements.
     pub(crate) fn set_stack(&mut self, new_stack: &[F]) {
-        self.stack.truncate(0);
+        self.stack.clear();
         self.stack.extend(new_stack);
     }
 

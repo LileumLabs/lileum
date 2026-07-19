@@ -229,7 +229,7 @@ where
         let combined = mles
             .iter()
             .map(|evals| {
-                buffer.truncate(0);
+                buffer.clear();
                 let evals: &SF::Mles<F> = evals;
                 Evals::flatten(evals.clone(), &mut buffer);
                 let instance_combined = Self::combine_eval(&buffer, &instance_filter, chall, None);
