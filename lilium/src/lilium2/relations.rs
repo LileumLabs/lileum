@@ -20,13 +20,13 @@ use transcript::reduction2::Relation;
 pub struct LcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
 
 pub struct LcsInstance<F: Field, C: CommitmentScheme<F>, const I: usize> {
-    witness_commit: C::Commitment,
-    public_inputs: [F; I],
+    pub(crate) witness_commit: C::Commitment,
+    pub(crate) public_inputs: [F; I],
 }
 
 pub struct LcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, const S: usize> {
-    ccs_structure: CcsStructure<F, IO, S>,
-    pcs: C,
+    pub(crate) ccs_structure: CcsStructure<F, IO, S>,
+    pub(crate) pcs: C,
 }
 
 impl<F, C, const I: usize, const IO: usize, const S: usize> Relation for LcsRelation<F, C, I, IO, S>

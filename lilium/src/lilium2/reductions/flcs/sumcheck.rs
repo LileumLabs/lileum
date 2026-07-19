@@ -29,6 +29,20 @@ pub struct FlcsEvals<V: Debug + Clone, const IO: usize, const S: usize, const I:
     challenge: V,
 }
 
+impl<F: Field, const IO: usize, const S: usize, const I: usize> FlcsEvals<Vec<F>, IO, S, I> {
+    pub fn coefficients(inputs: [F; I], challenge: F) -> Self {
+        Self {
+            inputs: inputs.to_vec(),
+            products: [(); IO].map(|_| vec![]),
+            w: vec![],
+            input_selector: vec![],
+            gate_selectors: [(); S].map(|_| vec![]),
+            constants: vec![],
+            challenge: vec![challenge],
+        }
+    }
+}
+
 impl<V: Debug + Copy + Default, const IO: usize, const S: usize, const I: usize> Default
     for FlcsEvals<V, IO, S, I>
 {
