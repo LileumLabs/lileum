@@ -15,7 +15,7 @@ use commit::commit2::{oracle::CommittedOracle, CommitmentScheme};
 use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::sumcheck2::oracles::{composite::CompositeOracle, core::CoreOracle};
-use transcript::reduction2::Reduction;
+use transcript::reduction2::{Argument, Reduction};
 use transcript::reduction2::{
     GuardedProof, ProverOutput, Transcript, TranscriptBuilder, VerifierTranscript,
 };
@@ -94,6 +94,14 @@ where
         let Ok(instance) = ToFlcs::verify(&key.1, instance, GuardedProof::empty(), transcript);
         FlcsArgument::verify(&key.0, instance, proof, transcript)
     }
+}
+
+impl<F, C, const I: usize, const IO: usize, const S: usize> Argument<F, LcsRelation<F, C, I, IO, S>>
+    for LcsArgument
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
 }
 
 impl<F, C, const IO: usize, const S: usize> LcsStructure<F, C, IO, S>
