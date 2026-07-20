@@ -13,7 +13,8 @@ use sumcheck::sumcheck2::{
     zerocheck::ZerocheckReduction,
 };
 use transcript::reduction2::{
-    GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
+    GuardedProof, NoError, ProverOutput, Reduction, Transcript, TranscriptBuilder,
+    VerifierTranscript,
 };
 
 #[derive(Clone, Debug)]
@@ -31,7 +32,7 @@ where
 
     type Proof = ();
 
-    type Error = ();
+    type Error = NoError;
 
     fn transcript_pattern(
         key: &Self::VerifierKey,

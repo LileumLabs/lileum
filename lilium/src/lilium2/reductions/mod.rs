@@ -3,4 +3,4 @@ pub(crate) mod lcs;
 pub(crate) mod matrix_product;
 
 pub use flcs::{FlcsArgument, FlcsReduction};
-pub use lcs::ToFlcs;
+pub use lcs::{LcsArgument, ToFlcs};

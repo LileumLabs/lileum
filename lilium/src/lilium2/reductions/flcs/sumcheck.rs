@@ -4,12 +4,14 @@ use ccs::{matrix::Matrix, structure::Exp};
 use commit::commit2::oracle::CommittedNature;
 use std::{fmt::Debug, rc::Rc, vec::IntoIter};
 use sumcheck::{
+    eq::eq_subset,
+    polynomials::MultiPoint,
     sumcheck::Var,
     sumcheck2::{
         evals::{Evals, EvalsCore},
         oracles::{
             composite::Either,
-            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
+            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, Func},
             SumcheckFunction,
         },
     },
@@ -43,6 +45,70 @@ impl<F: Field, const IO: usize, const S: usize, const I: usize> FlcsEvals<Vec<F>
     }
 }
 
+impl<F: Field, const IO: usize, const S: usize, const I: usize> FlcsEvals<F, IO, S, I> {
+    pub fn structure(is_input: bool, selector: usize, constant: F) -> Self {
+        let mut gate_selectors = [F::ZERO; S];
+        for (i, selector_eval) in gate_selectors.iter_mut().enumerate() {
+            if i == selector {
+                *selector_eval = F::ONE;
+            }
+        }
+        Self {
+            input_selector: if is_input { F::ONE } else { F::ZERO },
+            gate_selectors,
+            constants: constant,
+            ..Default::default()
+        }
+    }
+}
+
+impl<const IO: usize, const S: usize, const I: usize> FlcsEvals<bool, IO, S, I> {
+    pub fn vector() -> Self {
+        Self {
+            w: true,
+            ..Default::default()
+        }
+    }
+}
+
+fn eval_input_selector<F: Field>(point: &MultiPoint<F>, input_len: usize) -> F {
+    let log_input = input_len.next_power_of_two().ilog2().max(1);
+    let eq_evals = eq_subset(point, log_input as usize);
+    // Given that we multiply by either 1 or 0, we can just add the 1s and
+    // ignore the zeros.
+    eq_evals
+        .into_iter()
+        .take(input_len)
+        .fold(F::zero(), |acc, e| acc + e)
+}
+
+fn eval_inputs<F: Field>(inputs: &[F], point: &MultiPoint<F>) -> F {
+    let log_input = inputs.len().next_power_of_two().ilog2().max(1);
+    let eq_evals = eq_subset(point, log_input as usize);
+    inputs
+        .iter()
+        .zip(eq_evals)
+        .fold(F::zero(), |acc, (e, eq)| acc + eq * e)
+}
+
+impl<const IO: usize, const S: usize, const I: usize> FlcsEvals<(), IO, S, I> {
+    pub fn functions<F: Field>() -> FlcsEvals<Option<Func<F>>, IO, S, I> {
+        let default = FlcsEvals::map_evals(&FlcsEvals::vector(), |_| None);
+
+        let inputs: Func<F> = eval_inputs;
+        let inputs = Some(inputs);
+
+        let input_selector: Func<F> = |_, point| eval_input_selector(point, I);
+        let input_selector = Some(input_selector);
+
+        FlcsEvals {
+            inputs,
+            input_selector,
+            ..default
+        }
+    }
+}
+
 impl<V: Debug + Copy + Default, const IO: usize, const S: usize, const I: usize> Default
     for FlcsEvals<V, IO, S, I>
 {
@@ -66,6 +132,15 @@ pub struct FlcsData {
     gates: Vec<Vec<Exp<usize>>>,
     multi_constraint: bool,
     // inputs: usize,
+}
+
+impl FlcsData {
+    pub fn new(gates: Vec<Vec<Exp<usize>>>, multi_constraint: bool) -> Self {
+        Self {
+            gates,
+            multi_constraint,
+        }
+    }
 }
 
 impl<F: Field, const IO: usize, const S: usize, const I: usize> SumcheckFunction<F>

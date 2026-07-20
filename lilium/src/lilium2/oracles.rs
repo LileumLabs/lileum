@@ -41,6 +41,19 @@ where
     SF: SumcheckFunction<F>,
     C: CommitmentScheme<F>,
 {
+    pub fn new(
+        matrices: [Rc<Matrix>; N],
+        vector: SF::Mles<bool>,
+        committed_oracle: CommittedOracle<F, C, SF>,
+    ) -> Self {
+        Self {
+            matrices,
+            vector,
+            committed_oracle,
+            _f: PhantomData,
+        }
+    }
+
     pub fn matrices(&self) -> &[Rc<Matrix>; N] {
         &self.matrices
     }
