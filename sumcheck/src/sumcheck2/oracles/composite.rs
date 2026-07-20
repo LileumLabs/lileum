@@ -1,7 +1,9 @@
 use crate::{
+    folding::utils::FieldFolder,
     polynomials::MultiPoint,
     sumcheck2::{
         evals::{EvalsCore, EvalsExt},
+        folding::Foldable,
         oracles::{
             partial::{
                 Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance,
@@ -115,6 +117,25 @@ where
 {
     pub oracle1_instance: P1::Instance,
     pub oracle2_instance: P2::Instance,
+}
+
+impl<F, SF, P1, P2> Foldable<F> for CompositeOracleInstance<F, SF, P1, P2>
+where
+    F: Field,
+    SF: SumcheckFunction<F>,
+    P1: PartialOracle<F, SF>,
+    P2: PartialOracle<F, SF>,
+    P1::Instance: Foldable<F>,
+    P2::Instance: Foldable<F>,
+{
+    fn fold(folder: &FieldFolder<F>, a: Self, b: Self) -> Self {
+        let oracle1_instance = P1::Instance::fold(folder, a.oracle1_instance, b.oracle1_instance);
+        let oracle2_instance = P2::Instance::fold(folder, a.oracle2_instance, b.oracle2_instance);
+        Self {
+            oracle1_instance,
+            oracle2_instance,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]

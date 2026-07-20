@@ -1,7 +1,9 @@
 use crate::{
+    folding::utils::FieldFolder,
     polynomials::MultiPoint,
     sumcheck2::{
         evals::EvalsCore,
+        folding::Foldable,
         oracles::{
             composite::Either,
             partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
@@ -83,6 +85,28 @@ pub struct CoreOracleInstance<F, SF> {
     /// Elements which define small polynomials.
     elements: Vec<Vec<F>>,
     _f: PhantomData<SF>,
+}
+
+impl<F: Field, SF> Foldable<F> for CoreOracleInstance<F, SF> {
+    fn fold(folder: &FieldFolder<F>, a: Self, b: Self) -> Self {
+        let elements = a
+            .elements
+            .into_iter()
+            .zip(b.elements)
+            .map(|(a, b)| {
+                //TODO: Maybe this shoudln't panic.
+                assert_eq!(a.len(), b.len());
+                a.into_iter()
+                    .zip(b)
+                    .map(|(a, b)| folder.fold_elem(a, b))
+                    .collect()
+            })
+            .collect();
+        Self {
+            elements,
+            _f: PhantomData,
+        }
+    }
 }
 
 impl<F, SF> CoreOracleInstance<F, SF>

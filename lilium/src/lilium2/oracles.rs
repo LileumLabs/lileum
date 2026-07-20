@@ -9,9 +9,11 @@ use commit::commit2::{
 };
 use std::{marker::PhantomData, ops::Add, rc::Rc};
 use sumcheck::{
+    folding::utils::FieldFolder,
     polynomials::MultiPoint,
     sumcheck2::{
         evals::EvalsCore,
+        folding::Foldable,
         oracles::{
             composite::{CompositeOracle, Either},
             core::CoreOracle,
@@ -82,6 +84,12 @@ impl<F: Field, C: CommitmentScheme<F>> Message<F> for MatrixProductInstance<F, C
 
     fn to_field_elements(&self, _: &Self::Params) -> Result<Vec<F>, Self::Error> {
         self.0.to_field_elements(&())
+    }
+}
+
+impl<F: Field, C: CommitmentScheme<F>> Foldable<F> for MatrixProductInstance<F, C> {
+    fn fold(folder: &FieldFolder<F>, a: Self, b: Self) -> Self {
+        Self(folder.fold_abstract(a.0, b.0))
     }
 }
 
