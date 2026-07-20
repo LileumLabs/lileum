@@ -11,6 +11,7 @@ use transcript::reduction2::{
 };
 
 #[derive(Clone, Copy, Debug)]
+/// FLCS -> ()
 pub struct FlcsArgument;
 
 #[derive(Clone, Debug)]

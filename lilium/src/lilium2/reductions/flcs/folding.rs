@@ -19,6 +19,7 @@ use transcript::reduction2::{
 };
 
 #[derive(Clone, Copy, Debug)]
+/// FLCS x FLCS -> FLCS
 pub struct FlcsFoldingScheme;
 
 pub struct ProverKey<F, C, const IO: usize, const S: usize, const I: usize>

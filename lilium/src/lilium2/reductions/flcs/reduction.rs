@@ -31,6 +31,7 @@ use transcript::reduction2::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 
+/// FLCS -> CommitOpening
 pub struct FlcsReduction;
 
 type CompositeKey<F, C, const IO: usize, SF> =

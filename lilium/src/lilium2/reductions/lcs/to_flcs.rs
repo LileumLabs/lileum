@@ -18,6 +18,7 @@ use transcript::reduction2::{
 };
 
 #[derive(Clone, Debug)]
+/// LCS -> FLCS
 pub struct ToFlcs;
 
 impl<F, C, const I: usize, const IO: usize, const S: usize>

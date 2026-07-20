@@ -21,6 +21,7 @@ use transcript::reduction2::{
 };
 
 #[derive(Clone, Debug)]
+/// LCS -> ()
 pub struct LcsArgument;
 
 impl<F, C, const I: usize, const IO: usize, const S: usize>
