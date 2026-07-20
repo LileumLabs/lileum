@@ -60,6 +60,10 @@ impl<F: Field, const IO: usize, const S: usize, const I: usize> FlcsEvals<F, IO,
             ..Default::default()
         }
     }
+
+    pub fn w(&self) -> F {
+        self.w
+    }
 }
 
 impl<const IO: usize, const S: usize, const I: usize> FlcsEvals<bool, IO, S, I> {
