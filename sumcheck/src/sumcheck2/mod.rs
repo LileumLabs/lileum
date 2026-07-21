@@ -7,6 +7,8 @@ pub mod oracles;
 mod prove;
 mod reduction;
 mod relation;
+#[cfg(test)]
+mod tests;
 pub mod zerocheck;
 
 pub use oracles::OracleQueryInstance;
