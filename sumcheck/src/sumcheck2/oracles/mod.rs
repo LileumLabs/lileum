@@ -9,6 +9,7 @@ mod empty;
 mod function;
 pub mod partial;
 pub mod small;
+pub mod testing;
 
 pub use function::SumcheckFunction;
 
