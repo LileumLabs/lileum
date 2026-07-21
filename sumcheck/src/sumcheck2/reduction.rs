@@ -37,7 +37,7 @@ impl<F: Field> Message<F> for SumcheckMessage<F> {
     }
 
     fn to_field_elements(&self, params: &Self::Params) -> Result<Vec<F>, Self::Error> {
-        if self.0.len() == *params {
+        if self.0.len() == (params + 1) {
             Ok(self.0.clone())
         } else {
             Err(UnexpectedDegree)
