@@ -93,6 +93,7 @@ impl<F: Field, O: Oracle<F>> Message<F> for SumcheckInstance<F, O> {
 }
 
 /// The sumcheck relation over a given oracle.
+#[derive(Clone, Copy, Debug)]
 pub struct SumcheckRelation<F, O>(PhantomData<(F, O)>);
 
 impl<F: Field, O: Oracle<F>> Relation for SumcheckRelation<F, O> {

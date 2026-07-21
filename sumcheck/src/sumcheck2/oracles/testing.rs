@@ -2,7 +2,7 @@ use crate::{
     polynomials::MultiPoint,
     sumcheck2::{
         evals::{EvalsExt, Mles},
-        oracles::{EvalLocation, Oracle, SumcheckFunction},
+        oracles::{partial::Nature, EvalLocation, Oracle, SumcheckFunction},
     },
 };
 use ark_ff::Field;
@@ -17,6 +17,8 @@ pub struct TestingOracle<F: Field, SF: SumcheckFunction<F>> {
 
 #[derive(Clone, Copy, Debug)]
 pub struct TestingNature;
+
+impl Nature for TestingNature {}
 
 impl From<TestingNature> for EvalLocation {
     fn from(_: TestingNature) -> Self {

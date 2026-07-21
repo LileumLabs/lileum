@@ -21,6 +21,7 @@ where
     transcript_descriptor: TranscriptDescriptor<F, S>,
 }
 
+#[derive(Debug)]
 pub enum VerificationError<F, R1, R2, R>
 where
     F: Field,

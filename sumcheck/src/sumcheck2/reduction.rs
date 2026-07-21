@@ -47,6 +47,7 @@ impl<F: Field> Message<F> for SumcheckMessage<F> {
 
 /// The sumcheck reduction from the sumcheck relation to
 /// the oracle query relation.
+#[derive(Clone, Debug)]
 pub struct SumcheckReduction<F, O>(PhantomData<(F, O)>);
 
 #[derive(Clone, Copy, Debug)]

@@ -4,7 +4,7 @@ use std::vec::IntoIter;
 use transcript::Message;
 
 /// A point with `n` variables
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MultiPoint<F: Field>(Vec<F>);
 
 impl<F: Field> Message<F> for MultiPoint<F> {

@@ -81,6 +81,7 @@ where
 /// The oracle query relation.
 /// To be in the relation means that evaluating the given oracle
 /// on the given point, results in the given evaluation.
+#[derive(Clone, Copy, Debug)]
 pub struct QueryRelation<F, O>(PhantomData<(F, O)>);
 
 impl<F: Field, O: Oracle<F>> Relation for QueryRelation<F, O> {
