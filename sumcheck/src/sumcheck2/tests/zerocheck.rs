@@ -12,6 +12,7 @@ use crate::{
     },
 };
 use ark_ff::{Field, PrimeField};
+use rand::{rngs::StdRng, SeedableRng};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
 use transcript::reduction2::{Prover, ProverOutput, Relation, Verifier};
@@ -33,10 +34,15 @@ fn product_zerocheck_test<F: PrimeField>() {
     let prover1 = Prover::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle, &oracle, params);
     let verifier1 = Verifier::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle, &oracle, params);
 
-    let witness = ProductGate {
-        factors: [2_u8, 3, 6].map(F::from),
-    };
-    let witness = vec![witness; 1 << VARS];
+    let mut rng = StdRng::seed_from_u64(0);
+    let witness: Vec<ProductGate<F>> = (0..(1 << VARS))
+        .map(|_| {
+            let a = F::rand(&mut rng);
+            let b = F::rand(&mut rng);
+            let c = a * b;
+            ProductGate { factors: [a, b, c] }
+        })
+        .collect();
 
     // The instance of zerocheck is just an instance of the corresponding oracle.
     // There is no sum like with a SumcheckInstance as the only valid sum is 0.
