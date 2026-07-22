@@ -76,6 +76,7 @@ impl<F: Field> SumcheckVerifierKey<F> {
     /// which adds an extra multiplication at the end.
     pub(crate) fn increase_degree(mut self) -> Self {
         self.degree += 1;
+        self.weights = BarycentricWeights::compute(self.degree as u32);
         self
     }
 }
