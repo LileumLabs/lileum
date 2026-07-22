@@ -11,6 +11,7 @@ use crate::{
     },
 };
 use ark_ff::{Field, PrimeField};
+use rand::{rngs::StdRng, SeedableRng};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
 use transcript::reduction2::{Prover, ProverOutput, Relation, Verifier};
@@ -37,16 +38,22 @@ fn product_sumcheck_test<F: PrimeField>() {
     let verifier = Verifier::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle, params);
 
     // Create a sample witness.
-    let witness = ProductSum {
-        factors: [2_u8, 3, 5].map(F::from),
-    };
-    let witness = vec![witness; 1 << VARS];
+    let mut rng = StdRng::seed_from_u64(0);
+    let witness: Vec<ProductSum<F>> = (0..(1 << VARS))
+        .map(|_| {
+            let factors: [F; 3] = [(); 3].map(|_| F::rand(&mut rng));
+            ProductSum { factors }
+        })
+        .collect();
 
     // The expected sum.
-    let sum: u64 = (2 * 3 * 5) * (1 << VARS);
+    let sum: F = witness.iter().fold(F::ZERO, |acc, e| {
+        let [a, b, c] = e.factors;
+        acc + a * b * c
+    });
     // A sumcheck instance is the expected sum and an instance of the underlying oracle.
     // In this case the oracle used (TestingOracle) as no instance.
-    let sumcheck_instance = SumcheckInstance::new(F::from(sum), ());
+    let sumcheck_instance = SumcheckInstance::new(sum, ());
 
     // prover.prove() takes an instance-witness in R1 pair and returns an
     // instance-witness pair in R2, plus a proof of the reduction.
