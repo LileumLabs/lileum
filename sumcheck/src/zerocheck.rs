@@ -23,7 +23,7 @@ use transcript::{params::ParamResolver, Transcript};
 /// Represented as a product of degree 1 univariate polynomials.
 /// For v varibles, point evaluation if O(v) and MLE computation is
 /// O(2^v).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CompactPowers<F: Field> {
     coefficients: Vec<(F, F)>,
 }

@@ -9,6 +9,7 @@ use std::marker::PhantomData;
 use transcript::reduction2::{Message, Relation};
 
 /// The sumcheck relation over a given oracle.
+#[derive(Clone, Copy, Debug)]
 pub struct Zerocheck<F, O>(PhantomData<(F, O)>);
 
 impl<F: Field, O: Oracle<F>> Relation for Zerocheck<F, O> {

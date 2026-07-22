@@ -13,7 +13,7 @@ pub mod testing;
 
 pub use function::SumcheckFunction;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 /// An instance in the QueryRelation, made up of an instance of
 /// the oracle, an evaluation point, and an evaluation.
 pub struct OracleQueryInstance<F: Field, O> {

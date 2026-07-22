@@ -18,6 +18,7 @@ use transcript::reduction2::{
     VerifierTranscript,
 };
 
+#[derive(Clone, Copy, Debug)]
 pub struct ZerocheckReduction<F, O>(PhantomData<(F, O)>);
 
 impl<F, O> Reduction<F, Zerocheck<F, O>, ZeroSumcheck<F, O>> for ZerocheckReduction<F, O>
