@@ -234,7 +234,7 @@ impl<F: Field, O: Oracle<F>> prove::ProverKey<F, O> {
             left.iter().zip(right).map(|(left, right)| [*left, *right])
         };
 
-        let mut message = vec![F::zero(); degree];
+        let mut message = vec![F::zero(); degree + 1];
         for ((left, right), powers) in left.iter().zip(right).zip(powers) {
             Self::zerocheck_eval_acc(data, &mut message, [left, right], powers, sum.is_zero());
         }
