@@ -272,7 +272,7 @@ impl<F: Field, O: Oracle<F>> prove::ProverKey<F, O> {
 
         let acc: &mut [F] = if sums_to_zero { &mut acc[2..] } else { acc };
 
-        for m in acc[2..].iter_mut() {
+        for m in acc.iter_mut() {
             let evals = <O::Function as Evals>::map_evals(&e, |(eval, _)| *eval);
             let eval = O::Function::function(data, &evals);
 
