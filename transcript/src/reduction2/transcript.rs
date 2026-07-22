@@ -249,10 +249,12 @@ where
             _f,
         } = self;
 
+        sponge.finish().map_err(Error::SpongeError)?;
+
         if rounds.next().is_some() {
             return Err(Error::UnexpectedFinish);
         }
 
-        sponge.finish().map_err(Error::SpongeError)
+        Ok(())
     }
 }

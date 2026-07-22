@@ -80,7 +80,10 @@ where
 
         // This shouldn't be possible through the public API.
         if let Err(err) = transcript.finish() {
-            panic!("Transcript error: {:?}", err);
+            // TODO: use let chain
+            if reduced.is_ok() {
+                panic!("Transcript error: {:?}", err);
+            }
         }
 
         reduced
