@@ -182,7 +182,7 @@ impl<F: Field, O: Oracle<F>> prove::ProverKey<F, O> {
         witness: Vec<Mles<O::Function, F>>,
         transcript: &mut Transcript<F, S>,
         instance_evals: Mles<O::Function, F>,
-        sum: F,
+        mut sum: F,
         powers: CompactPowers<F>,
     ) -> (Vec<SumcheckMessage<F>>, MultiPoint<F>, F) {
         let mut witness = self.prepare_witness(witness, instance_evals);
@@ -194,6 +194,8 @@ impl<F: Field, O: Oracle<F>> prove::ProverKey<F, O> {
 
         for _ in 0..self.vars() {
             let message = self.zerocheck_message(&witness, &powers_over_domain, sum);
+            // To dissable the optimization after the first round.
+            sum = F::ONE;
             let degree = self.degree();
             let [r] = transcript.send_message(&message, &degree);
 
