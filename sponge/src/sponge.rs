@@ -259,8 +259,20 @@ where
             }
             Some(Pattern::Squeeze(n)) => Pattern::Squeeze(n + 1),
             None => {
-                // as I don't think there is any reason to start with squeezing
-                return Err(Error::SqueezeBeforeAbsorb);
+                // Due to a lack of legit reasons to do this, it will be allowed
+                // only for tests.
+                cfg_select! {
+                    //TODO: this may not be the ideal way to use it. It may be better
+                    //to use a feature.
+                    debug_assertions => {
+                        self.squeeze_pos = R;
+                        Pattern::Squeeze(1)
+                    },
+                    _ => {
+                        // As I don't think there is any reason to start with squeezing.
+                        return Err(Error::SqueezeBeforeAbsorb);
+                    }
+                }
             }
         };
         self.running_pattern.push(to_push);
