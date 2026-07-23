@@ -49,7 +49,9 @@ where
         builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
         let degree = key.degree + 1;
-        builder.round::<F, SumcheckMessage<F>, 1>(&degree)
+        builder
+            .round::<F, (), 1>(&())
+            .round::<F, SumcheckMessage<F>, 1>(&degree)
     }
 
     fn verifier_key(oracle: &O, _: &O) -> Self::VerifierKey {
