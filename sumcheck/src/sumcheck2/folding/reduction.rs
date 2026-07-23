@@ -112,15 +112,15 @@ where
         };
         // Message is sent and sumcheck challenge received.
         let [r] = transcript.send_message(&message, &(key.degree + 1));
+        let message_at_r = message.eval_at_x(r, &key.extended_weights);
 
         // Checking that message agrees with sum.
-        let sum = {
+        {
             let sum = instance[0].sum * (F::ONE - beta) + instance[1].sum * beta;
             let message = message.to_message();
             let eval_zero = message.eval_at_0();
             let eval_one = message.eval_at_1();
             assert_eq!(sum, eval_zero + eval_one);
-            sum
         };
 
         let proof = message;
@@ -129,6 +129,8 @@ where
             let folder = FieldFolder::new(r);
             let [a, b] = instance;
             let oracle_instance = Foldable::fold(&folder, a.oracle_instance, b.oracle_instance);
+            let eqr = r * beta + (F::one() - r) * (F::one() - beta);
+            let sum = message_at_r / eqr;
             SumcheckInstance {
                 sum,
                 oracle_instance,
