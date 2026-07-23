@@ -11,3 +11,7 @@ pub use zerofold::{ZeroFold, ZeroFoldKey};
 pub trait Foldable<F> {
     fn fold(folder: &FieldFolder<F>, a: Self, b: Self) -> Self;
 }
+
+impl<F> Foldable<F> for () {
+    fn fold(_: &FieldFolder<F>, _: (), _: ()) -> Self {}
+}

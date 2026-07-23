@@ -87,6 +87,7 @@ impl<R: Relation, const N: usize> Relation for [R; N] {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct FoldingRelation<R: Relation>(R);
 
 impl<R: Relation> Relation for FoldingRelation<R> {

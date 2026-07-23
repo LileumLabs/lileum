@@ -16,6 +16,7 @@ use transcript::reduction2::{
     TranscriptBuilder, VerifierTranscript,
 };
 
+#[derive(Clone, Copy, Debug)]
 pub struct SumFold<F, O>(PhantomData<(F, O)>);
 
 #[derive(Clone, Debug)]
