@@ -19,6 +19,7 @@ use transcript::reduction2::{
 };
 
 /// Folding scheme for zerocheck.
+#[derive(Clone, Copy, Debug)]
 pub struct ZeroFold<F, O>(PhantomData<(F, O)>);
 
 #[derive(Clone, Debug)]
