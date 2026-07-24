@@ -6,3 +6,4 @@ type Poseidon<F> = Sponge<F, PoseidonDefault<F>, 2, 1, 3>;
 mod sum_of_products;
 mod sumfold;
 mod zerocheck;
+mod zerofold;
