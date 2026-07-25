@@ -39,6 +39,16 @@ impl<F: Field> MultiPoint<F> {
     pub fn new(vars: Vec<F>) -> Self {
         MultiPoint(vars)
     }
+    pub fn new_from_index(mut index: usize, vars: usize) -> Self {
+        let vars = (0..vars)
+            .map(|_| {
+                let var = if index & 0b1 == 1 { F::ONE } else { F::ZERO };
+                index >>= 1;
+                var
+            })
+            .collect();
+        MultiPoint::new(vars)
+    }
     pub(crate) fn pop(mut self) -> (Self, F) {
         let var = self.0.pop().unwrap();
         (self, var)
