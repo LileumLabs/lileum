@@ -83,10 +83,10 @@ impl<F: Field, O: Oracle<F>> Relation for ZeroSumcheck<F, O> {
         witness: &Self::Witness,
     ) -> bool {
         let powers = instance.zerocheck_powers.eval_over_domain();
-        oracle_evals(structure, &instance.oracle_instance, witness)
+        let sum = oracle_evals(structure, &instance.oracle_instance, witness)
             .into_iter()
             .zip(powers)
-            .fold(F::ZERO, |acc, (eval, power)| acc + eval * power)
-            .is_zero()
+            .fold(F::ZERO, |acc, (eval, power)| acc + eval * power);
+        sum == instance.sum
     }
 }
