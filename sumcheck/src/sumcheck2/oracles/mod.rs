@@ -5,7 +5,7 @@ use transcript::reduction2::{Message, Relation};
 
 pub mod composite;
 pub mod core;
-mod empty;
+pub mod empty;
 mod function;
 pub mod partial;
 pub mod small;

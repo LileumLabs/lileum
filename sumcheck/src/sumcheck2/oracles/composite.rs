@@ -107,7 +107,7 @@ where
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CompositeOracleInstance<F, SF, P1, P2>
 where
     F: Field,

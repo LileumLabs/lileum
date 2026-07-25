@@ -80,7 +80,7 @@ where
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CoreOracleInstance<F, SF> {
     /// Elements which define small polynomials.
     elements: Vec<Vec<F>>,

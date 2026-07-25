@@ -9,8 +9,8 @@ use ark_ff::Field;
 use std::{marker::PhantomData, rc::Rc};
 use transcript::reduction2::{Message, NoError, Relation};
 
-#[derive(Clone, Copy, Debug)]
-struct EmptyOracle<F, SF>(PhantomData<(F, SF)>);
+// #[derive(Clone, Copy, Debug)]
+// pub struct EmptyOracle<F, SF>(PhantomData<(F, SF)>);
 
 #[derive(Clone, Copy, Debug)]
 pub enum NoNature {}
@@ -23,7 +23,7 @@ impl From<NoNature> for EvalLocation {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EmptyInstance;
 
 impl<F: Field> Message<F> for EmptyInstance {
@@ -38,10 +38,6 @@ impl<F: Field> Message<F> for EmptyInstance {
     fn to_field_elements(&self, _params: &Self::Params) -> Result<Vec<F>, Self::Error> {
         Ok(vec![])
     }
-}
-
-impl<F, SF> From<EmptyOracle<F, SF>> for () {
-    fn from(_value: EmptyOracle<F, SF>) -> Self {}
 }
 
 pub struct EmptyRelation<F, SF>(PhantomData<(F, SF)>);
