@@ -9,7 +9,7 @@ use ark_ff::Field;
 use std::{any::Any, fmt::Debug, marker::PhantomData, rc::Rc};
 use transcript::reduction2::{Message, Relation};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PartialQueryInstance<F, SF, O>
 where
     F: Field,
@@ -169,6 +169,7 @@ where
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct PartialQueryRelation<F, SF, P1, P2>(PhantomData<(F, SF, P1, P2)>);
 
 impl<F, SF, P1, P2> Relation for PartialQueryRelation<F, SF, P1, P2>
