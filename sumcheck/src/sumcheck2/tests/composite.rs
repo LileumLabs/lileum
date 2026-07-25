@@ -7,8 +7,8 @@ use crate::{
         oracles::{
             composite::{CompositeOracle, CompositeOracleInstance, Either},
             core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
-            empty::{EmptyInstance, NoNature},
-            partial::OracleParams,
+            empty::{EmptyInstance, EmptyRelation, NoNature},
+            partial::{OracleParams, PartialQueryRelation},
             QueryRelation, SumcheckFunction,
         },
         SumcheckInstance, SumcheckReduction, SumcheckRelation,
@@ -110,6 +110,36 @@ fn composite_sumcheck_test<F: PrimeField>() {
     let verifier_instance = verifier.verify(instance, proof).unwrap();
 
     assert_eq!(verifier_instance, query_instance);
+
+    // The second parameters is for the number of evaluations the prover will
+    // provide to evaluate the query.
+    // As the CoreOracle's verifier can compute all of them, the prover doesn't
+    // have to provide anything and the param will be 0.
+    let params = (params, 0);
+    let prover =
+        Prover::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle, oracle.inner_oracles(), params);
+    let verifier =
+        Verifier::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle, oracle.inner_oracles(), params);
+
+    let ProverOutput {
+        instance: partial_query_instance,
+        witness,
+        proof,
+    } = prover.prove(query_instance.clone(), witness);
+
+    assert!(PartialQueryRelation::check(
+        oracle.inner_oracles(),
+        &partial_query_instance,
+        &witness
+    ));
+
+    let (core_instance, empty) = partial_query_instance;
+
+    assert!(EmptyRelation::check(&(), &empty, &witness));
+
+    let verifier_instance = verifier.verify(query_instance, proof).unwrap();
+
+    assert_eq!(core_instance, verifier_instance.0);
 }
 
 fn eval_powers<F: Field>(coeffs: &[F], point: &MultiPoint<F>) -> F {
