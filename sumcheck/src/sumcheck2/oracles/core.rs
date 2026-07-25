@@ -346,6 +346,12 @@ where
                         assert_eq!(coeffs.len(), n);
                         F::ZERO
                     }
+                    CoreNature::SmallInstance(Coeffs::PerVariable) => {
+                        //TODO: While we can't know the correct number of variables
+                        //in this function, we can at least check it is always the same.
+                        let _ = coefficients.next().unwrap();
+                        F::ZERO
+                    }
                     CoreNature::Challenge => coefficients.next().unwrap()[0],
                     _ => F::ZERO,
                 }
