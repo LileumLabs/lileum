@@ -57,6 +57,7 @@ impl<F: Field> Mul for SumcheckMessage<F> {
     type Output = Self;
 
     fn mul(mut self, rhs: Self) -> Self::Output {
+        debug_assert_eq!(self.0.len(), rhs.0.len());
         for ab in self.0.iter_mut().zip(rhs.0.iter()) {
             let (a, b): (&mut F, &F) = ab;
             *a *= b;
