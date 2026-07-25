@@ -58,7 +58,7 @@ where
     fn verifier_key(oracle: &O, _: &O) -> Self::VerifierKey {
         let degree = folding_degree(oracle);
         let vars = oracle.vars();
-        let weights = (0..(vars + 1))
+        let weights = (0..=(vars + 1))
             .map(|i| BarycentricWeights::compute((degree + i) as u32))
             .collect();
         let data = oracle.data().clone();
@@ -92,7 +92,8 @@ where
 
         let [beta] = transcript.send_message(&(), &());
 
-        let eq_beta = SumcheckMessage::new_degree_n(F::one() - beta, beta, key.degree + 1);
+        let eq_beta =
+            SumcheckMessage::new_degree_n(F::one() - beta, beta, key.degree + key.vars + 1);
         // Compute final message eq(beta,x) * f(x).
         // By doing it at the end, having to compute d+2 points in the whole hypercube is
         // avoided, it is done instead over d+1 points.
@@ -262,10 +263,7 @@ impl<F: Field, O: Oracle<F>> ZeroFoldKey<F, O> {
                 Self::fold_with_powers(powers, messages, weights)
             });
 
-        assert_eq!(
-            message.len(),
-            self.weights.last().unwrap().domain_size() + 1
-        );
+        assert_eq!(message.len(), self.weights[self.vars].domain_size());
         SumcheckMessage::new(message)
     }
 
