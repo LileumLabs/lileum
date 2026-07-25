@@ -18,6 +18,8 @@ use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
 use transcript::reduction2::{FoldingRelation, Prover, ProverOutput, Relation, Verifier};
 
+// As the folding scheme is [ZeroSumcheck;2] -> ZeroSumcheck, but we start
+// with [Zerocheck;2], we need first to reduce [Zerocheck;2] -> [ZeroSumcheck;2].
 type Reduction1<F> = ZerocheckReduction<F, TestingOracle<F, ProductGate<()>>>;
 
 type FoldingScheme<F> = ZeroFold<F, TestingOracle<F, ProductGate<()>>>;
@@ -27,6 +29,9 @@ const VARS: usize = 4;
 fn product_zerofold_test<F: PrimeField>() {
     let oracle = TestingOracle::new(VARS, ());
     let params = ();
+
+    // From the proof being just (), we know the protocol is non-interactive, and the verifier
+    // alone can compute the instance without receiving a proof from the prover.
 
     // let prover = Prover::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle, &oracle, params);
     let verifier = Verifier::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle, &oracle, params);
@@ -41,23 +46,25 @@ fn product_zerofold_test<F: PrimeField>() {
     let witness1: Vec<ProductGate<F>> = (0..(1 << VARS)).map(&mut witness).collect();
     let witness2: Vec<ProductGate<F>> = (0..(1 << VARS)).map(witness).collect();
 
+    // Two oracle instances of the TestingOracle, which are just ().
     let instances = [(); 2];
     assert!(Zerocheck::check(&oracle, &(), &witness1));
     assert!(Zerocheck::check(&oracle, &(), &witness2));
 
     let instances = instances.map(|instance| verifier.verify(instance, ()).unwrap());
 
+    // They each individually belong to ZeroSumcheck.
     assert!(ZeroSumcheck::check(&oracle, &instances[0], &witness1));
     assert!(ZeroSumcheck::check(&oracle, &instances[1], &witness2));
 
     let witnesses = [witness1, witness2];
 
+    // And by extension the 2 together belong to FoldingRelation<ZeroSumcheck> too.
     assert!(FoldingRelation::<ZeroSumcheck<F, _>>::check(
         &oracle, &instances, &witnesses
     ));
 
-    // assert!(Zerocheck::check(&oracle, &zerocheck_instance, &witness));
-    //
+    // Now we create a folding prover and verifier.
     let params = (OracleParams { vars: VARS }, ());
     let prover = Prover::<F, Poseidon<F>, _, _, FoldingScheme<F>>::new(&oracle, &oracle, params);
     let verifier =
@@ -69,6 +76,7 @@ fn product_zerofold_test<F: PrimeField>() {
         proof,
     } = prover.prove(instances.clone(), witnesses);
 
+    // From 2 ZeroSumcheck instance-witness pairs, we know have only 1 left.
     assert!(ZeroSumcheck::check(&oracle, &prover_instance, &witness));
 
     let verifier_instance = verifier.verify(instances, proof).unwrap();
