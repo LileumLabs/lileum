@@ -18,7 +18,7 @@ use ark_ff::{Field, PrimeField};
 use rand::{rngs::StdRng, SeedableRng};
 use std::{fmt::Debug, iter::successors, rc::Rc, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
-use transcript::reduction2::{Prover, ProverOutput, Relation, Verifier};
+use transcript::reduction2::{Prover, ProverOutput, Relation, UnsafeVerifier, Verifier};
 
 type Oracle<F, SF = SmallEvals<()>> = CompositeOracle<F, SF, CoreOracle<F, SF>, ()>;
 type Sumcheck<F> = SumcheckReduction<F, Oracle<F>>;
@@ -141,6 +141,13 @@ fn composite_sumcheck_test<F: PrimeField>() {
     let verifier_instance = verifier.verify(query_instance, proof).unwrap();
 
     assert_eq!(core_instance, verifier_instance.0);
+
+    let verifier = UnsafeVerifier::<F, Poseidon<F>, _, _, CoreOracle<F, SmallEvals<()>>>::new(
+        &oracle.inner_oracles().0,
+        &(),
+    );
+
+    verifier.verify(core_instance, ());
 }
 
 fn eval_powers<F: Field>(coeffs: &[F], point: &MultiPoint<F>) -> F {
