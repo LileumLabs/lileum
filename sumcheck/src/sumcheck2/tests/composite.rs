@@ -6,7 +6,7 @@ use crate::{
         evals::{Evals, EvalsCore},
         oracles::{
             composite::{CompositeOracle, CompositeOracleInstance, Either},
-            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
+            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, CoreQueryRelation},
             empty::{EmptyInstance, EmptyRelation, NoNature},
             partial::{OracleParams, PartialQueryRelation},
             QueryRelation, SumcheckFunction,
@@ -132,6 +132,11 @@ fn composite_sumcheck_test<F: PrimeField>() {
     let (core_instance, empty) = partial_query_instance;
 
     assert!(EmptyRelation::check(&(), &empty, &witness));
+    assert!(CoreQueryRelation::check(
+        &oracle.inner_oracles().0,
+        &core_instance,
+        &witness
+    ));
 
     let verifier_instance = verifier.verify(query_instance, proof).unwrap();
 
