@@ -60,6 +60,7 @@ fn find_z<C: SWCurveConfig>() -> Option<F<C>> {
     None
 }
 
+#[derive(Copy, PartialEq, Eq)]
 pub struct SvdwMap<C: SWCurveConfig> {
     z: C::BaseField,
 }

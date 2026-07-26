@@ -1,7 +1,7 @@
 use ark_ff::Field;
 use std::{marker::PhantomData, rc::Rc};
-use sumcheck::{eq, polynomials::MultiPoint};
-use transcript::reduction2::Relation;
+use sumcheck::{eq, polynomials::MultiPoint, sumcheck2::oracles::UnexpectedVars};
+use transcript::reduction2::{Message, Relation};
 
 mod committed;
 pub mod flexible;
@@ -64,9 +64,27 @@ pub struct StaticSparkStructure<F: Field, const N: usize> {
 
 pub struct StaticSparkRelation<F, const N: usize>(PhantomData<F>);
 
+#[derive(Clone, Debug)]
 pub struct SparkInstance<F: Field> {
     point: MultiPoint<F>,
     eval: F,
+}
+
+impl<F: Field> Message<F> for SparkInstance<F> {
+    type Params = usize;
+
+    type Error = UnexpectedVars;
+
+    fn len(params: &Self::Params) -> usize {
+        MultiPoint::<F>::len(params) + 1
+    }
+
+    fn to_field_elements(&self, params: &Self::Params) -> Result<Vec<F>, Self::Error> {
+        let SparkInstance { point, eval } = self;
+        let mut elems = point.to_field_elements(params)?;
+        elems.push(*eval);
+        Ok(elems)
+    }
 }
 
 impl<F: Field> SparkInstance<F> {
