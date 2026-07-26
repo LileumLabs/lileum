@@ -535,9 +535,9 @@ where
 
         if eval == expected_eval {
             let instance1 =
-                PartialQueryInstance::new(instance1, oracle_instance.oracle1_instance, &point);
+                PartialQueryInstance::new(evals1, oracle_instance.oracle1_instance, &point);
             let instance2 =
-                PartialQueryInstance::new(instance2, oracle_instance.oracle2_instance, &point);
+                PartialQueryInstance::new(evals2, oracle_instance.oracle2_instance, &point);
             Ok((instance1, instance2))
         } else {
             Err(())
