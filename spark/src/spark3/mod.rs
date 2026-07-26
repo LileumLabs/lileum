@@ -8,6 +8,8 @@ pub mod flexible;
 mod prove;
 mod reduction;
 pub mod sumcheck_argument;
+#[cfg(test)]
+mod tests;
 
 pub use committed::CommittedSparkRelation;
 pub use flexible::FlexibleSpark;
@@ -24,6 +26,10 @@ pub struct SparseMle<F, const N: usize> {
 }
 
 impl<F: Field, const N: usize> SparseMle<F, N> {
+    pub fn new(addresses: Vec<[u8; N]>, values: Vec<F>) -> Self {
+        Self { addresses, values }
+    }
+
     pub fn eval(&self, point: &MultiPoint<F>) -> F {
         assert_eq!(point.vars(), N * 8);
         assert!(self.values.len().is_power_of_two());
