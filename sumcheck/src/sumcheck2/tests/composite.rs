@@ -111,11 +111,7 @@ fn composite_sumcheck_test<F: PrimeField>() {
 
     assert_eq!(verifier_instance, query_instance);
 
-    // The second parameters is for the number of evaluations the prover will
-    // provide to evaluate the query.
-    // As the CoreOracle's verifier can compute all of them, the prover doesn't
-    // have to provide anything and the param will be 0.
-    let params = (params, 0);
+    let params = (params, VARS);
     let prover =
         Prover::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle, oracle.inner_oracles(), params);
     let verifier =
