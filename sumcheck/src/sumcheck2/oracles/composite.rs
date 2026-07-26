@@ -406,7 +406,7 @@ where
         let evals1 = SF::combine(&evals, &evals1, |eval, query| match query {
             OracleEval::Computed(e) => {
                 assert_eq!(e, eval);
-                None
+                Some(*e)
             }
             OracleEval::ProverProvided => Some(*eval),
             OracleEval::None => None,
@@ -416,7 +416,7 @@ where
         let evals2 = SF::combine(&evals, &evals2, |eval, query| match query {
             OracleEval::Computed(e) => {
                 assert_eq!(e, eval);
-                None
+                Some(*e)
             }
             OracleEval::ProverProvided => Some(*eval),
             OracleEval::None => None,
@@ -430,37 +430,29 @@ where
                 Either::Right(()) => Either::Right(nature.prover_provided()),
             },
         );
-        let _ = SF::combine(&check, &evals1, |check, eval| {
-            let valid = match check {
-                Either::Left(true) => eval.is_some(),
-                Either::Left(false) => eval.is_none(),
-                Either::Right(true) | Either::Right(false) => eval.is_none(),
-            };
-            assert!(valid)
+        let prover_evals1 = SF::combine(&check, &evals1, |check, eval| match (check, eval) {
+            (Either::Left(provided), Some(e)) => provided.then_some(*e),
+            (Either::Right(_), None) => None,
+            (Either::Left(_), None) | (Either::Right(_), Some(_)) => panic!(),
         });
-        let _ = SF::combine(&check, &evals2, |check, eval| {
-            let valid = match check {
-                Either::Right(true) => eval.is_some(),
-                Either::Right(false) => eval.is_none(),
-                Either::Left(true) | Either::Left(false) => eval.is_none(),
-            };
-            assert!(valid)
+        let prover_evals2 = SF::combine(&check, &evals2, |check, eval| match (check, eval) {
+            (Either::Right(provided), Some(e)) => provided.then_some(*e),
+            (Either::Left(_), None) => None,
+            (Either::Right(_), None) | (Either::Left(_), Some(_)) => panic!(),
         });
-
-        let prover_evals = SF::combine(&evals1, &evals2, |eval1, eval2| match (eval1, eval2) {
+        let prover_evals = SF::combine(&prover_evals1, &prover_evals2, |e1, e2| match (e1, e2) {
             (None, None) => None,
             (None, Some(e)) | (Some(e), None) => Some(*e),
             (Some(_), Some(_)) => panic!(),
         });
+
         let prover_evals = prover_evals.flatten_vec().into_iter().flatten().collect();
         let prover_evals = ProverEvals(prover_evals);
         let [] = transcript.send_message(&prover_evals, &key.prover_evals);
         let proof = prover_evals;
 
-        let instance1 =
-            PartialQueryInstance::new(evals1.clone(), oracle_instance.oracle1_instance, &point);
-        let instance2 =
-            PartialQueryInstance::new(evals2.clone(), oracle_instance.oracle2_instance, &point);
+        let instance1 = PartialQueryInstance::new(evals1, oracle_instance.oracle1_instance, &point);
+        let instance2 = PartialQueryInstance::new(evals2, oracle_instance.oracle2_instance, &point);
         let instance = (instance1, instance2);
 
         ProverOutput {
@@ -530,14 +522,8 @@ where
                 // (None, None, Either::Left(_)) => todo!(),
                 // (None, None, Either::Right(_)) => todo!(),
                 // (None, Some(_), Either::Left(_)) => todo!(),
-                (None, Some(e), Either::Right(nature)) => {
-                    assert!(nature.prover_provided());
-                    *e
-                }
-                (Some(e), None, Either::Left(nature)) => {
-                    assert!(nature.prover_provided());
-                    *e
-                }
+                (None, Some(e), Either::Right(_)) => *e,
+                (Some(e), None, Either::Left(_)) => *e,
                 // (Some(_), None, Either::Right(_)) => todo!(),
                 // (Some(_), Some(_), Either::Left(_)) => todo!(),
                 // (Some(_), Some(_), Either::Right(_)) => todo!(),
