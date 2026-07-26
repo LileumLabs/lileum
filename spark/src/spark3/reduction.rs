@@ -29,6 +29,7 @@ use transcript::reduction2::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 
+#[derive(Clone, Copy, Debug)]
 pub struct SparkReduction<F: Field, C: CommitmentScheme<F>, const N: usize>(PhantomData<(F, C)>);
 
 type Rel1<F, const N: usize> = StaticSparkRelation<F, N>;

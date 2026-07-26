@@ -14,9 +14,10 @@ use transcript::reduction2::{Message, Relation};
 /// P(x) = y
 /// And:
 /// C = pcs(P)
+#[derive(Clone, Copy, Debug)]
 pub struct OpeningRelation<F, C>(PhantomData<(F, C)>);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OpenInstance<F: Field, C: CommitmentSchemeCore<F>> {
     pub commit: C::Commitment,
     pub point: MultiPoint<F>,

@@ -62,6 +62,7 @@ pub struct StaticSparkStructure<F: Field, const N: usize> {
     mle: Rc<SparseMle<F, N>>,
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct StaticSparkRelation<F, const N: usize>(PhantomData<F>);
 
 #[derive(Clone, Debug)]
