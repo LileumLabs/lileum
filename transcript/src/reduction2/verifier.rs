@@ -1,6 +1,6 @@
 use crate::reduction2::{
     transcript::VerifierTranscript, transcript_builder::TranscriptDescriptor, GuardedProof,
-    Message, Reduction, Relation,
+    Message, Reduction, Relation, TranscriptBuilder,
 };
 
 use ark_ff::Field;
@@ -87,5 +87,67 @@ where
         }
 
         reduced
+    }
+}
+
+/// There are reductions which are not intended to be used alone, from
+/// relations whose instance is only supposed to exist transitively
+/// during the protocol, and thus don't implement [Message<F>].
+/// But it may still be desired to test them in isolation. For that
+/// purpose, this verifier works similarly to [Verifier], but `R1::Instance`
+/// doesn't need to implement [Message<F>].
+pub struct UnsafeVerifier<F, S, R1, R2, R>
+where
+    F: Field,
+    R1: Relation,
+    R2: Relation,
+    S: Duplex<F>,
+    R: Reduction<F, R1, R2>,
+{
+    key: R::VerifierKey,
+    transcript_descriptor: TranscriptDescriptor<F, S>,
+}
+
+impl<F, S, R1, R2, R> UnsafeVerifier<F, S, R1, R2, R>
+where
+    F: Field,
+    R1: Relation,
+    R2: Relation,
+    S: Duplex<F>,
+    R: Reduction<F, R1, R2>,
+{
+    /// Creates verifier from the structures of both relations.
+    pub fn new(structure_1: &R1::Structure, structure_2: &R2::Structure) -> Self {
+        let key = R::verifier_key(structure_1, structure_2);
+
+        let transcript_descriptor = TranscriptBuilder::new()
+            .subprotocol::<R, F, R1, R2>(&key)
+            .finish();
+
+        UnsafeVerifier {
+            key,
+            transcript_descriptor,
+        }
+    }
+
+    /// Verify that the instance is in R1 by the provided proof. Panics
+    /// if the reduction returns an error.
+    pub fn verify(&self, instance: R1::Instance, proof: R::Proof) -> R2::Instance {
+        let transcript = self.transcript_descriptor.instantiate();
+        let mut transcript = VerifierTranscript::<F, S>::new(transcript);
+
+        let proof = GuardedProof::new(proof);
+
+        let reduced = R::verify(&self.key, instance, proof, &mut transcript);
+
+        // This shouldn't be possible through the public API.
+        if let Err(err) = transcript.finish() {
+            // TODO: use let chain
+            if reduced.is_ok() {
+                panic!("Transcript error: {:?}", err);
+            }
+        }
+
+        reduced.unwrap()
     }
 }
