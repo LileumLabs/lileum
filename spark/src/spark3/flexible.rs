@@ -15,6 +15,7 @@ use transcript::reduction2::{
 
 /// Wrapper which dynamically chooses N as required, currently implemented up to
 /// 64 bits/8 segments.
+#[derive(Clone, Copy, Debug)]
 pub enum FlexibleSpark<F: Field, C: CommitmentScheme<F>> {
     S1(SparkReduction<F, C, 1>),
     S2(SparkReduction<F, C, 2>),

@@ -164,6 +164,7 @@ impl<F: Field> FlexibleSparkStructure<F> {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct FlexibleSparkRelation<F>(PhantomData<F>);
 
 impl<F: Field> Relation for FlexibleSparkRelation<F> {
