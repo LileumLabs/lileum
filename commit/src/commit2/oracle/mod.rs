@@ -472,7 +472,7 @@ where
         let filter: Vec<bool> = SF::natures()
             .flatten_vec()
             .into_iter()
-            .map(|nature| Option::from(nature).is_some())
+            .map(|nature| nature.into_dynamic().into::<CommittedNature>().is_some())
             .collect();
 
         let locations = SF::map_evals(&SF::natures(), |nature| (*nature).into());
@@ -485,9 +485,11 @@ where
             .into_iter()
             .zip(key.structure_evals.iter())
             .map(|(witness, structure)| {
+                space.clear();
                 let evals = merge::<F, SF>(structure, &instance_evals, &witness, &locations);
                 evals.flatten(&mut space);
                 let mut combined_eval = F::ZERO;
+
                 for (eval, is_committed) in space.iter().zip(&filter) {
                     if *is_committed {
                         combined_eval *= chall;
