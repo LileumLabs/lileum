@@ -132,7 +132,8 @@ impl<F: Field, O: Oracle<F>> Reduction<F, ZeroSumcheck<F, O>, QueryRelation<F, O
             oracle_instance,
         } = instance;
 
-        let oracle_witness = O::witness_from_evals(&witness);
+        // TODO: maybe it is better to compute the sumcheck witness here like in sumcheck.
+        let oracle_witness = O::witness_from_evals(witness.clone());
         let instance_evals = O::instance_evals(&oracle_instance);
         let (messages, point, eval) =
             key.prove_zerocheck(witness, transcript, instance_evals, sum, zerocheck_powers);

@@ -84,11 +84,9 @@ impl<F: Field, O: Oracle<F>> ProverKey<F, O> {
 
     pub(crate) fn prove<S: Duplex<F>>(
         &self,
-        witness: Vec<Mles<O::Function, F>>,
+        mut witness: Vec<Mles<O::Function, F>>,
         transcript: &mut Transcript<F, S>,
-        instance_evals: Mles<O::Function, F>,
     ) -> (Vec<SumcheckMessage<F>>, MultiPoint<F>, F) {
-        let mut witness = self.prepare_witness(witness, instance_evals);
         let mut vars = vec![];
         let mut messages = vec![];
 

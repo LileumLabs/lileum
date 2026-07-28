@@ -273,7 +273,7 @@ where
         )
     }
 
-    fn witness_from_evals(evals: &[SF::Mles<F>]) -> Self::Witness {
+    fn witness_from_evals(evals: Vec<SF::Mles<F>>) -> Self::Witness {
         evals.to_vec()
     }
 

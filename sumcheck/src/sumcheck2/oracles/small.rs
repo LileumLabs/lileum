@@ -88,7 +88,7 @@ impl<F: Field, SF: SumcheckFunction<F>> Oracle<F> for SmallEvalOracle<F, SF> {
         SF::map_evals(&self.evals, |f| f(point))
     }
 
-    fn witness_from_evals(_evals: &[SF::Mles<F>]) -> Self::Witness {}
+    fn witness_from_evals(_evals: Vec<SF::Mles<F>>) -> Self::Witness {}
 
     fn instance_evals(_instance: &()) -> SF::Mles<F> {
         SF::map_evals(&SF::natures(), |_| F::ZERO)

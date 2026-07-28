@@ -146,7 +146,7 @@ where
         instance: &Self::Instance,
         witness: &Self::Witness,
     ) -> Mles<Self::Function, F>;
-    fn witness_from_evals(evals: &[Mles<Self::Function, F>]) -> Self::Witness;
+    fn witness_from_evals(evals: Vec<Mles<Self::Function, F>>) -> Self::Witness;
     fn natures(&self) -> Mles<Self::Function, Self::Nature>;
     fn call_function<V: Var<F> + Debug>(&self, evals: &Mles<Self::Function, V>) -> V {
         let data = self.data();

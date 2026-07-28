@@ -66,8 +66,8 @@ where
         EvalsExt::eval(witness, point)
     }
 
-    fn witness_from_evals(evals: &[Mles<Self::Function, F>]) -> Self::Witness {
-        evals.to_vec()
+    fn witness_from_evals(evals: Vec<Mles<Self::Function, F>>) -> Self::Witness {
+        evals
     }
 
     fn natures(&self) -> Mles<Self::Function, Self::Nature> {

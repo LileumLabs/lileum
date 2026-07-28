@@ -171,9 +171,9 @@ impl<F: Field, O: Oracle<F>> Reduction<F, SumcheckRelation<F, O>, QueryRelation<
         witness: Vec<Mles<O::Function, F>>,
         transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<QueryRelation<F, O>, Self::Proof> {
-        let oracle_witness = O::witness_from_evals(&witness);
         let instance_evals = O::instance_evals(&instance.oracle_instance);
-        let (messages, point, eval) = key.prove(witness, transcript, instance_evals);
+        let witness = key.prepare_witness(witness, instance_evals);
+        let (messages, point, eval) = key.prove(witness.clone(), transcript);
 
         let instance = OracleQueryInstance {
             oracle_instance: instance.oracle_instance,
@@ -181,9 +181,10 @@ impl<F: Field, O: Oracle<F>> Reduction<F, SumcheckRelation<F, O>, QueryRelation<
             eval,
         };
 
+        let witness = O::witness_from_evals(witness);
+
         let proof = messages;
 
-        let witness = oracle_witness;
         ProverOutput {
             instance,
             witness,
