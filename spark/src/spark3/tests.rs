@@ -153,6 +153,7 @@ where
 
     let pcs = C::new(VARS);
     let mle = FlexibleSparkStructure::new(Rc::new(mle));
+    assert_eq!(eval, mle.eval(point.clone()));
 
     let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, VARS);
     let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, VARS);
@@ -181,4 +182,64 @@ fn single_dimension_flexible() {
 
     type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
     single_dimension_flex_test::<Fr, Scheme>();
+}
+
+fn two_dimensions_flex_test<F, C>()
+where
+    F: PrimeField,
+    C: CommitmentScheme<F>,
+{
+    let mut rng = StdRng::seed_from_u64(0);
+
+    let addresses: Vec<u64> = repeat(())
+        .map(|_| rng.gen::<u16>() as u64)
+        .take(1 << VARS)
+        .collect();
+    let values: Vec<F> = repeat(())
+        .map(|_| F::rand(&mut rng))
+        .take(1 << VARS)
+        .collect();
+
+    let mle = addresses
+        .iter()
+        .zip(&values)
+        .map(|(addr, val)| (*addr, *val))
+        .collect();
+
+    let pcs = C::new(VARS);
+    let mle = FlexibleSparkStructure::new(Rc::new(mle));
+
+    let (eval, point) = {
+        let point = [(); VARS * 2].map(|_| F::rand(&mut rng)).to_vec();
+        let point = MultiPoint::new(point);
+        (mle.eval(point.clone()), point)
+    };
+
+    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, VARS * 2);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, VARS * 2);
+
+    let instance = SparkInstance::new(point, eval);
+
+    assert!(FlexibleSparkRelation::check(&mle, &instance, &()));
+
+    let ProverOutput {
+        instance: open_instance,
+        witness,
+        proof,
+    } = prover.prove(instance.clone(), ());
+
+    assert!(OpeningRelation::check(&pcs, &open_instance, &witness));
+
+    let verifier_instance = verifier.verify(instance, proof).unwrap();
+
+    assert_eq!(open_instance, verifier_instance);
+}
+
+#[test]
+fn two_dimensions_flexible() {
+    use ark_vesta::{Fr, Projective, VestaConfig};
+    use commit::ipa2::IpaCommitmentScheme;
+
+    type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
+    two_dimensions_flex_test::<Fr, Scheme>();
 }
