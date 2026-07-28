@@ -85,10 +85,11 @@ where
     let mle = StaticSparkStructure { mle: mle.clone() };
 
     let pcs = C::new(VARS);
-    let prover = Prover::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle, &pcs, VARS);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle, &pcs, VARS);
+    let prover = Prover::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle, &pcs, VARS * 2);
+    let verifier =
+        Verifier::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle, &pcs, VARS * 2);
 
-    let point = [(); VARS].map(|_| F::rand(&mut rng)).to_vec();
+    let point = [(); VARS * 2].map(|_| F::rand(&mut rng)).to_vec();
     let point = MultiPoint::new(point);
 
     let eval = mle.mle.eval(&point);
