@@ -243,3 +243,69 @@ fn two_dimensions_flexible() {
     type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
     two_dimensions_flex_test::<Fr, Scheme>();
 }
+
+// fn test_flexible<F, C>(mle: Vec<(u64, F)>, point_vars: usize)
+fn test_flexible<F, C>(point_vars: usize)
+where
+    F: PrimeField,
+    C: CommitmentScheme<F>,
+{
+    let mut rng = StdRng::seed_from_u64(0);
+
+    let mut mle: Vec<(u64, F)> = repeat(())
+        .map(|_| {
+            let addr: u64 = rng.gen_range(0..(1 << point_vars));
+            let val = F::rand(&mut rng);
+            (addr, val)
+        })
+        .take(1 << VARS)
+        .collect();
+
+    // so that both extremes of the range are included.
+    mle[0].0 = 0;
+    mle[1].0 = (1 << point_vars) - 1;
+
+    let mle = FlexibleSparkStructure::new(Rc::new(mle));
+
+    let pcs = C::new(VARS);
+
+    let (eval, point) = {
+        let point = (0..point_vars).map(|_| F::rand(&mut rng)).collect();
+        let point = MultiPoint::new(point);
+        (mle.eval(point.clone()), point)
+    };
+
+    let vars = point_vars;
+    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, vars);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, vars);
+
+    let instance = SparkInstance::new(point, eval);
+
+    assert!(FlexibleSparkRelation::check(&mle, &instance, &()));
+
+    let ProverOutput {
+        instance: open_instance,
+        witness,
+        proof,
+    } = prover.prove(instance.clone(), ());
+
+    assert!(OpeningRelation::check(&pcs, &open_instance, &witness));
+
+    let verifier_instance = verifier.verify(instance, proof).unwrap();
+
+    assert_eq!(open_instance, verifier_instance);
+}
+
+#[test]
+fn flexible_edge_cases() {
+    use ark_vesta::{Fr, Projective, VestaConfig};
+    use commit::ipa2::IpaCommitmentScheme;
+
+    type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
+
+    test_flexible::<Fr, Scheme>(3);
+    test_flexible::<Fr, Scheme>(7);
+    test_flexible::<Fr, Scheme>(9);
+    test_flexible::<Fr, Scheme>(15);
+    test_flexible::<Fr, Scheme>(17);
+}
