@@ -265,9 +265,12 @@ where
         _instance: &Self::Instance,
         _point: &MultiPoint<F>,
     ) -> SF::Mles<OracleEval<F>> {
-        SF::map_evals(&SF::natures(), |nature| match Option::from(*nature) {
-            Some(_) => OracleEval::ProverProvided,
-            None => OracleEval::None,
+        SF::map_evals(&SF::natures(), |nature| {
+            let nature: Option<CommittedNature> = nature.into_dynamic().into();
+            match nature {
+                Some(_) => OracleEval::ProverProvided,
+                None => OracleEval::None,
+            }
         })
     }
 }
