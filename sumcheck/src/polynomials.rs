@@ -179,7 +179,7 @@ pub trait EvalsExt<F: Field>: Evals<F> + Sized {
                 }
             }
         }
-        todo!()
+        res
     }
 }
 
