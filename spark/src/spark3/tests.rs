@@ -1,5 +1,6 @@
 use crate::spark3::{
-    SparkInstance, SparkReduction, SparseMle, StaticSparkRelation, StaticSparkStructure,
+    FlexibleSpark, FlexibleSparkRelation, FlexibleSparkStructure, SparkInstance, SparkReduction,
+    SparseMle, StaticSparkRelation, StaticSparkStructure,
 };
 use ark_ff::PrimeField;
 use commit::commit2::{CommitmentScheme, OpeningRelation};
@@ -118,4 +119,66 @@ fn two_dimensions() {
 
     type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
     two_dimensions_test::<Fr, Scheme>();
+}
+
+fn single_dimension_flex_test<F, C>()
+where
+    F: PrimeField,
+    C: CommitmentScheme<F>,
+{
+    let mut rng = StdRng::seed_from_u64(0);
+
+    let addresses: Vec<[u8; 1]> = repeat(())
+        .enumerate()
+        .map(|(i, _)| [i as u8])
+        .take(1 << VARS)
+        .collect();
+    let values: Vec<F> = repeat(())
+        .map(|_| F::rand(&mut rng))
+        .take(1 << VARS)
+        .collect();
+
+    let mle = addresses
+        .iter()
+        .zip(&values)
+        .map(|([addr], val)| (*addr as u64, *val))
+        .collect();
+
+    let (eval, point) = {
+        let mle = SparseMle::new(addresses, values);
+        let point = [(); VARS].map(|_| F::rand(&mut rng)).to_vec();
+        let point = MultiPoint::new(point);
+        (mle.eval(&point), point)
+    };
+
+    let pcs = C::new(VARS);
+    let mle = FlexibleSparkStructure::new(Rc::new(mle));
+
+    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, VARS);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, VARS);
+
+    let instance = SparkInstance::new(point, eval);
+
+    assert!(FlexibleSparkRelation::check(&mle, &instance, &()));
+
+    let ProverOutput {
+        instance: open_instance,
+        witness,
+        proof,
+    } = prover.prove(instance.clone(), ());
+
+    assert!(OpeningRelation::check(&pcs, &open_instance, &witness));
+
+    let verifier_instance = verifier.verify(instance, proof).unwrap();
+
+    assert_eq!(open_instance, verifier_instance);
+}
+
+#[test]
+fn single_dimension_flexible() {
+    use ark_vesta::{Fr, Projective, VestaConfig};
+    use commit::ipa2::IpaCommitmentScheme;
+
+    type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
+    single_dimension_flex_test::<Fr, Scheme>();
 }
