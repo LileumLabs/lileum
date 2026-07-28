@@ -219,6 +219,7 @@ where
         _: (),
         transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<Rel2<F, C>, Self::Proof> {
+        let instance = instance.align_to_byte();
         macro_rules! prove {
             ($variant:path,$key:ident) => {{
                 let ProverOutput {
@@ -270,6 +271,7 @@ where
         transcript: &mut VerifierTranscript<F, S>,
     ) -> Result<OpenInstance<F, C>, Self::Error> {
         use VerifierKey::*;
+        let instance = instance.align_to_byte();
 
         macro_rules! verify {
             ($variant:path,$key:ident) => {{

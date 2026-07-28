@@ -77,6 +77,18 @@ pub struct SparkInstance<F: Field> {
     eval: F,
 }
 
+impl<F: Field> SparkInstance<F> {
+    pub(crate) fn align_to_byte(self) -> Self {
+        let Self { point, eval } = self;
+        let mut point = point.inner();
+        if point.len() % 8 != 0 {
+            point.resize((point.len() / 8) * 8 + 8, F::ZERO);
+        }
+        let point = MultiPoint::new(point);
+        Self { point, eval }
+    }
+}
+
 impl<F: Field> Message<F> for SparkInstance<F> {
     type Params = usize;
 
