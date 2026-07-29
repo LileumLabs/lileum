@@ -15,13 +15,31 @@ use sumcheck::sumcheck2::{
     oracles::Oracle,
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
 };
-use transcript::reduction2::Relation;
+use transcript::reduction2::{Message, NoError, Relation};
 
+#[derive(Clone, Copy, Debug)]
 pub struct LcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
 
+#[derive(Clone, Debug)]
 pub struct LcsInstance<F: Field, C: CommitmentScheme<F>, const I: usize> {
     pub(crate) witness_commit: C::Commitment,
     pub(crate) public_inputs: [F; I],
+}
+
+impl<F: Field, C: CommitmentScheme<F>, const I: usize> Message<F> for LcsInstance<F, C, I> {
+    type Params = ();
+
+    type Error = NoError;
+
+    fn len(_: &()) -> usize {
+        C::Commitment::len(&()) + I
+    }
+
+    fn to_field_elements(&self, _: &()) -> Result<Vec<F>, Self::Error> {
+        let Ok(mut elems) = self.witness_commit.to_field_elements(&());
+        elems.extend(self.public_inputs.iter().cloned());
+        Ok(elems)
+    }
 }
 
 pub struct LcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, const S: usize> {
