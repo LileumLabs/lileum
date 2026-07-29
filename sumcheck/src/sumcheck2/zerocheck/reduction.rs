@@ -132,11 +132,10 @@ impl<F: Field, O: Oracle<F>> Reduction<F, ZeroSumcheck<F, O>, QueryRelation<F, O
             oracle_instance,
         } = instance;
 
-        // TODO: maybe it is better to compute the sumcheck witness here like in sumcheck.
-        let oracle_witness = O::witness_from_evals(witness.clone());
         let instance_evals = O::instance_evals(&oracle_instance);
+        let witness = key.prepare_witness(witness, instance_evals);
         let (messages, point, eval) =
-            key.prove_zerocheck(witness, transcript, instance_evals, sum, zerocheck_powers);
+            key.prove_zerocheck(witness.clone(), transcript, sum, zerocheck_powers);
 
         let instance = OracleQueryInstance {
             oracle_instance,
@@ -146,7 +145,8 @@ impl<F: Field, O: Oracle<F>> Reduction<F, ZeroSumcheck<F, O>, QueryRelation<F, O
 
         let proof = messages;
 
-        let witness = oracle_witness;
+        let witness = O::witness_from_evals(witness);
+
         ProverOutput {
             instance,
             witness,
@@ -180,13 +180,11 @@ impl<F: Field, O: Oracle<F>> Reduction<F, ZeroSumcheck<F, O>, QueryRelation<F, O
 impl<F: Field, O: Oracle<F>> prove::ProverKey<F, O> {
     fn prove_zerocheck<S: Duplex<F>>(
         &self,
-        witness: Vec<Mles<O::Function, F>>,
+        mut witness: Vec<Mles<O::Function, F>>,
         transcript: &mut Transcript<F, S>,
-        instance_evals: Mles<O::Function, F>,
         mut sum: F,
         powers: CompactPowers<F>,
     ) -> (Vec<SumcheckMessage<F>>, MultiPoint<F>, F) {
-        let mut witness = self.prepare_witness(witness, instance_evals);
         let mut powers_over_domain = powers.eval_over_domain();
         let mut shrinking_powers = ShrinkingPowers::new(powers);
 
