@@ -25,16 +25,16 @@ where
     let pcs = C::new(ccs_structure.vars());
     let structure = LcsStructure { ccs_structure, pcs };
 
-    let prover: Prover<F, Poseidon<F>, LcsRelation<F, C, 1, 4, 5>, (), LcsArgument> =
+    let prover: Prover<F, Poseidon<F>, LcsRelation<F, C, 2, 4, 5>, (), LcsArgument> =
         Prover::new(&structure, &(), ());
 
-    let verifier: Verifier<F, Poseidon<F>, LcsRelation<F, C, 1, 4, 5>, (), LcsArgument> =
+    let verifier: Verifier<F, Poseidon<F>, LcsRelation<F, C, 2, 4, 5>, (), LcsArgument> =
         Verifier::new(&structure, &(), ());
 
     let input = F::from(8u8);
     let (instance, witness) = commit_witness::<F, C, N>(&structure.pcs, [input]);
 
-    assert!(LcsRelation::<F, C, 1, 4, 5>::check(
+    assert!(LcsRelation::<F, C, 2, 4, 5>::check(
         &structure, &instance, &witness
     ));
     let ProverOutput {
@@ -49,7 +49,7 @@ where
 pub fn commit_witness<F, C, const N: usize>(
     pcs: &C,
     inputs: [F; 1],
-) -> (LcsInstance<F, C, 1>, Vec<F>)
+) -> (LcsInstance<F, C, 2>, Vec<F>)
 where
     F: Field,
     C: CommitmentScheme<F>,
@@ -59,12 +59,14 @@ where
     witness.pad_to_power();
     let witness_commit = pcs.commit_mle(&witness.0);
 
-    let mut inputs = [F::zero(); 1];
-    inputs.copy_from_slice(&witness.0[0..1]);
+    let mut inputs = [F::zero(); 2];
+    inputs.copy_from_slice(&witness.0[0..2]);
 
-    let instance: LcsInstance<F, C, 1> = LcsInstance {
+    let public_inputs = inputs;
+
+    let instance: LcsInstance<F, C, 2> = LcsInstance {
         witness_commit,
-        public_inputs: inputs,
+        public_inputs,
     };
 
     (instance, witness.0)
