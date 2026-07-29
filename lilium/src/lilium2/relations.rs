@@ -68,7 +68,7 @@ where
             gate_selectors,
             input_len,
             gates,
-            trace_len,
+            trace_len: _,
             constants,
         } = &structure.ccs_structure;
 
@@ -78,11 +78,12 @@ where
         } = instance;
 
         let expected_commit = structure.pcs.commit_mle(witness);
+
         if witness_commit != &expected_commit {
             return false;
         }
 
-        if *trace_len != witness.len() {
+        if witness.len() != (1 << structure.ccs_structure.vars()) {
             return false;
         }
 
