@@ -133,6 +133,7 @@ where
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
+        let builder = builder.round::<F, (), 1>(&());
         (0..key.vars)
             .fold(builder, |builder, _| {
                 builder.round::<F, RoundMsg<G>, 1>(&())
