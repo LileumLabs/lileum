@@ -58,7 +58,7 @@ where
     fn verifier_key(structure: &LcsStructure<F, C, IO, S>, _: &()) -> Self::VerifierKey {
         let flcs_structure = structure.to_flcs::<I>();
         let verifier_key = FlcsArgument::verifier_key(&flcs_structure, &());
-        let vars = 1;
+        let vars = structure.ccs_structure.vars();
         (verifier_key, vars)
     }
 
@@ -68,7 +68,7 @@ where
     ) -> (Self::VerifierKey, Self::ProverKey) {
         let flcs_structure = structure.to_flcs::<I>();
         let (verifier_key, prover_key) = FlcsArgument::key_pair(&flcs_structure, &());
-        let vars = 1;
+        let vars = structure.ccs_structure.vars();
         ((verifier_key, vars), (prover_key, vars))
     }
 
