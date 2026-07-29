@@ -19,7 +19,6 @@ where
     F: PrimeField,
     C: CommitmentScheme<F>,
 {
-    // let key = CircuitKey::<Fr, Sponge, HashChain<N>, Scheme, 2, 4, 5>::new();
     let ccs_structure: CcsStructure<F, 4, 5> =
         <HashChain<N> as BuildStructure<F, 1, 1, 1, 4>>::structure();
 
