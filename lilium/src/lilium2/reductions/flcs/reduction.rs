@@ -407,19 +407,27 @@ where
 fn spark_structure<F: Field, const N: usize>(
     matrices: &[Matrix; N],
 ) -> [FlexibleSparkStructure<F>; N] {
-    matrices.each_ref().map(|matrix| {
+    let mut biggest_matrix = 0;
+    let evals = matrices.each_ref().map(|matrix| {
         let evals = matrix.to_evals();
         let (x_max, y_max) = evals
             .iter()
             .fold((0, 0), |acc, (x, y)| (acc.0.max(*x), acc.1.max(*y)));
         assert!(x_max.highest_one().unwrap_or(0) + y_max.highest_one().unwrap_or(0) < 64);
-        let evals = evals
+        let mut evals: Vec<(u64, F)> = evals
             .into_iter()
             .map(|(x, y)| {
                 let addr = x + (y << (x_max.highest_one().unwrap_or(0) + 1));
                 (addr as u64, F::ONE)
             })
             .collect();
+
+        evals.resize(evals.len().next_power_of_two(), (0, F::ZERO));
+        biggest_matrix = evals.len().max(biggest_matrix);
+        evals
+    });
+    evals.map(|mut evals| {
+        evals.resize(biggest_matrix, (0, F::ZERO));
         FlexibleSparkStructure::new(Rc::new(evals))
     })
 }
