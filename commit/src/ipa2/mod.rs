@@ -129,6 +129,7 @@ where
         } = round;
         let [cl, cr] = ipa_reduce::<F, G>([&a, &b], &basis, product_base);
         let message = RoundMsg { cl, cr };
+        let message = Some(message);
         let [chall] = transcript.send_message(&message, &());
         let chall_inv = chall.inverse().unwrap();
         let a = fold_vec(a, [chall, chall_inv]);

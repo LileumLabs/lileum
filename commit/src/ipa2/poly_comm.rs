@@ -136,7 +136,7 @@ where
         let builder = builder.round::<F, (), 1>(&());
         (0..key.vars)
             .fold(builder, |builder, _| {
-                builder.round::<F, RoundMsg<G>, 1>(&())
+                builder.round::<F, Option<RoundMsg<G>>, 1>(&())
             })
             .round::<F, SingleElement<F>, 0>(&())
     }
