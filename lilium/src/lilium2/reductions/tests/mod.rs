@@ -46,6 +46,7 @@ where
     verifier.verify(instance, proof).unwrap();
 }
 
+/// Creates an instance-witness pair from public inputs.
 pub fn commit_witness<F, C, const N: usize>(
     pcs: &C,
     inputs: [F; 1],
