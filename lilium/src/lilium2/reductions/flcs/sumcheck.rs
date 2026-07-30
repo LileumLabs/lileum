@@ -187,7 +187,7 @@ impl<F: Field, const IO: usize, const S: usize, const I: usize> SumcheckFunction
             challenge,
         } = evals;
 
-        let inputs_check = { input_selector.clone() - inputs.clone() * w };
+        let inputs_check = { (inputs.clone() - w) * input_selector };
 
         let mut acc = inputs_check;
 
