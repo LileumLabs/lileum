@@ -29,8 +29,8 @@ where
     R: Reduction<F, R1, R2, Params = <R1::Instance as Message<F>>::Params>,
 {
     /// Creates prover from the structures of both relations.
-    pub fn new(structure_1: &R1::Structure, structure_2: &R2::Structure) -> Self {
-        let (verifier_key, key) = R::key_pair(structure_1, structure_2);
+    pub fn new(structure: &R1::Structure) -> Self {
+        let (verifier_key, key) = R::key_pair(structure);
 
         let params = R::params(&verifier_key);
 

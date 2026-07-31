@@ -28,11 +28,7 @@ const VARS: usize = 4;
 fn product_zerofold_test<F: PrimeField>() {
     let oracle = TestingOracle::new(VARS, ());
 
-    // From the proof being just (), we know the protocol is non-interactive, and the verifier
-    // alone can compute the instance without receiving a proof from the prover.
-
-    // let prover = Prover::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle, &oracle, params);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle, &oracle);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle);
 
     let mut rng = StdRng::seed_from_u64(0);
     let mut witness = |_| {
@@ -63,8 +59,8 @@ fn product_zerofold_test<F: PrimeField>() {
     ));
 
     // Now we create a folding prover and verifier.
-    let prover = Prover::<F, Poseidon<F>, _, _, FoldingScheme<F>>::new(&oracle, &oracle);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, FoldingScheme<F>>::new(&oracle, &oracle);
+    let prover = Prover::<F, Poseidon<F>, _, _, FoldingScheme<F>>::new(&oracle);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, FoldingScheme<F>>::new(&oracle);
 
     let ProverOutput {
         instance: prover_instance,

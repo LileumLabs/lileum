@@ -1,4 +1,5 @@
 use ark_ff::Field;
+use commit::commit2::CommitmentScheme;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{eq, polynomials::MultiPoint, sumcheck2::oracles::UnexpectedVars};
 use transcript::reduction2::{Message, Relation};
@@ -63,13 +64,13 @@ impl<F: Field, const N: usize> SparseMle<F, N> {
 // }
 
 #[derive(Clone, Debug)]
-pub struct StaticSparkStructure<F: Field, const N: usize> {
-    // minor_structure: MinorStructure<N>,
+pub struct StaticSparkStructure<F: Field, C, const N: usize> {
     mle: Rc<SparseMle<F, N>>,
+    pcs: C,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct StaticSparkRelation<F, const N: usize>(PhantomData<F>);
+pub struct StaticSparkRelation<F, C, const N: usize>(PhantomData<(F, C)>);
 
 #[derive(Clone, Debug)]
 pub struct SparkInstance<F: Field> {
@@ -112,11 +113,12 @@ impl<F: Field> SparkInstance<F> {
     }
 }
 
-impl<F, const N: usize> Relation for StaticSparkRelation<F, N>
+impl<F, C, const N: usize> Relation for StaticSparkRelation<F, C, N>
 where
     F: Field,
+    C: CommitmentScheme<F>,
 {
-    type Structure = StaticSparkStructure<F, N>;
+    type Structure = StaticSparkStructure<F, C, N>;
 
     type Instance = SparkInstance<F>;
 
@@ -142,13 +144,14 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct FlexibleSparkStructure<F: Field> {
+pub struct FlexibleSparkStructure<F: Field, C> {
     evals: Rc<Vec<(u64, F)>>,
+    pcs: C,
 }
 
-impl<F: Field> FlexibleSparkStructure<F> {
-    pub fn new(evals: Rc<Vec<(u64, F)>>) -> Self {
-        Self { evals }
+impl<F: Field, C> FlexibleSparkStructure<F, C> {
+    pub fn new(evals: Rc<Vec<(u64, F)>>, pcs: C) -> Self {
+        Self { evals, pcs }
     }
 
     pub fn eval(&self, point: MultiPoint<F>) -> F {
@@ -177,10 +180,10 @@ impl<F: Field> FlexibleSparkStructure<F> {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct FlexibleSparkRelation<F>(PhantomData<F>);
+pub struct FlexibleSparkRelation<F, C>(PhantomData<(F, C)>);
 
-impl<F: Field> Relation for FlexibleSparkRelation<F> {
-    type Structure = FlexibleSparkStructure<F>;
+impl<F: Field, C> Relation for FlexibleSparkRelation<F, C> {
+    type Structure = FlexibleSparkStructure<F, C>;
 
     type Instance = SparkInstance<F>;
 

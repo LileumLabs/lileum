@@ -69,7 +69,7 @@ pub enum Proof<F: Field, C: CommitmentScheme<F>> {
     S8(reduction::Proof<F, C, 8>),
 }
 
-type Rel1<F> = FlexibleSparkRelation<F>;
+type Rel1<F, C> = FlexibleSparkRelation<F, C>;
 type Rel2<F, C> = OpeningRelation<F, C>;
 
 #[derive(Clone, Copy, Debug)]
@@ -78,7 +78,7 @@ pub enum FlexibleSparkError {
     Spark(SparkError),
 }
 
-impl<F, C> Reduction<F, Rel1<F>, Rel2<F, C>> for FlexibleSpark<F, C>
+impl<F, C> Reduction<F, Rel1<F, C>, Rel2<F, C>> for FlexibleSpark<F, C>
 where
     F: Field,
     C: CommitmentScheme<F>,
@@ -110,8 +110,8 @@ where
         }
     }
 
-    fn verifier_key(structure: &FlexibleSparkStructure<F>, pcs: &C) -> Self::VerifierKey {
-        let FlexibleSparkStructure { evals } = structure;
+    fn verifier_key(structure: &FlexibleSparkStructure<F, C>) -> Self::VerifierKey {
+        let FlexibleSparkStructure { evals, pcs: _ } = structure;
         assert!(evals.len().is_power_of_two());
         let max: u64 = evals
             .iter()
@@ -121,59 +121,32 @@ where
         use VerifierKey::*;
         if bits == 0 {
             let structure = structure.static_structure();
-            return S1(SparkReduction::verifier_key(&structure, pcs));
+            return S1(SparkReduction::verifier_key(&structure));
         }
 
         match bits - 1 {
-            0..8 => S1(SparkReduction::verifier_key(
-                &structure.static_structure(),
-                pcs,
-            )),
-            8..16 => S2(SparkReduction::verifier_key(
-                &structure.static_structure(),
-                pcs,
-            )),
-            16..24 => S3(SparkReduction::verifier_key(
-                &structure.static_structure(),
-                pcs,
-            )),
-            24..32 => S4(SparkReduction::verifier_key(
-                &structure.static_structure(),
-                pcs,
-            )),
-            32..40 => S5(SparkReduction::verifier_key(
-                &structure.static_structure(),
-                pcs,
-            )),
-            40..48 => S6(SparkReduction::verifier_key(
-                &structure.static_structure(),
-                pcs,
-            )),
-            48..56 => S7(SparkReduction::verifier_key(
-                &structure.static_structure(),
-                pcs,
-            )),
-            56..64 => S8(SparkReduction::verifier_key(
-                &structure.static_structure(),
-                pcs,
-            )),
+            0..8 => S1(SparkReduction::verifier_key(&structure.static_structure())),
+            8..16 => S2(SparkReduction::verifier_key(&structure.static_structure())),
+            16..24 => S3(SparkReduction::verifier_key(&structure.static_structure())),
+            24..32 => S4(SparkReduction::verifier_key(&structure.static_structure())),
+            32..40 => S5(SparkReduction::verifier_key(&structure.static_structure())),
+            40..48 => S6(SparkReduction::verifier_key(&structure.static_structure())),
+            48..56 => S7(SparkReduction::verifier_key(&structure.static_structure())),
+            56..64 => S8(SparkReduction::verifier_key(&structure.static_structure())),
             _ => panic!("unsupported (and impossible) size"),
         }
     }
 
-    fn key_pair(
-        structure: &FlexibleSparkStructure<F>,
-        pcs: &C,
-    ) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(structure: &FlexibleSparkStructure<F, C>) -> (Self::VerifierKey, Self::ProverKey) {
         macro_rules! key_pair {
             ($vk_variant: path, $pk_variant: path) => {{
                 let structure = structure.static_structure();
-                let (vk, pk) = SparkReduction::key_pair(&structure, pcs);
+                let (vk, pk) = SparkReduction::key_pair(&structure);
                 ($vk_variant(vk), $pk_variant(pk))
             }};
         }
 
-        let FlexibleSparkStructure { evals } = structure;
+        let FlexibleSparkStructure { evals, .. } = structure;
         assert!(evals.len().is_power_of_two());
         let max: u64 = evals
             .iter()
@@ -182,7 +155,7 @@ where
 
         if bits == 0 {
             let structure = structure.static_structure();
-            let (vk, pk) = SparkReduction::key_pair(&structure, pcs);
+            let (vk, pk) = SparkReduction::key_pair(&structure);
             return (VerifierKey::S1(vk), ProverKey::S1(pk));
         }
 
@@ -316,8 +289,8 @@ where
     }
 }
 
-impl<F: Field> FlexibleSparkStructure<F> {
-    fn static_structure<const N: usize>(&self) -> StaticSparkStructure<F, N> {
+impl<F: Field, C: Clone> FlexibleSparkStructure<F, C> {
+    fn static_structure<const N: usize>(&self) -> StaticSparkStructure<F, C, N> {
         let (addresses, values) = self
             .evals
             .iter()
@@ -329,6 +302,9 @@ impl<F: Field> FlexibleSparkStructure<F> {
             })
             .unzip();
         let mle = SparseMle { addresses, values };
-        StaticSparkStructure { mle: Rc::new(mle) }
+        StaticSparkStructure {
+            mle: Rc::new(mle),
+            pcs: self.pcs.clone(),
+        }
     }
 }

@@ -44,8 +44,8 @@ where
     R: Reduction<F, R1, R2, Params = <R1::Instance as Message<F>>::Params>,
 {
     /// Creates verifier from the structures of both relations.
-    pub fn new(structure_1: &R1::Structure, structure_2: &R2::Structure) -> Self {
-        let key = R::verifier_key(structure_1, structure_2);
+    pub fn new(structure: &R1::Structure) -> Self {
+        let key = R::verifier_key(structure);
 
         let params = R::params(&key);
 
@@ -115,8 +115,8 @@ where
     R: Reduction<F, R1, R2>,
 {
     /// Creates verifier from the structures of both relations.
-    pub fn new(structure_1: &R1::Structure, structure_2: &R2::Structure) -> Self {
-        let key = R::verifier_key(structure_1, structure_2);
+    pub fn new(structure: &R1::Structure) -> Self {
+        let key = R::verifier_key(structure);
 
         let transcript_descriptor = TranscriptBuilder::new()
             .subprotocol::<R, F, R1, R2>(&key)

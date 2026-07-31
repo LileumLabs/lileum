@@ -40,11 +40,11 @@ where
         builder.round::<F, (), 1>(&())
     }
 
-    fn verifier_key(oracle: &O, _: &O) -> Self::VerifierKey {
+    fn verifier_key(oracle: &O) -> Self::VerifierKey {
         oracle.vars()
     }
 
-    fn key_pair(oracle: &O, _: &O) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(oracle: &O) -> (Self::VerifierKey, Self::ProverKey) {
         let vars = oracle.vars();
         (vars, vars)
     }
@@ -117,12 +117,12 @@ impl<F: Field, O: Oracle<F>> Reduction<F, ZeroSumcheck<F, O>, QueryRelation<F, O
         SumcheckReduction::<F, O>::transcript_pattern(key, builder)
     }
 
-    fn verifier_key(structure_1: &O, structure_2: &O) -> Self::VerifierKey {
-        SumcheckReduction::verifier_key(structure_1, structure_2).increase_degree()
+    fn verifier_key(structure: &O) -> Self::VerifierKey {
+        SumcheckReduction::verifier_key(structure).increase_degree()
     }
 
-    fn key_pair(structure_1: &O, structure_2: &O) -> (Self::VerifierKey, Self::ProverKey) {
-        let (verifier_key, prover_key) = SumcheckReduction::key_pair(structure_1, structure_2);
+    fn key_pair(structure: &O) -> (Self::VerifierKey, Self::ProverKey) {
+        let (verifier_key, prover_key) = SumcheckReduction::key_pair(structure);
         (verifier_key.increase_degree(), prover_key.increase_degree())
     }
 

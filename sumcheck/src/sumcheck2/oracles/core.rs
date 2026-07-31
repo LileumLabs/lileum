@@ -451,11 +451,11 @@ where
         builder
     }
 
-    fn verifier_key(oracle: &Self, _: &()) -> Self::VerifierKey {
+    fn verifier_key(oracle: &Self) -> Self::VerifierKey {
         oracle.clone()
     }
 
-    fn key_pair(oracle: &Self, _: &()) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(oracle: &Self) -> (Self::VerifierKey, Self::ProverKey) {
         (oracle.clone(), oracle.clone())
     }
 

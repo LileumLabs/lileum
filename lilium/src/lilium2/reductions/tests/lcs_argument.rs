@@ -23,10 +23,10 @@ where
     let structure = LcsStructure { ccs_structure, pcs };
 
     let prover: Prover<F, Poseidon<F>, LcsRelation<F, C, 2, 4, 5>, (), LcsArgument> =
-        Prover::new(&structure, &());
+        Prover::new(&structure);
 
     let verifier: Verifier<F, Poseidon<F>, LcsRelation<F, C, 2, 4, 5>, (), LcsArgument> =
-        Verifier::new(&structure, &());
+        Verifier::new(&structure);
 
     let input = F::from(8u8);
     let (instance, witness) = commit_witness::<F, C, N>(&structure.pcs, [input]);

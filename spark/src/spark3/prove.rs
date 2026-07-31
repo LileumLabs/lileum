@@ -72,11 +72,11 @@ where
             pcs.clone(),
         );
 
-        let (sumcheck_verifier_key, sumcheck_key) = SumcheckReduction::key_pair(&oracle, &oracle);
+        let (sumcheck_verifier_key, sumcheck_key) = SumcheckReduction::key_pair(&oracle);
 
-        let (_, oracle_key) = CompositeOracle::key_pair(&oracle, oracle.inner_oracles());
+        let (_, oracle_key) = CompositeOracle::key_pair(&oracle);
 
-        let (_, committed_oracle_key) = CommittedOracle::key_pair(&oracle.inner_oracles().1, &pcs);
+        let (_, committed_oracle_key) = CommittedOracle::key_pair(&oracle.inner_oracles().1);
 
         let verifier_key = VerifierKey::new(
             (*minor_structure).clone(),

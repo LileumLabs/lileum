@@ -57,19 +57,16 @@ where
             .subprotocol::<FlcsArgument, F, FlcsRelation<F, C, I, IO, S>, ()>(&key.0)
     }
 
-    fn verifier_key(structure: &LcsStructure<F, C, IO, S>, _: &()) -> Self::VerifierKey {
+    fn verifier_key(structure: &LcsStructure<F, C, IO, S>) -> Self::VerifierKey {
         let flcs_structure = structure.to_flcs::<I>();
-        let verifier_key = FlcsArgument::verifier_key(&flcs_structure, &());
+        let verifier_key = FlcsArgument::verifier_key(&flcs_structure);
         let vars = structure.ccs_structure.vars();
         (verifier_key, vars)
     }
 
-    fn key_pair(
-        structure: &LcsStructure<F, C, IO, S>,
-        _: &(),
-    ) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(structure: &LcsStructure<F, C, IO, S>) -> (Self::VerifierKey, Self::ProverKey) {
         let flcs_structure = structure.to_flcs::<I>();
-        let (verifier_key, prover_key) = FlcsArgument::key_pair(&flcs_structure, &());
+        let (verifier_key, prover_key) = FlcsArgument::key_pair(&flcs_structure);
         let vars = structure.ccs_structure.vars();
         ((verifier_key, vars), (prover_key, vars))
     }
@@ -140,7 +137,8 @@ where
             &data,
             Rc::clone(&mles),
         );
-        let builder2 = MatrixProductOracle::new(matrices, FlcsEvals::vector(), committed_oracle);
+        let builder2 =
+            MatrixProductOracle::new(matrices, FlcsEvals::vector(), committed_oracle, pcs.clone());
         let oracle = CompositeOracle::new(data, mles, builder1, builder2);
 
         FlcsStructure {

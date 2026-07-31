@@ -361,7 +361,7 @@ where
         builder.round::<F, ProverEvals<F>, 0>(&key.prover_evals)
     }
 
-    fn verifier_key(oracle: &Self, _: &(P1, P2)) -> Self::VerifierKey {
+    fn verifier_key(oracle: &Self) -> Self::VerifierKey {
         let prover_evals = SF::natures()
             .flatten_vec()
             .into_iter()
@@ -383,11 +383,8 @@ where
         }
     }
 
-    fn key_pair(
-        structure_1: &Self,
-        structure_2: &(P1, P2),
-    ) -> (Self::VerifierKey, Self::ProverKey) {
-        let key = Self::verifier_key(structure_1, structure_2);
+    fn key_pair(structure: &Self) -> (Self::VerifierKey, Self::ProverKey) {
+        let key = Self::verifier_key(structure);
         (key.clone(), key)
     }
 

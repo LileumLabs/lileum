@@ -15,7 +15,7 @@ use commit::commit2::{
     },
     CommitmentScheme, OpenInstance, OpeningRelation,
 };
-use spark::spark3::{FlexibleSparkRelation, FlexibleSparkStructure, SparkInstance};
+use spark::spark3::{FlexibleSparkRelation, SparkInstance};
 use sponge::sponge::Duplex;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::sumcheck2::{
@@ -87,7 +87,7 @@ pub enum Error {
 }
 
 type Rel1<F, C, SF, const N: usize> = MatrixOracleQuery<F, C, SF, N>;
-type Rel2<F, C, const N: usize> = ([OpeningRelation<F, C>; 2], [FlexibleSparkRelation<F>; N]);
+type Rel2<F, C, const N: usize> = ([OpeningRelation<F, C>; 2], [FlexibleSparkRelation<F, C>; N]);
 
 impl<F, C, SF, const N: usize> Reduction<F, Rel1<F, C, SF, N>, Rel2<F, C, N>>
     for MatrixProductReduction
@@ -127,12 +127,9 @@ where
             .subprotocol::<MatrixSumOracle<F, C, N>, _, _, _>(&())
     }
 
-    fn verifier_key(
-        structure_1: &MatrixProductOracle<F, C, SF, N>,
-        structure_2: &([C; 2], [FlexibleSparkStructure<F>; N]),
-    ) -> Self::VerifierKey {
+    fn verifier_key(structure: &MatrixProductOracle<F, C, SF, N>) -> Self::VerifierKey {
         let vars = {
-            let rows = structure_1
+            let rows = structure
                 .matrices()
                 .iter()
                 .map(|matrix| matrix.len())
@@ -144,22 +141,21 @@ where
         let mles = vec![MatrixSumEvals::zero(); 1 << vars];
         let mles = Rc::new(mles);
 
-        let builder1 = MatrixSumOracle::new(structure_1.matrices().clone());
+        let builder1 = MatrixSumOracle::new(structure.matrices().clone());
 
         let core_oracle = CoreOracle::new(MatrixSumEvals::core_oracle_functions());
-        let [pcs, _] = &structure_2.0;
-        let builder2 = (core_oracle, pcs.clone());
+        let builder2 = (core_oracle, structure.pcs().clone());
 
         let oracle = Oracle::new((), mles, builder1, builder2);
 
-        let sumcheck_key = SumcheckReduction::verifier_key(&oracle, &oracle);
+        let sumcheck_key = SumcheckReduction::verifier_key(&oracle);
 
-        let committed_oracle1 = CommittedOracle::verifier_key(structure_1.committed_oracle(), pcs);
+        let committed_oracle1 = CommittedOracle::verifier_key(structure.committed_oracle());
 
         let committed_oracle2 =
-            CommittedOracle::verifier_key(&oracle.inner_oracles().1.inner_oracles().1, pcs);
+            CommittedOracle::verifier_key(&oracle.inner_oracles().1.inner_oracles().1);
 
-        let composite_key = Oracle::verifier_key(&oracle, oracle.inner_oracles());
+        let composite_key = Oracle::verifier_key(&oracle);
 
         VerifierKey {
             sumcheck_key,
@@ -172,18 +168,17 @@ where
     }
 
     fn key_pair(
-        structure_1: &MatrixProductOracle<F, C, SF, N>,
-        structure_2: &([C; 2], [FlexibleSparkStructure<F>; N]),
+        structure: &MatrixProductOracle<F, C, SF, N>,
     ) -> (Self::VerifierKey, Self::ProverKey) {
         //TODO: Reuse computations.
-        let verifier_key = Self::verifier_key(structure_1, structure_2);
+        let verifier_key = Self::verifier_key(structure);
 
-        let [pcs, _] = &structure_2.0;
+        let pcs = structure.pcs();
 
-        let (_, committed_oracle1) = CommittedOracle::key_pair(structure_1.committed_oracle(), pcs);
+        let (_, committed_oracle1) = CommittedOracle::key_pair(structure.committed_oracle());
 
         let vars = {
-            let rows = structure_1
+            let rows = structure
                 .matrices()
                 .iter()
                 .map(|matrix| matrix.len())
@@ -197,26 +192,25 @@ where
             let mles = vec![MatrixSumEvals::zero(); 1 << vars];
             let mles = Rc::new(mles);
 
-            let builder1 = MatrixSumOracle::new(structure_1.matrices().clone());
+            let builder1 = MatrixSumOracle::new(structure.matrices().clone());
 
             let core_oracle = CoreOracle::new(MatrixSumEvals::core_oracle_functions());
-            let [pcs, _] = &structure_2.0;
             let builder2 = (core_oracle, pcs.clone());
 
             let oracle = Oracle::new((), mles, builder1, builder2);
 
-            let (_, prover_key) = SumcheckReduction::key_pair(&oracle, &oracle);
+            let (_, prover_key) = SumcheckReduction::key_pair(&oracle);
             (oracle, prover_key)
         };
 
-        let matrices = structure_1.matrices().each_ref().map(Rc::clone);
+        let matrices = structure.matrices().each_ref().map(Rc::clone);
 
-        let vector = structure_1.vector().clone();
+        let vector = structure.vector().clone();
 
-        let (_, composite_key) = Oracle::key_pair(&oracle, oracle.inner_oracles());
+        let (_, composite_key) = Oracle::key_pair(&oracle);
 
         let (_, committed_oracle2) =
-            CommittedOracle::key_pair(&oracle.inner_oracles().1.inner_oracles().1, pcs);
+            CommittedOracle::key_pair(&oracle.inner_oracles().1.inner_oracles().1);
 
         let prover_key = ProverKey {
             committed_oracle1,

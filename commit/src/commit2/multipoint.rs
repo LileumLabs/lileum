@@ -138,7 +138,7 @@ where
             )
     }
 
-    fn verifier_key(structure_1: &(C, usize), _: &C) -> Self::VerifierKey {
+    fn verifier_key(structure_1: &(C, usize)) -> Self::VerifierKey {
         let (pcs, vars) = structure_1;
 
         let mles = vec![MultipointEvals::<F, N>::zero(); 1 << vars];
@@ -156,9 +156,9 @@ where
 
         let oracle = Oracle::new((), mles, builder1, pcs.clone());
 
-        let composite = CompositeOracle::verifier_key(&oracle, oracle.inner_oracles());
+        let composite = CompositeOracle::verifier_key(&oracle);
 
-        let sumcheck = SumcheckReduction::verifier_key(&oracle, &oracle);
+        let sumcheck = SumcheckReduction::verifier_key(&oracle);
 
         VerifierKey {
             sumcheck,
@@ -167,9 +167,9 @@ where
         }
     }
 
-    fn key_pair(structure_1: &(C, usize), structure_2: &C) -> (Self::VerifierKey, Self::ProverKey) {
-        let verifier_key = Self::verifier_key(structure_1, structure_2);
-        let (pcs, vars) = structure_1;
+    fn key_pair(structure: &(C, usize)) -> (Self::VerifierKey, Self::ProverKey) {
+        let verifier_key = Self::verifier_key(structure);
+        let (pcs, vars) = structure;
 
         let mles = vec![MultipointEvals::<F, N>::zero(); 1 << vars];
         let mles = Rc::new(mles);
@@ -186,10 +186,9 @@ where
 
         let oracle = Oracle::new((), mles, builder1, pcs.clone());
 
-        let (_, sumcheck) = SumcheckReduction::key_pair(&oracle, &oracle);
+        let (_, sumcheck) = SumcheckReduction::key_pair(&oracle);
 
-        let (_, committed_oracle) =
-            CommittedOracle::key_pair(&oracle.inner_oracles().1, structure_2);
+        let (_, committed_oracle) = CommittedOracle::key_pair(&oracle.inner_oracles().1);
 
         let prover_key = ProverKey {
             vars: *vars,

@@ -29,9 +29,9 @@ fn product_sumcheck_test<F: PrimeField>() {
     let oracle = TestingOracle::new(VARS, ());
 
     // Create a prover for the SumcheckReduction, both relations have the same structure.
-    let prover = Prover::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle);
+    let prover = Prover::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle);
     // The verifier works the same.
-    let verifier = Verifier::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle);
 
     // Create a sample witness.
     let mut rng = StdRng::seed_from_u64(0);

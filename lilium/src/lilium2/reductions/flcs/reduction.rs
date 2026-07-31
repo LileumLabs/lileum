@@ -118,34 +118,32 @@ where
             .subprotocol::<MultipointBatching<F, C, 3>, _, _, _>(&key.batching2)
     }
 
-    fn verifier_key(structure_1: &FlcsStructure<F, C, IO, S, I>, _: &C) -> Self::VerifierKey {
+    fn verifier_key(structure: &FlcsStructure<F, C, IO, S, I>) -> Self::VerifierKey {
         let FlcsStructure {
             ccs_structure,
             pcs,
             oracle,
-        } = structure_1;
+        } = structure;
 
         let sumcheck_key = ZerocheckSumcheckReduction::<
             F,
             FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
-        >::verifier_key(oracle, oracle);
+        >::verifier_key(oracle);
 
         let vars = sumcheck_key.vars();
 
-        let composite_key = CompositeOracle::verifier_key(oracle, oracle.inner_oracles());
+        let composite_key = CompositeOracle::verifier_key(oracle);
 
-        let spark_structure = spark_structure(&ccs_structure.io_matrices);
+        let spark_structure = spark_structure(&ccs_structure.io_matrices, pcs);
         let matrix_structure = ([pcs.clone(), pcs.clone()], spark_structure);
-        let matrix_oracle_key =
-            MatrixProductReduction::verifier_key(&oracle.inner_oracles().1, &matrix_structure);
+        let matrix_oracle_key = MatrixProductReduction::verifier_key(&oracle.inner_oracles().1);
         let (_, spark_structure) = matrix_structure;
 
-        let spark_keys =
-            spark_structure.map(|structure| FlexibleSpark::verifier_key(&structure, pcs));
+        let spark_keys = spark_structure.map(|structure| FlexibleSpark::verifier_key(&structure));
 
         let batching_structure = (pcs.clone(), vars);
-        let batching1 = MultipointBatching::verifier_key(&batching_structure, pcs);
-        let batching2 = MultipointBatching::verifier_key(&batching_structure, pcs);
+        let batching1 = MultipointBatching::verifier_key(&batching_structure);
+        let batching2 = MultipointBatching::verifier_key(&batching_structure);
 
         VerifierKey {
             sumcheck_key,
@@ -157,52 +155,47 @@ where
         }
     }
 
-    fn key_pair(
-        structure_1: &FlcsStructure<F, C, IO, S, I>,
-        structure_2: &C,
-    ) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(structure: &FlcsStructure<F, C, IO, S, I>) -> (Self::VerifierKey, Self::ProverKey) {
         let verifier_key = <Self as Reduction<
             F,
             FlcsRelation<F, C, I, IO, S>,
             OpeningRelation<F, C>,
-        >>::verifier_key(structure_1, structure_2);
+        >>::verifier_key(structure);
 
         let FlcsStructure {
             ccs_structure,
             pcs,
             oracle,
-        } = structure_1;
+        } = structure;
 
         let (_, sumcheck) = ZerocheckSumcheckReduction::<
             F,
             FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
-        >::key_pair(oracle, oracle);
+        >::key_pair(oracle);
 
         let vars = {
             use oracles::Oracle;
             oracle.vars()
         };
 
-        let composite_key = CompositeOracle::verifier_key(oracle, oracle.inner_oracles());
+        let composite_key = CompositeOracle::verifier_key(oracle);
 
-        let matrices = structure_1
+        let matrices = structure
             .ccs_structure
             .io_matrices
             .each_ref()
             .map(|matrix| Rc::new(matrix.clone()));
 
-        let spark_structure = spark_structure(&ccs_structure.io_matrices);
+        let spark_structure = spark_structure(&ccs_structure.io_matrices, pcs);
         let matrix_structure = ([pcs.clone(), pcs.clone()], spark_structure);
-        let (_, matrix_oracle_key) =
-            MatrixProductReduction::key_pair(&oracle.inner_oracles().1, &matrix_structure);
+        let (_, matrix_oracle_key) = MatrixProductReduction::key_pair(&oracle.inner_oracles().1);
         let (_, spark_structure) = matrix_structure;
 
-        let spark_keys =
-            spark_structure.map(|structure| FlexibleSpark::key_pair(&structure, pcs).1);
+        let spark_keys = spark_structure.map(|structure| FlexibleSpark::key_pair(&structure).1);
 
         let batching_structure = (pcs.clone(), vars);
-        let (_, batching1) = MultipointBatching::key_pair(&batching_structure, pcs);
-        let (_, batching2) = MultipointBatching::key_pair(&batching_structure, pcs);
+        let (_, batching1) = MultipointBatching::key_pair(&batching_structure);
+        let (_, batching2) = MultipointBatching::key_pair(&batching_structure);
 
         let prover_key = ProverKey {
             sumcheck,
@@ -408,9 +401,10 @@ where
     }
 }
 
-fn spark_structure<F: Field, const N: usize>(
+fn spark_structure<F: Field, C: Clone, const N: usize>(
     matrices: &[Matrix; N],
-) -> [FlexibleSparkStructure<F>; N] {
+    pcs: &C,
+) -> [FlexibleSparkStructure<F, C>; N] {
     let mut biggest_matrix = 0;
     let evals = matrices.each_ref().map(|matrix| {
         let evals = matrix.to_evals();
@@ -432,6 +426,6 @@ fn spark_structure<F: Field, const N: usize>(
     });
     evals.map(|mut evals| {
         evals.resize(biggest_matrix, (0, F::ZERO));
-        FlexibleSparkStructure::new(Rc::new(evals))
+        FlexibleSparkStructure::new(Rc::new(evals), pcs.clone())
     })
 }

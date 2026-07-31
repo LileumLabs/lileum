@@ -1,9 +1,7 @@
 use crate::lilium2::{
     oracles::{FlcsOracle, MatrixProductInstance},
     reductions::flcs::FlcsEvals,
-    relations::{
-        FlcsInstance, FlcsRelation, FlcsStructure, LcsInstance, LcsRelation, LcsStructure,
-    },
+    relations::{FlcsInstance, FlcsRelation, LcsInstance, LcsRelation, LcsStructure},
 };
 use ark_ff::Field;
 use commit::commit2::CommitmentScheme;
@@ -48,11 +46,8 @@ where
             .subprotocol::<ZerocheckReduction<F, Oracle<F, C, IO, S, I>>, _, _, _>(key)
     }
 
-    fn verifier_key(
-        structure_1: &LcsStructure<F, C, IO, S>,
-        _: &FlcsStructure<F, C, IO, S, I>,
-    ) -> Self::VerifierKey {
-        let LcsStructure { ccs_structure, .. } = structure_1;
+    fn verifier_key(structure: &LcsStructure<F, C, IO, S>) -> Self::VerifierKey {
+        let LcsStructure { ccs_structure, .. } = structure;
         let witness_len = ccs_structure.trace_len.next_power_of_two();
         let constrains = ccs_structure.gate_selectors.len().next_power_of_two();
         //TODO: lift this restriction
@@ -60,11 +55,8 @@ where
         constrains.ilog2() as usize
     }
 
-    fn key_pair(
-        structure_1: &LcsStructure<F, C, IO, S>,
-        structure_2: &FlcsStructure<F, C, IO, S, I>,
-    ) -> (Self::VerifierKey, Self::ProverKey) {
-        let vars = Self::verifier_key(structure_1, structure_2);
+    fn key_pair(structure: &LcsStructure<F, C, IO, S>) -> (Self::VerifierKey, Self::ProverKey) {
+        let vars = <Self as Reduction<F, LcsRelation<F, C, I, IO, S>, _>>::verifier_key(structure);
         (vars, vars)
     }
 

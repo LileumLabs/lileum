@@ -106,20 +106,13 @@ impl<F: Field, O: Oracle<F>> Reduction<F, SumcheckRelation<F, O>, QueryRelation<
         })
     }
 
-    fn verifier_key(
-        structure_1: &O,
-        _structure_2: &<QueryRelation<F, O> as Relation>::Structure,
-    ) -> Self::VerifierKey {
-        let vars = structure_1.vars();
-        let degree = degree::sumcheck_degree(structure_1);
-
+    fn verifier_key(structure: &O) -> Self::VerifierKey {
+        let vars = structure.vars();
+        let degree = degree::sumcheck_degree(structure);
         let weights = BarycentricWeights::compute(degree as u32);
-
-        // let oracle_instance_params = structure_1.oracle_params();
-        let params = structure_1.oracle_params();
+        let params = structure.oracle_params();
 
         SumcheckVerifierKey {
-            // oracle_instance_params,
             degree,
             vars,
             weights,
@@ -127,12 +120,9 @@ impl<F: Field, O: Oracle<F>> Reduction<F, SumcheckRelation<F, O>, QueryRelation<
         }
     }
 
-    fn key_pair(
-        structure_1: &O,
-        structure_2: &<QueryRelation<F, O> as Relation>::Structure,
-    ) -> (Self::VerifierKey, Self::ProverKey) {
-        let verifier_key = Self::verifier_key(structure_1, structure_2);
-        let prover_key = prove::ProverKey::new(structure_1);
+    fn key_pair(structure: &O) -> (Self::VerifierKey, Self::ProverKey) {
+        let verifier_key = Self::verifier_key(structure);
+        let prover_key = prove::ProverKey::new(structure);
         (verifier_key, prover_key)
     }
 

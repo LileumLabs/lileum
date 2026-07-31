@@ -34,7 +34,7 @@ where
     matrices: [Rc<Matrix>; N],
     vector: SF::Mles<bool>,
     committed_oracle: CommittedOracle<F, C, SF>,
-    _f: PhantomData<F>,
+    pcs: C,
 }
 
 impl<F, SF, C, const N: usize> MatrixProductOracle<F, C, SF, N>
@@ -47,12 +47,13 @@ where
         matrices: [Rc<Matrix>; N],
         vector: SF::Mles<bool>,
         committed_oracle: CommittedOracle<F, C, SF>,
+        pcs: C,
     ) -> Self {
         Self {
             matrices,
             vector,
             committed_oracle,
-            _f: PhantomData,
+            pcs,
         }
     }
 
@@ -67,6 +68,10 @@ where
     /// A filter to select the vector MLE.
     pub fn vector(&self) -> &SF::Mles<bool> {
         &self.vector
+    }
+
+    pub fn pcs(&self) -> &C {
+        &self.pcs
     }
 }
 

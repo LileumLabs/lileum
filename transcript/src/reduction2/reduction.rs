@@ -74,12 +74,9 @@ pub trait Reduction<F: Field, R1: Relation, R2: Relation> {
     fn transcript_pattern(key: &Self::VerifierKey, builder: TranscriptBuilder)
         -> TranscriptBuilder;
 
-    fn verifier_key(structure_1: &R1::Structure, structure_2: &R2::Structure) -> Self::VerifierKey;
+    fn verifier_key(structure: &R1::Structure) -> Self::VerifierKey;
 
-    fn key_pair(
-        structure_1: &R1::Structure,
-        structure_2: &R2::Structure,
-    ) -> (Self::VerifierKey, Self::ProverKey);
+    fn key_pair(structure: &R1::Structure) -> (Self::VerifierKey, Self::ProverKey);
 
     /// Provides the concrete params for R1::Instance if this reduction
     /// is instanciated.

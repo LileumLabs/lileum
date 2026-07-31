@@ -43,9 +43,9 @@ fn composite_sumcheck_test<F: PrimeField>() {
     let oracle: Oracle<F> = Oracle::new((), structure.clone(), core_oracle, ());
 
     // Create a prover for the SumcheckReduction, both relations have the same structure.
-    let prover = Prover::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle);
+    let prover = Prover::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle);
     // The verifier works the same.
-    let verifier = Verifier::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle);
 
     let mut rng = StdRng::seed_from_u64(0);
 
@@ -109,9 +109,8 @@ fn composite_sumcheck_test<F: PrimeField>() {
 
     assert_eq!(verifier_instance, query_instance);
 
-    let prover = Prover::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle, oracle.inner_oracles());
-    let verifier =
-        Verifier::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle, oracle.inner_oracles());
+    let prover = Prover::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle);
 
     let ProverOutput {
         instance: partial_query_instance,
@@ -140,7 +139,6 @@ fn composite_sumcheck_test<F: PrimeField>() {
 
     let verifier = UnsafeVerifier::<F, Poseidon<F>, _, _, CoreOracle<F, SmallEvals<()>>>::new(
         &oracle.inner_oracles().0,
-        &(),
     );
 
     verifier.verify(core_instance, ());

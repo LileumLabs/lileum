@@ -52,21 +52,17 @@ where
         B::transcript_pattern(&key.b_key, builder)
     }
 
-    fn verifier_key(
-        structure_1: &(R1::Structure, R2::Structure),
-        structure_2: &R3::Structure,
-    ) -> Self::VerifierKey {
-        let a_key = A::verifier_key(&structure_1.0, &structure_1.1);
-        let b_key = B::verifier_key(&structure_1.1, structure_2);
+    fn verifier_key(structure: &(R1::Structure, R2::Structure)) -> Self::VerifierKey {
+        let a_key = A::verifier_key(&structure.0);
+        let b_key = B::verifier_key(&structure.1);
         CompoundKey { a_key, b_key }
     }
 
     fn key_pair(
-        structure_1: &(R1::Structure, R2::Structure),
-        structure_2: &R3::Structure,
+        structure: &(R1::Structure, R2::Structure),
     ) -> (Self::VerifierKey, Self::ProverKey) {
-        let (a_key_v, a_key_p) = A::key_pair(&structure_1.0, &structure_1.1);
-        let (b_key_v, b_key_p) = B::key_pair(&structure_1.1, structure_2);
+        let (a_key_v, a_key_p) = A::key_pair(&structure.0);
+        let (b_key_v, b_key_p) = B::key_pair(&structure.1);
         let verifier_key = CompoundKey {
             a_key: a_key_v,
             b_key: b_key_v,

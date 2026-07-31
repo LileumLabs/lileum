@@ -24,8 +24,8 @@ const VARS: usize = 4;
 fn product_sumfold_test<F: PrimeField>() {
     let oracle = TestingOracle::new(VARS, ());
 
-    let prover = Prover::<F, Poseidon<F>, _, _, FoldingScheme<F>>::new(&oracle, &oracle);
-    let verifer = Verifier::<F, Poseidon<F>, _, _, FoldingScheme<F>>::new(&oracle, &oracle);
+    let prover = Prover::<F, Poseidon<F>, _, _, FoldingScheme<F>>::new(&oracle);
+    let verifer = Verifier::<F, Poseidon<F>, _, _, FoldingScheme<F>>::new(&oracle);
 
     let mut rng = StdRng::seed_from_u64(0);
     let mut witness = |_| {

@@ -58,7 +58,7 @@ where
             .round::<F, SumcheckMessage<F>, 1>(&degree)
     }
 
-    fn verifier_key(oracle: &O, _: &O) -> Self::VerifierKey {
+    fn verifier_key(oracle: &O) -> Self::VerifierKey {
         let degree = folding_degree(oracle);
         let vars = oracle.vars();
         let weights = (0..=(vars + 1))
@@ -75,8 +75,8 @@ where
         }
     }
 
-    fn key_pair(structure_1: &O, structure_2: &O) -> (Self::VerifierKey, Self::ProverKey) {
-        let key = Self::verifier_key(structure_1, structure_2);
+    fn key_pair(structure: &O) -> (Self::VerifierKey, Self::ProverKey) {
+        let key = Self::verifier_key(structure);
         (key.clone(), key)
     }
 

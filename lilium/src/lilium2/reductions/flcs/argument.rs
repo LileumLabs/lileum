@@ -51,21 +51,18 @@ where
             .subprotocol::<C, _, _, _>(&key.1)
     }
 
-    fn verifier_key(structure: &FlcsStructure<F, C, IO, S, I>, _: &()) -> Self::VerifierKey {
+    fn verifier_key(structure: &FlcsStructure<F, C, IO, S, I>) -> Self::VerifierKey {
         let pcs = &structure.pcs;
-        let reduction_key = FlcsReduction::verifier_key(structure, pcs);
-        let opening_key = C::verifier_key(pcs, &());
+        let reduction_key = FlcsReduction::verifier_key(structure);
+        let opening_key = C::verifier_key(pcs);
 
         (reduction_key, opening_key)
     }
 
-    fn key_pair(
-        structure: &FlcsStructure<F, C, IO, S, I>,
-        _: &(),
-    ) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(structure: &FlcsStructure<F, C, IO, S, I>) -> (Self::VerifierKey, Self::ProverKey) {
         let pcs = &structure.pcs;
-        let reduction_keys = FlcsReduction::key_pair(structure, pcs);
-        let opening_keys = C::key_pair(pcs, &());
+        let reduction_keys = FlcsReduction::key_pair(structure);
+        let opening_keys = C::key_pair(pcs);
 
         let verifier_key = (reduction_keys.0, opening_keys.0);
         let prover_key = (reduction_keys.1, opening_keys.1);

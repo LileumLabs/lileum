@@ -32,12 +32,17 @@ where
         .map(|_| F::rand(&mut rng))
         .take(1 << VARS)
         .collect();
-    let mle = Rc::new(SparseMle::new(addresses, values));
-    let mle = StaticSparkStructure { mle: mle.clone() };
 
     let pcs = C::new(VARS);
-    let prover = Prover::<F, Poseidon<F>, _, _, SparkReduction<F, C, 1>>::new(&mle, &pcs);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, SparkReduction<F, C, 1>>::new(&mle, &pcs);
+
+    let mle = Rc::new(SparseMle::new(addresses, values));
+    let mle = StaticSparkStructure {
+        mle: mle.clone(),
+        pcs: pcs.clone(),
+    };
+
+    let prover = Prover::<F, Poseidon<F>, _, _, SparkReduction<F, C, 1>>::new(&mle);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, SparkReduction<F, C, 1>>::new(&mle);
 
     let point = [(); VARS].map(|_| F::rand(&mut rng)).to_vec();
     let point = MultiPoint::new(point);
@@ -82,12 +87,17 @@ where
         .map(|_| F::rand(&mut rng))
         .take(1 << VARS)
         .collect();
-    let mle = Rc::new(SparseMle::new(addresses, values));
-    let mle = StaticSparkStructure { mle: mle.clone() };
 
     let pcs = C::new(VARS);
-    let prover = Prover::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle, &pcs);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle, &pcs);
+
+    let mle = Rc::new(SparseMle::new(addresses, values));
+    let mle = StaticSparkStructure {
+        mle: mle.clone(),
+        pcs: pcs.clone(),
+    };
+
+    let prover = Prover::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle);
 
     let point = [(); VARS * 2].map(|_| F::rand(&mut rng)).to_vec();
     let point = MultiPoint::new(point);
@@ -151,11 +161,11 @@ where
     };
 
     let pcs = C::new(VARS);
-    let mle = FlexibleSparkStructure::new(Rc::new(mle));
+    let mle = FlexibleSparkStructure::new(Rc::new(mle), pcs.clone());
     assert_eq!(eval, mle.eval(point.clone()));
 
-    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
+    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle);
 
     let instance = SparkInstance::new(point, eval);
 
@@ -206,7 +216,7 @@ where
         .collect();
 
     let pcs = C::new(VARS);
-    let mle = FlexibleSparkStructure::new(Rc::new(mle));
+    let mle = FlexibleSparkStructure::new(Rc::new(mle), pcs.clone());
 
     let (eval, point) = {
         let point = [(); VARS * 2].map(|_| F::rand(&mut rng)).to_vec();
@@ -214,8 +224,8 @@ where
         (mle.eval(point.clone()), point)
     };
 
-    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
+    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle);
 
     let instance = SparkInstance::new(point, eval);
 
@@ -263,9 +273,9 @@ where
     mle[0].0 = 0;
     mle[1].0 = (1 << point_vars) - 1;
 
-    let mle = FlexibleSparkStructure::new(Rc::new(mle));
-
     let pcs = C::new(VARS);
+
+    let mle = FlexibleSparkStructure::new(Rc::new(mle), pcs.clone());
 
     let (eval, point) = {
         let point = (0..point_vars).map(|_| F::rand(&mut rng)).collect();
@@ -273,8 +283,8 @@ where
         (mle.eval(point.clone()), point)
     };
 
-    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
+    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle);
 
     let instance = SparkInstance::new(point, eval);
 

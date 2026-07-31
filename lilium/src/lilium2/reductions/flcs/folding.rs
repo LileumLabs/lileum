@@ -62,20 +62,14 @@ where
         builder.subprotocol::<ZeroFold<F, _>, _, _, _>(key)
     }
 
-    fn verifier_key(
-        structure: &FlcsStructure<F, C, IO, S, I>,
-        _: &FlcsStructure<F, C, IO, S, I>,
-    ) -> Self::VerifierKey {
+    fn verifier_key(structure: &FlcsStructure<F, C, IO, S, I>) -> Self::VerifierKey {
         let oracle = &structure.oracle;
-        ZeroFold::verifier_key(oracle, oracle)
+        ZeroFold::verifier_key(oracle)
     }
 
-    fn key_pair(
-        structure: &FlcsStructure<F, C, IO, S, I>,
-        _: &FlcsStructure<F, C, IO, S, I>,
-    ) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(structure: &FlcsStructure<F, C, IO, S, I>) -> (Self::VerifierKey, Self::ProverKey) {
         let oracle = &structure.oracle;
-        let verifier_key = ZeroFold::verifier_key(oracle, oracle);
+        let verifier_key = ZeroFold::verifier_key(oracle);
 
         let matrices = structure.ccs_structure.io_matrices.clone().map(Rc::new);
         let structure = oracle.structure();

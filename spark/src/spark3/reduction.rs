@@ -32,7 +32,7 @@ use transcript::reduction2::{
 #[derive(Clone, Copy, Debug)]
 pub struct SparkReduction<F: Field, C: CommitmentScheme<F>, const N: usize>(PhantomData<(F, C)>);
 
-type Rel1<F, const N: usize> = StaticSparkRelation<F, N>;
+type Rel1<F, C, const N: usize> = StaticSparkRelation<F, C, N>;
 type Rel2<F, C> = OpeningRelation<F, C>;
 
 #[derive(Clone, Debug)]
@@ -100,7 +100,7 @@ pub enum SparkError {
     CoreOracle,
 }
 
-impl<F, C, const N: usize> Reduction<F, Rel1<F, N>, Rel2<F, C>> for SparkReduction<F, C, N>
+impl<F, C, const N: usize> Reduction<F, Rel1<F, C, N>, Rel2<F, C>> for SparkReduction<F, C, N>
 where
     F: Field,
     C: CommitmentScheme<F>,
@@ -133,20 +133,14 @@ where
             )
     }
 
-    fn verifier_key(
-        structure_1: &StaticSparkStructure<F, N>,
-        structure_2: &C,
-    ) -> Self::VerifierKey {
+    fn verifier_key(structure: &StaticSparkStructure<F, C, N>) -> Self::VerifierKey {
         // TODO: specialize instead of creating both keys.
-        let (verifier_key, _) = Self::key_pair(structure_1, structure_2);
+        let (verifier_key, _) = Self::key_pair(structure);
         verifier_key
     }
 
-    fn key_pair(
-        structure_1: &StaticSparkStructure<F, N>,
-        structure_2: &C,
-    ) -> (Self::VerifierKey, Self::ProverKey) {
-        ProverKey::new(&structure_1.mle, structure_2.clone())
+    fn key_pair(structure: &StaticSparkStructure<F, C, N>) -> (Self::VerifierKey, Self::ProverKey) {
+        ProverKey::new(&structure.mle, structure.pcs.clone())
     }
 
     fn params(key: &Self::VerifierKey) -> Self::Params {

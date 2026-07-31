@@ -143,11 +143,11 @@ where
             .round::<F, SingleElement<F>, 0>(&())
     }
 
-    fn verifier_key(pcs: &Self, _: &()) -> Self::VerifierKey {
+    fn verifier_key(pcs: &Self) -> Self::VerifierKey {
         pcs.clone()
     }
 
-    fn key_pair(pcs: &Self, _: &()) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(pcs: &Self) -> (Self::VerifierKey, Self::ProverKey) {
         (pcs.clone(), pcs.clone())
     }
 

@@ -97,6 +97,7 @@ where
     ) -> bool {
         let static_spark = StaticSparkStructure {
             mle: Rc::clone(&structure.mle),
+            pcs: structure.pcs.clone(),
         };
         if !StaticSparkRelation::check(&static_spark, instance, witness) {
             return false;

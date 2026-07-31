@@ -130,15 +130,14 @@ where
         builder
     }
 
-    fn verifier_key(structure_1: &SmallEvalOracle<F, SF>, _structure_2: &()) -> Self::VerifierKey {
-        structure_1.clone()
+    fn verifier_key(structure: &SmallEvalOracle<F, SF>) -> Self::VerifierKey {
+        structure.clone()
     }
 
     fn key_pair(
-        structure_1: &<Rel<F, SF> as Relation>::Structure,
-        _structure_2: &<() as Relation>::Structure,
+        structure: &<Rel<F, SF> as Relation>::Structure,
     ) -> (Self::VerifierKey, Self::ProverKey) {
-        (structure_1.clone(), structure_1.clone())
+        (structure.clone(), structure.clone())
     }
 
     fn params(_: &Self::VerifierKey) -> Self::Params {}

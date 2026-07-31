@@ -29,8 +29,8 @@ const VARS: usize = 4;
 fn product_zerocheck_test<F: PrimeField>() {
     let oracle = TestingOracle::new(VARS, ());
 
-    let prover1 = Prover::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle, &oracle);
-    let verifier1 = Verifier::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle, &oracle);
+    let prover1 = Prover::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle);
+    let verifier1 = Verifier::<F, Poseidon<F>, _, _, Reduction1<F>>::new(&oracle);
 
     let mut rng = StdRng::seed_from_u64(0);
     let witness: Vec<ProductGate<F>> = (0..(1 << VARS))
@@ -73,8 +73,8 @@ fn product_zerocheck_test<F: PrimeField>() {
     //TODO: The number of variables should likely be part of the structure
     // like with normal sumcheck.
 
-    let prover2 = Prover::<F, Poseidon<F>, _, _, Reduction2<F>>::new(&oracle, &oracle);
-    let verifier2 = Verifier::<F, Poseidon<F>, _, _, Reduction2<F>>::new(&oracle, &oracle);
+    let prover2 = Prover::<F, Poseidon<F>, _, _, Reduction2<F>>::new(&oracle);
+    let verifier2 = Verifier::<F, Poseidon<F>, _, _, Reduction2<F>>::new(&oracle);
 
     let ProverOutput {
         instance: query_instance,

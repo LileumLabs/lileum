@@ -2,7 +2,7 @@ use crate::lilium2::reductions::matrix_product::function::MatrixSumEvals;
 use ark_ff::Field;
 use ccs::matrix::Matrix;
 use commit::commit2::CommitmentScheme;
-use spark::spark3::{FlexibleSparkRelation, FlexibleSparkStructure, SparkInstance};
+use spark::spark3::{FlexibleSparkRelation, SparkInstance};
 use sponge::sponge::Duplex;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
@@ -172,7 +172,7 @@ impl<F: Field, C: CommitmentScheme<F>, const N: usize> Relation for MatrixSumQue
 #[derive(Clone, Copy, Debug)]
 pub struct MissingEvals;
 
-impl<F, C, const N: usize> Reduction<F, MatrixSumQuery<F, C, N>, [FlexibleSparkRelation<F>; N]>
+impl<F, C, const N: usize> Reduction<F, MatrixSumQuery<F, C, N>, [FlexibleSparkRelation<F, C>; N]>
     for MatrixSumOracle<F, C, N>
 where
     F: Field,
@@ -195,12 +195,9 @@ where
         builder
     }
 
-    fn verifier_key(_: &Self, _: &[FlexibleSparkStructure<F>; N]) -> Self::VerifierKey {}
+    fn verifier_key(_: &Self) -> Self::VerifierKey {}
 
-    fn key_pair(
-        _: &Self,
-        _: &[FlexibleSparkStructure<F>; N],
-    ) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(_: &Self) -> (Self::VerifierKey, Self::ProverKey) {
         ((), ())
     }
 
@@ -211,7 +208,7 @@ where
         instance: <MatrixSumQuery<F, C, N> as Relation>::Instance,
         _witness: <MatrixSumQuery<F, C, N> as Relation>::Witness,
         _transcript: &mut Transcript<F, S>,
-    ) -> ProverOutput<[FlexibleSparkRelation<F>; N], Self::Proof> {
+    ) -> ProverOutput<[FlexibleSparkRelation<F, C>; N], Self::Proof> {
         let oracle_instance = instance.oracle_instance();
         let evals = instance.evals();
         let rx = &oracle_instance.point;

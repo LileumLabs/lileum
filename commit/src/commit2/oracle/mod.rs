@@ -443,7 +443,7 @@ where
         builder.round::<F, (), 1>(&())
     }
 
-    fn verifier_key(oracle: &Self, _: &C) -> Self::VerifierKey {
+    fn verifier_key(oracle: &Self) -> Self::VerifierKey {
         let structure_filter = SF::map_evals(&SF::natures(), |nature| {
             let nature: Option<CommittedNature> = nature.into_dynamic().into();
             matches!(nature, Some(CommittedNature::Structure))
@@ -454,8 +454,8 @@ where
         VerifierKey { structure_commits }
     }
 
-    fn key_pair(oracle: &Self, structure_2: &C) -> (Self::VerifierKey, Self::ProverKey) {
-        let verifier_key = Self::verifier_key(oracle, structure_2);
+    fn key_pair(oracle: &Self) -> (Self::VerifierKey, Self::ProverKey) {
+        let verifier_key = Self::verifier_key(oracle);
         let structure_commits = verifier_key.structure_commits.clone();
         let structure_evals = Rc::clone(&oracle.structure_evals);
         let prover_key = ProverKey {
