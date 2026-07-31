@@ -295,6 +295,7 @@ where
     data: SF::Data,
     oracle1_key: P1::VerifierKey,
     oracle2_key: P2::VerifierKey,
+    vars: usize,
 }
 
 impl<F: Field, SF: SumcheckFunction<F>, P1, P2> CompositeReductionKey<F, SF, P1, P2>
@@ -351,6 +352,8 @@ where
 
     type Error = ();
 
+    type Params = (OracleParams, usize);
+
     fn transcript_pattern(
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -369,12 +372,14 @@ where
         let oracle1_key = From::from(oracle.partial_oracles.0.clone());
         let oracle2_key = From::from(oracle.partial_oracles.1.clone());
         let evals_per_oracle = oracle.evals_per_oracle.clone();
+        let vars = oracle.vars;
         CompositeReductionKey {
             prover_evals,
             evals_per_oracle,
             data,
             oracle1_key,
             oracle2_key,
+            vars,
         }
     }
 
@@ -384,6 +389,11 @@ where
     ) -> (Self::VerifierKey, Self::ProverKey) {
         let key = Self::verifier_key(structure_1, structure_2);
         (key.clone(), key)
+    }
+
+    fn params(key: &Self::VerifierKey) -> Self::Params {
+        let vars = key.vars;
+        (OracleParams { vars }, vars)
     }
 
     fn prove<S: Duplex<F>>(

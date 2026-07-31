@@ -42,6 +42,8 @@ where
 
     type Error = CompoundError<A::Error, B::Error>;
 
+    type Params = A::Params;
+
     fn transcript_pattern(
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -74,6 +76,10 @@ where
             b_key: b_key_p,
         };
         (verifier_key, prover_key)
+    }
+
+    fn params(key: &Self::VerifierKey) -> Self::Params {
+        A::params(&key.a_key)
     }
 
     fn prove<S: Duplex<F>>(

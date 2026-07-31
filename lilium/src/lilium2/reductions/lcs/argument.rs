@@ -44,6 +44,8 @@ where
 
     type Error = Error<F, C>;
 
+    type Params = ();
+
     fn transcript_pattern(
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -71,6 +73,8 @@ where
         let vars = structure.ccs_structure.vars();
         ((verifier_key, vars), (prover_key, vars))
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,

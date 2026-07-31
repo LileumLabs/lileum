@@ -53,6 +53,8 @@ where
 
     type Error = FoldingError;
 
+    type Params = ();
+
     fn transcript_pattern(
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -85,6 +87,8 @@ where
 
         (verifier_key, prover_key)
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,

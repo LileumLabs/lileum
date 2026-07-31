@@ -49,7 +49,7 @@ type CompositeKey<F, C, const N: usize, SF> = CompositeReductionKey<
 type Func<const N: usize> = MatrixSumEvals<(), N>;
 
 pub struct VerifierKey<F: Field, C: CommitmentScheme<F>, SF, const N: usize> {
-    sumcheck_key: SumcheckVerifierKey<F>,
+    sumcheck_key: SumcheckVerifierKey<F, Oracle<F, Func<N>, C, N>>,
     vars: usize,
     committed_oracle1: CommittedVerifierKey<F, C>,
     committed_oracle2: CommittedVerifierKey<F, C>,
@@ -103,6 +103,8 @@ where
     type Proof = Proof<F>;
 
     type Error = Error;
+
+    type Params = ();
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -227,6 +229,8 @@ where
         };
         (verifier_key, prover_key)
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,

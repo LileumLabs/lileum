@@ -186,6 +186,8 @@ where
 
     type Error = MissingEvals;
 
+    type Params = ();
+
     fn transcript_pattern(
         _key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -201,6 +203,8 @@ where
     ) -> (Self::VerifierKey, Self::ProverKey) {
         ((), ())
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         _key: &Self::ProverKey,

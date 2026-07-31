@@ -65,8 +65,9 @@ where
     CommittedOracle<F, C, SF>: PartialOracle<F, SF>,
 {
     minor_structure: MinorStructure<N>,
-    sumcheck_key: SumcheckVerifierKey<F>,
+    sumcheck_key: SumcheckVerifierKey<F, SparkOracle<F, C, N>>,
     oracle_key: CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
+    vars: usize,
 }
 
 impl<F, C, SF, const N: usize> Key<F, C, SF, N>
@@ -79,13 +80,15 @@ where
 {
     pub(crate) fn new(
         minor_structure: MinorStructure<N>,
-        sumcheck_key: SumcheckVerifierKey<F>,
+        sumcheck_key: SumcheckVerifierKey<F, SparkOracle<F, C, N>>,
         oracle_key: CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
+        vars: usize,
     ) -> Self {
         Self {
             minor_structure,
             sumcheck_key,
             oracle_key,
+            vars,
         }
     }
 }
@@ -109,6 +112,8 @@ where
     type Proof = Proof<F, C, N>;
 
     type Error = SparkError;
+
+    type Params = usize;
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -142,6 +147,10 @@ where
         structure_2: &C,
     ) -> (Self::VerifierKey, Self::ProverKey) {
         ProverKey::new(&structure_1.mle, structure_2.clone())
+    }
+
+    fn params(key: &Self::VerifierKey) -> Self::Params {
+        key.vars
     }
 
     fn prove<S: Duplex<F>>(

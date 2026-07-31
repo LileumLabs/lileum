@@ -36,8 +36,8 @@ where
     let mle = StaticSparkStructure { mle: mle.clone() };
 
     let pcs = C::new(VARS);
-    let prover = Prover::<F, Poseidon<F>, _, _, SparkReduction<F, C, 1>>::new(&mle, &pcs, VARS);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, SparkReduction<F, C, 1>>::new(&mle, &pcs, VARS);
+    let prover = Prover::<F, Poseidon<F>, _, _, SparkReduction<F, C, 1>>::new(&mle, &pcs);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, SparkReduction<F, C, 1>>::new(&mle, &pcs);
 
     let point = [(); VARS].map(|_| F::rand(&mut rng)).to_vec();
     let point = MultiPoint::new(point);
@@ -86,9 +86,8 @@ where
     let mle = StaticSparkStructure { mle: mle.clone() };
 
     let pcs = C::new(VARS);
-    let prover = Prover::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle, &pcs, VARS * 2);
-    let verifier =
-        Verifier::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle, &pcs, VARS * 2);
+    let prover = Prover::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle, &pcs);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, SparkReduction<F, C, 2>>::new(&mle, &pcs);
 
     let point = [(); VARS * 2].map(|_| F::rand(&mut rng)).to_vec();
     let point = MultiPoint::new(point);
@@ -155,8 +154,8 @@ where
     let mle = FlexibleSparkStructure::new(Rc::new(mle));
     assert_eq!(eval, mle.eval(point.clone()));
 
-    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, VARS);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, VARS);
+    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
 
     let instance = SparkInstance::new(point, eval);
 
@@ -215,8 +214,8 @@ where
         (mle.eval(point.clone()), point)
     };
 
-    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, VARS * 2);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, VARS * 2);
+    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
 
     let instance = SparkInstance::new(point, eval);
 
@@ -244,7 +243,6 @@ fn two_dimensions_flexible() {
     two_dimensions_flex_test::<Fr, Scheme>();
 }
 
-// fn test_flexible<F, C>(mle: Vec<(u64, F)>, point_vars: usize)
 fn test_flexible<F, C>(point_vars: usize)
 where
     F: PrimeField,
@@ -275,9 +273,8 @@ where
         (mle.eval(point.clone()), point)
     };
 
-    let vars = point_vars;
-    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, vars);
-    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs, vars);
+    let prover = Prover::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, FlexibleSpark<F, C>>::new(&mle, &pcs);
 
     let instance = SparkInstance::new(point, eval);
 

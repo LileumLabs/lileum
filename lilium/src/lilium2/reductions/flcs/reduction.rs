@@ -42,7 +42,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    sumcheck_key: SumcheckVerifierKey<F>,
+    sumcheck_key: SumcheckVerifierKey<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>,
     composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S, I>>,
     matrix_oracle_key: matrix_product::VerifierKey<F, C, FlcsEvals<(), IO, S, I>, IO>,
     spark_keys: [flexible::VerifierKey<F, C>; IO],
@@ -98,6 +98,8 @@ where
     type Proof = Proof<F, C, IO>;
 
     type Error = FlcsError;
+
+    type Params = ();
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -213,6 +215,8 @@ where
         };
         (verifier_key, prover_key)
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,

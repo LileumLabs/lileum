@@ -2,7 +2,7 @@ use crate::{
     polynomials::MultiPoint,
     sumcheck2::{
         evals::{Evals, Mles},
-        oracles::{Oracle, OracleData, QueryRelation, SumcheckFunction},
+        oracles::{partial::OracleParams, Oracle, OracleData, QueryRelation, SumcheckFunction},
         prove,
         reduction::SumcheckVerifierKey,
         zerocheck::{ZeroSumcheck, ZeroSumcheckInstance, Zerocheck},
@@ -14,8 +14,8 @@ use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::marker::PhantomData;
 use transcript::reduction2::{
-    GuardedProof, NoError, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
-    VerifierTranscript,
+    GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
+    TranscriptBuilder, VerifierTranscript,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -34,6 +34,8 @@ where
 
     type Error = NoError;
 
+    type Params = ();
+
     fn transcript_pattern(_: &Self::VerifierKey, builder: TranscriptBuilder) -> TranscriptBuilder {
         builder.round::<F, (), 1>(&())
     }
@@ -46,6 +48,8 @@ where
         let vars = oracle.vars();
         (vars, vars)
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         key: &usize,
@@ -98,11 +102,13 @@ impl<F: Field, O: Oracle<F>> Reduction<F, ZeroSumcheck<F, O>, QueryRelation<F, O
 {
     type ProverKey = prove::ProverKey<F, O>;
 
-    type VerifierKey = SumcheckVerifierKey<F>;
+    type VerifierKey = SumcheckVerifierKey<F, O>;
 
     type Proof = Vec<SumcheckMessage<F>>;
 
     type Error = SumcheckError;
+
+    type Params = (OracleParams, <O::Instance as Message<F>>::Params);
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -118,6 +124,12 @@ impl<F: Field, O: Oracle<F>> Reduction<F, ZeroSumcheck<F, O>, QueryRelation<F, O
     fn key_pair(structure_1: &O, structure_2: &O) -> (Self::VerifierKey, Self::ProverKey) {
         let (verifier_key, prover_key) = SumcheckReduction::key_pair(structure_1, structure_2);
         (verifier_key.increase_degree(), prover_key.increase_degree())
+    }
+
+    fn params(key: &Self::VerifierKey) -> Self::Params {
+        let oracle_params = SumcheckReduction::<F, O>::params(key);
+        let vars = key.vars();
+        (OracleParams { vars }, oracle_params)
     }
 
     fn prove<S: Duplex<F>>(

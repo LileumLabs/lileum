@@ -8,7 +8,7 @@ use crate::{
             composite::{CompositeOracle, CompositeOracleInstance, Either},
             core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, CoreQueryRelation},
             empty::{EmptyInstance, EmptyRelation, NoNature},
-            partial::{OracleParams, PartialQueryRelation},
+            partial::PartialQueryRelation,
             QueryRelation, SumcheckFunction,
         },
         SumcheckInstance, SumcheckReduction, SumcheckRelation,
@@ -42,12 +42,10 @@ fn composite_sumcheck_test<F: PrimeField>() {
     });
     let oracle: Oracle<F> = Oracle::new((), structure.clone(), core_oracle, ());
 
-    let params = OracleParams { vars: VARS };
-
     // Create a prover for the SumcheckReduction, both relations have the same structure.
-    let prover = Prover::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle, params);
+    let prover = Prover::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle);
     // The verifier works the same.
-    let verifier = Verifier::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle, params);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle);
 
     let mut rng = StdRng::seed_from_u64(0);
 
@@ -111,11 +109,9 @@ fn composite_sumcheck_test<F: PrimeField>() {
 
     assert_eq!(verifier_instance, query_instance);
 
-    let params = (params, VARS);
-    let prover =
-        Prover::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle, oracle.inner_oracles(), params);
+    let prover = Prover::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle, oracle.inner_oracles());
     let verifier =
-        Verifier::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle, oracle.inner_oracles(), params);
+        Verifier::<F, Poseidon<F>, _, _, Oracle<F>>::new(&oracle, oracle.inner_oracles());
 
     let ProverOutput {
         instance: partial_query_instance,

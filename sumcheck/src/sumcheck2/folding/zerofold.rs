@@ -4,7 +4,7 @@ use crate::{
     sumcheck2::{
         evals::{EvalsCore, Mles},
         folding::{folding_degree, Foldable},
-        oracles::{Oracle, OracleData, SumcheckFunction},
+        oracles::{partial::OracleParams, Oracle, OracleData, SumcheckFunction},
         zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
         SumcheckError, SumcheckMessage,
     },
@@ -14,8 +14,8 @@ use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::marker::PhantomData;
 use transcript::reduction2::{
-    FoldingRelation, FoldingScheme, GuardedProof, ProverOutput, Reduction, Relation, Transcript,
-    TranscriptBuilder, VerifierTranscript,
+    FoldingRelation, FoldingScheme, GuardedProof, Message, ProverOutput, Reduction, Relation,
+    Transcript, TranscriptBuilder, VerifierTranscript,
 };
 
 /// Folding scheme for zerocheck.
@@ -29,6 +29,7 @@ pub struct ZeroFoldKey<F: Field, O: Oracle<F>> {
     // Weights for degrees d to (d + vars + 1).
     weights: Vec<BarycentricWeights<F>>,
     data: OracleData<F, O>,
+    params: <O::Instance as Message<F>>::Params,
 }
 
 impl<F, O> Reduction<F, FoldingRelation<ZeroSumcheck<F, O>>, ZeroSumcheck<F, O>> for ZeroFold<F, O>
@@ -44,6 +45,8 @@ where
     type Proof = SumcheckMessage<F>;
 
     type Error = SumcheckError;
+
+    type Params = (OracleParams, <O::Instance as Message<F>>::Params);
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -62,17 +65,24 @@ where
             .map(|i| BarycentricWeights::compute((degree + i) as u32))
             .collect();
         let data = oracle.data().clone();
+        let params = oracle.oracle_params();
         ZeroFoldKey {
             degree,
             vars,
             weights,
             data,
+            params,
         }
     }
 
     fn key_pair(structure_1: &O, structure_2: &O) -> (Self::VerifierKey, Self::ProverKey) {
         let key = Self::verifier_key(structure_1, structure_2);
         (key.clone(), key)
+    }
+
+    fn params(key: &Self::VerifierKey) -> Self::Params {
+        let vars = key.vars;
+        (OracleParams { vars }, key.params)
     }
 
     fn prove<S: Duplex<F>>(

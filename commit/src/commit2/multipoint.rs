@@ -62,13 +62,15 @@ where
     }
 }
 
+type Oracle<F, C, SF> = CompositeOracle<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;
+
 pub struct VerifierKey<F, C, const N: usize, SF = MultipointEvals<(), N>>
 where
     F: Field,
     C: CommitmentScheme<F>,
-    SF: SumcheckFunction<F>,
+    SF: SumcheckFunction<F, Natures = Either<CoreNature, CommittedNature>>,
 {
-    sumcheck: SumcheckVerifierKey<F>,
+    sumcheck: SumcheckVerifierKey<F, Oracle<F, C, SF>>,
     vars: usize,
     composite: CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
 }
@@ -112,6 +114,8 @@ where
     type Proof = Proof<F>;
 
     type Error = Error;
+
+    type Params = ();
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -196,6 +200,8 @@ where
 
         (verifier_key, prover_key)
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,
@@ -332,8 +338,6 @@ where
         Ok(open_instance)
     }
 }
-
-type Oracle<F, C, SF> = CompositeOracle<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;
 
 fn core_instance<F: Field, const N: usize>(
     points: [MultiPoint<F>; N],

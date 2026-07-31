@@ -63,6 +63,10 @@ pub trait Reduction<F: Field, R1: Relation, R2: Relation> {
     type VerifierKey;
     type Proof: Clone;
     type Error: Clone + Debug;
+    /// The type of params of the source relation, it should be
+    /// `<R1::Instance as Message<F>>::Params` or just `()` if
+    /// R1::Instance doesn't implement `Message<F>`.
+    type Params: Clone;
 
     /// Defines the shape of the interactive protocol, any interactions which
     /// deviate from it will result in panics in the prover and errors in the
@@ -76,6 +80,12 @@ pub trait Reduction<F: Field, R1: Relation, R2: Relation> {
         structure_1: &R1::Structure,
         structure_2: &R2::Structure,
     ) -> (Self::VerifierKey, Self::ProverKey);
+
+    /// Provides the concrete params for R1::Instance if this reduction
+    /// is instanciated.
+    /// If the reduction is only intended to be used as part of another reduction
+    /// `Reduction::Params` can be set to ().
+    fn params(key: &Self::VerifierKey) -> Self::Params;
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,

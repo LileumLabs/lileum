@@ -44,6 +44,8 @@ where
 
     type Error = SumcheckError;
 
+    type Params = ();
+
     fn transcript_pattern(
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -72,6 +74,8 @@ where
         let key = Self::verifier_key(structure_1, structure_2);
         (key.clone(), key)
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,

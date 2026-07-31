@@ -441,6 +441,8 @@ where
 
     type Error = ();
 
+    type Params = ();
+
     fn transcript_pattern(
         _key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -456,6 +458,8 @@ where
     fn key_pair(oracle: &Self, _: &()) -> (Self::VerifierKey, Self::ProverKey) {
         (oracle.clone(), oracle.clone())
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,

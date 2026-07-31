@@ -35,6 +35,8 @@ where
 
     type Error = NoError;
 
+    type Params = ();
+
     fn transcript_pattern(
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -65,6 +67,8 @@ where
         let vars = Self::verifier_key(structure_1, structure_2);
         (vars, vars)
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,

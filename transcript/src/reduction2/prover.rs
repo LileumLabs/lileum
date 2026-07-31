@@ -26,15 +26,13 @@ where
     R1::Instance: Message<F>,
     R2: Relation,
     S: Duplex<F>,
-    R: Reduction<F, R1, R2>,
+    R: Reduction<F, R1, R2, Params = <R1::Instance as Message<F>>::Params>,
 {
     /// Creates prover from the structures of both relations.
-    pub fn new(
-        structure_1: &R1::Structure,
-        structure_2: &R2::Structure,
-        params: <R1::Instance as Message<F>>::Params,
-    ) -> Self {
+    pub fn new(structure_1: &R1::Structure, structure_2: &R2::Structure) -> Self {
         let (verifier_key, key) = R::key_pair(structure_1, structure_2);
+
+        let params = R::params(&verifier_key);
 
         let transcript_descriptor =
             TranscriptDescriptor::for_reduction::<R1, R2, R>(&verifier_key, &params);

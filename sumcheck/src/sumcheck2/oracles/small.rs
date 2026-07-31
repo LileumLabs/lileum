@@ -120,6 +120,8 @@ where
 
     type Error = ();
 
+    type Params = ();
+
     fn transcript_pattern(
         _key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -138,6 +140,8 @@ where
     ) -> (Self::VerifierKey, Self::ProverKey) {
         (structure_1.clone(), structure_1.clone())
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         _key: &Self::ProverKey,

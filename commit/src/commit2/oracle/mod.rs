@@ -434,6 +434,8 @@ where
 
     type Error = NoError;
 
+    type Params = ();
+
     fn transcript_pattern(
         _key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -462,6 +464,8 @@ where
         };
         (verifier_key, prover_key)
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,

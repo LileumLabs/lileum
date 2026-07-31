@@ -51,11 +51,14 @@ where
         let minor_structure = Rc::new(minor_structure);
         let mut addresses = [(); N].map(|_| Vec::new());
 
+        let mut highest_address = 0u8;
         for address in &mle.addresses {
+            highest_address = highest_address.max(address[N - 1]);
             for (i, address) in address.iter().enumerate() {
                 addresses[i].push(*address);
             }
         }
+        let vars = (N - 1) * 8 + (highest_address.highest_one().unwrap_or(0) + 1) as usize;
 
         let sumcheck_structure = SparkEvals::structure(mle);
         let sumcheck_structure = Rc::new(sumcheck_structure);
@@ -79,6 +82,7 @@ where
             (*minor_structure).clone(),
             sumcheck_verifier_key,
             oracle_key.clone(),
+            vars,
         );
 
         let prover_key = Self {

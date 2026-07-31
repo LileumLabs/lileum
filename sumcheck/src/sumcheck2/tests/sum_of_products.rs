@@ -27,15 +27,11 @@ const VARS: usize = 4;
 fn product_sumcheck_test<F: PrimeField>() {
     // We create an oracle, the structure of the Sumcheck reduction.
     let oracle = TestingOracle::new(VARS, ());
-    // We define the params of the instance of our relation, SumcheckRelation in
-    // this case, and SumcheckInstance.
-    // SumcheckInstance has no params, for that reason is ().
-    let params = ();
 
     // Create a prover for the SumcheckReduction, both relations have the same structure.
-    let prover = Prover::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle, params);
+    let prover = Prover::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle);
     // The verifier works the same.
-    let verifier = Verifier::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle, params);
+    let verifier = Verifier::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle, &oracle);
 
     // Create a sample witness.
     let mut rng = StdRng::seed_from_u64(0);

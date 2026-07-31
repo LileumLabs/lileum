@@ -91,6 +91,8 @@ where
 
     type Error = FlexibleSparkError;
 
+    type Params = usize;
+
     fn transcript_pattern(
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -210,6 +212,19 @@ where
                 key_pair!(VerifierKey::S8, ProverKey::S8)
             }
             _ => panic!("unsupported (and impossible) size"),
+        }
+    }
+
+    fn params(key: &Self::VerifierKey) -> Self::Params {
+        match key {
+            VerifierKey::S1(key) => SparkReduction::params(key),
+            VerifierKey::S2(key) => SparkReduction::params(key),
+            VerifierKey::S3(key) => SparkReduction::params(key),
+            VerifierKey::S4(key) => SparkReduction::params(key),
+            VerifierKey::S5(key) => SparkReduction::params(key),
+            VerifierKey::S6(key) => SparkReduction::params(key),
+            VerifierKey::S7(key) => SparkReduction::params(key),
+            VerifierKey::S8(key) => SparkReduction::params(key),
         }
     }
 

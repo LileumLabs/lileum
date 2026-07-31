@@ -129,6 +129,8 @@ where
 
     type Error = IpaError;
 
+    type Params = ();
+
     fn transcript_pattern(
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
@@ -148,6 +150,8 @@ where
     fn key_pair(pcs: &Self, _: &()) -> (Self::VerifierKey, Self::ProverKey) {
         (pcs.clone(), pcs.clone())
     }
+
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,
