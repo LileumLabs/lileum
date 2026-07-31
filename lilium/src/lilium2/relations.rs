@@ -148,6 +148,7 @@ where
     pub oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
 }
 
+#[derive(Clone, Debug)]
 pub struct FlcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
 
 pub struct FlcsInstance<F, C, const IO: usize, const S: usize, const I: usize>(
