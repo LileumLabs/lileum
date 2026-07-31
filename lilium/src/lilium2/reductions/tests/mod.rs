@@ -3,6 +3,7 @@ use ark_ff::Field;
 use commit::commit2::CommitmentScheme;
 use sponge::{poseidon2::PoseidonDefault, sponge::Sponge};
 
+// mod folding;
 mod lcs_argument;
 
 type Poseidon<F> = Sponge<F, PoseidonDefault<F>, 2, 1, 3>;
