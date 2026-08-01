@@ -9,7 +9,7 @@ mod evals;
 mod reduction;
 mod relation;
 
-#[derive(Clone, Debug, Eq)]
+#[derive(Clone, Debug)]
 pub struct ZeroSumcheckInstance<F: Field, O: Oracle<F>> {
     /// Same sum as in sumcheck, with the particularity that it will be
     /// zero unless the instance is the result of folding.
@@ -28,6 +28,8 @@ where
             && self.oracle_instance == other.oracle_instance
     }
 }
+
+impl<F: Field, O: Oracle<F>> Eq for ZeroSumcheckInstance<F, O> where O::Instance: Eq {}
 
 impl<F: Field, O: Oracle<F>> ZeroSumcheckInstance<F, O> {
     pub fn oracle_instance(&self) -> &O::Instance {

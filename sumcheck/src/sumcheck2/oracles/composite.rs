@@ -107,7 +107,7 @@ where
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug)]
 pub struct CompositeOracleInstance<F, SF, P1, P2>
 where
     F: Field,
@@ -117,6 +117,32 @@ where
 {
     pub oracle1_instance: P1::Instance,
     pub oracle2_instance: P2::Instance,
+}
+
+impl<F, SF, P1, P2> PartialEq for CompositeOracleInstance<F, SF, P1, P2>
+where
+    F: Field,
+    SF: SumcheckFunction<F>,
+    P1: PartialOracle<F, SF>,
+    P2: PartialOracle<F, SF>,
+    P1::Instance: PartialEq,
+    P2::Instance: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.oracle1_instance == other.oracle1_instance
+            && self.oracle2_instance == other.oracle2_instance
+    }
+}
+
+impl<F, SF, P1, P2> Eq for CompositeOracleInstance<F, SF, P1, P2>
+where
+    F: Field,
+    SF: SumcheckFunction<F>,
+    P1: PartialOracle<F, SF>,
+    P2: PartialOracle<F, SF>,
+    P1::Instance: Eq,
+    P2::Instance: Eq,
+{
 }
 
 impl<F, SF, P1, P2> Foldable<F> for CompositeOracleInstance<F, SF, P1, P2>
