@@ -1,5 +1,5 @@
 use crate::lilium2::{
-    oracles::FlcsOracle,
+    oracles::{FlcsOracle, FlcsOracleParams},
     reductions::flcs::{compute_sumcheck_witness, FlcsEvals},
 };
 use ark_ff::Field;
@@ -12,7 +12,7 @@ use ccs::{
 use commit::commit2::CommitmentScheme;
 use std::marker::PhantomData;
 use sumcheck::sumcheck2::{
-    oracles::Oracle,
+    oracles::{partial::OracleParams, Oracle},
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
 };
 use transcript::reduction2::{Message, NoError, Relation};
@@ -151,12 +151,38 @@ where
 #[derive(Clone, Debug)]
 pub struct FlcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
 
+type ZeroInstance<F, C, const IO: usize, const S: usize, const I: usize> =
+    ZeroSumcheckInstance<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FlcsInstance<F, C, const IO: usize, const S: usize, const I: usize>(
-    pub ZeroSumcheckInstance<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>,
+    pub ZeroInstance<F, C, IO, S, I>,
 )
 where
     F: Field,
     C: CommitmentScheme<F>;
+
+impl<F, C, const IO: usize, const S: usize, const I: usize> Message<F>
+    for FlcsInstance<F, C, IO, S, I>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    type Params = (
+        OracleParams,
+        FlcsOracleParams<F, C, FlcsEvals<(), IO, S, I>, IO>,
+    );
+
+    type Error = <ZeroInstance<F, C, IO, S, I> as Message<F>>::Error;
+
+    fn len(params: &Self::Params) -> usize {
+        ZeroSumcheckInstance::<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>::len(params)
+    }
+
+    fn to_field_elements(&self, params: &Self::Params) -> Result<Vec<F>, Self::Error> {
+        self.0.to_field_elements(params)
+    }
+}
 
 impl<F, C, const I: usize, const IO: usize, const S: usize> Relation
     for FlcsRelation<F, C, I, IO, S>

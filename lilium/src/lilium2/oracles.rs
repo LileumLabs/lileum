@@ -18,7 +18,7 @@ use sumcheck::{
             composite::{CompositeOracle, Either},
             core::CoreOracle,
             partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
-            EvalLocation, SumcheckFunction,
+            EvalLocation, Oracle, SumcheckFunction,
         },
     },
 };
@@ -75,7 +75,7 @@ where
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MatrixProductInstance<F: Field, C: CommitmentScheme<F>>(pub(crate) C::Commitment);
 
 impl<F: Field, C: CommitmentScheme<F>> Message<F> for MatrixProductInstance<F, C> {
@@ -306,3 +306,9 @@ where
 
 pub type FlcsOracle<F, C, SF, const IO: usize> =
     CompositeOracle<F, SF, CoreOracle<F, SF>, MatrixProductOracle<F, C, SF, IO>>;
+
+pub type FlcsOracleInstance<F, C, SF, const IO: usize> =
+    <FlcsOracle<F, C, SF, IO> as Oracle<F>>::Instance;
+
+pub type FlcsOracleParams<F, C, SF, const IO: usize> =
+    <FlcsOracleInstance<F, C, SF, IO> as Message<F>>::Params;

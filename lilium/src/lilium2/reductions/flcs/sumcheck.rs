@@ -18,7 +18,7 @@ use sumcheck::{
 };
 use sumcheck_derive::EvalsCore;
 
-#[derive(Clone, Copy, Debug, EvalsCore)]
+#[derive(Clone, Copy, Debug, EvalsCore, PartialEq, Eq)]
 pub struct FlcsEvals<V: Debug + Clone, const IO: usize, const S: usize, const I: usize> {
     /// matrix vector products M(x)z(x)
     products: [V; IO],

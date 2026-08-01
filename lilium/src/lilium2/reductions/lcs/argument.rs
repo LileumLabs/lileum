@@ -111,7 +111,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    fn to_flcs<const I: usize>(&self) -> FlcsStructure<F, C, IO, S, I> {
+    pub fn to_flcs<const I: usize>(&self) -> FlcsStructure<F, C, IO, S, I> {
         use sumcheck::sumcheck2::oracles::partial::PartialOracle;
         let LcsStructure { ccs_structure, pcs } = self;
         let (ccs_structure, pcs) = (ccs_structure.clone(), pcs.clone());

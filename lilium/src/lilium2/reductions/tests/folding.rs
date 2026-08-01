@@ -2,14 +2,14 @@ use super::{commit_witness, Poseidon};
 use crate::{
     lilium2::{
         reductions::{FlcsFoldingScheme, ToFlcs},
-        relations::{LcsRelation, LcsStructure},
+        relations::{FlcsRelation, LcsRelation, LcsStructure},
     },
     testing::utils::HashChain,
 };
-use ark_ff::{Field, PrimeField};
+use ark_ff::PrimeField;
 use ccs::{circuit::BuildStructure, structure::CcsStructure};
 use commit::commit2::CommitmentScheme;
-use transcript::reduction2::{GuardedProof, Prover, Verifier};
+use transcript::reduction2::{Prover, ProverOutput, Relation, Verifier};
 
 fn test<F, C, const N: usize>()
 where
@@ -21,16 +21,45 @@ where
 
     let pcs = C::new(ccs_structure.vars());
     let structure = LcsStructure { ccs_structure, pcs };
-    // let flcs_structure = structure.to_flcs::<2>();
+    let flcs_structure = structure.to_flcs::<2>();
 
-    // let input = F::from(8u8);
-    // let (instance1, witness1) = commit_witness::<F, C, N>(&structure.pcs, [input]);
-    // let input = F::from(9u8);
-    // let (instance2, witness2) = commit_witness::<F, C, N>(&structure.pcs, [input]);
+    let input = F::from(8u8);
+    let (instance1, witness1) = commit_witness::<F, C, N>(&structure.pcs, [input]);
+    let input = F::from(9u8);
+    let (instance2, witness2) = commit_witness::<F, C, N>(&structure.pcs, [input]);
 
-    // let verifier: Verifier<F, Poseidon<F>, LcsRelation<F, C, 2, 4, 5>, _, ToFlcs> =
-    //     Verifier::new(&structure, &flcs_structure, ());
-    //
-    // let [instance1, instance2] =
-    //     [instance1, instance2].map(|instance| verifier.verify(instance, ()).unwrap());
+    let verifier: Verifier<F, Poseidon<F>, LcsRelation<F, C, 2, 4, 5>, _, ToFlcs> =
+        Verifier::new(&structure);
+
+    let instances = [instance1, instance2].map(|instance| verifier.verify(instance, ()).unwrap());
+
+    let prover: Prover<F, Poseidon<F>, _, FlcsRelation<F, C, 2, 4, 5>, FlcsFoldingScheme> =
+        Prover::new(&flcs_structure);
+    let verifier: Verifier<F, Poseidon<F>, _, FlcsRelation<F, C, 2, 4, 5>, FlcsFoldingScheme> =
+        Verifier::new(&flcs_structure);
+
+    let witnesses = [witness1, witness2];
+
+    let ProverOutput {
+        instance,
+        witness,
+        proof,
+    } = prover.prove(instances.clone(), witnesses);
+
+    assert!(FlcsRelation::check(&flcs_structure, &instance, &witness));
+
+    let verifier_instance = verifier.verify(instances, proof).unwrap();
+
+    assert_eq!(verifier_instance, instance);
+}
+
+#[test]
+fn flcs_fold() {
+    use ark_vesta::{Fr, Projective, VestaConfig};
+    use commit::ipa2::IpaCommitmentScheme;
+    use hash_to_curve::svdw::SvdwMap;
+
+    type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
+
+    test::<Fr, Scheme, 3>();
 }

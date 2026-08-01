@@ -10,7 +10,7 @@ use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::sumcheck2::{
     folding::{ZeroFold, ZeroFoldKey},
-    oracles::Oracle,
+    oracles::{partial::OracleParams, Oracle},
     SumcheckError, SumcheckMessage,
 };
 use transcript::reduction2::{
@@ -53,7 +53,7 @@ where
 
     type Error = FoldingError;
 
-    type Params = ();
+    type Params = (OracleParams, OracleParams);
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -82,7 +82,10 @@ where
         (verifier_key, prover_key)
     }
 
-    fn params(_: &Self::VerifierKey) -> Self::Params {}
+    fn params(key: &Self::VerifierKey) -> Self::Params {
+        let oracle_params = key.params();
+        (oracle_params, oracle_params)
+    }
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
