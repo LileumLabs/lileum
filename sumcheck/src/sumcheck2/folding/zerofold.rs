@@ -315,4 +315,8 @@ impl<F: Field, O: Oracle<F>> ZeroFoldKey<F, O> {
         assert_eq!(res.len(), (n / 2) * (weights.domain_size() + 1));
         res
     }
+
+    pub fn params(&self) -> <<O as Oracle<F>>::Instance as Message<F>>::Params {
+        self.params
+    }
 }
