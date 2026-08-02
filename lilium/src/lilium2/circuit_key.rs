@@ -83,8 +83,18 @@ where
         }
     }
 
-    pub fn prove(&self, instance: LcsInstance<F, CS, I>, witness: Witness<F>) -> Proof<F, CS, IO> {
-        let Ok(instance) = self.to_flcs.verify(instance, ());
+    pub fn prove(
+        &self,
+        instance: impl Into<Instance<F, CS, IO, S, I>>,
+        witness: Witness<F>,
+    ) -> Proof<F, CS, IO> {
+        let instance = match instance.into() {
+            Instance::Lcs(lcs_instance) => {
+                let Ok(instance) = self.to_flcs.verify(lcs_instance, ());
+                instance
+            }
+            Instance::Flcs(flcs_instance) => flcs_instance,
+        };
         let ProverOutput {
             instance: (),
             witness: (),
@@ -94,8 +104,18 @@ where
         Proof::Flcs(proof)
     }
 
-    pub fn verify(&self, instance: LcsInstance<F, CS, I>, proof: Proof<F, CS, IO>) -> bool {
-        let Ok(instance) = self.to_flcs.verify(instance, ());
+    pub fn verify(
+        &self,
+        instance: impl Into<Instance<F, CS, IO, S, I>>,
+        proof: Proof<F, CS, IO>,
+    ) -> bool {
+        let instance = match instance.into() {
+            Instance::Lcs(lcs_instance) => {
+                let Ok(instance) = self.to_flcs.verify(lcs_instance, ());
+                instance
+            }
+            Instance::Flcs(flcs_instance) => flcs_instance,
+        };
 
         let Proof::Flcs(proof) = proof;
 
@@ -104,13 +124,21 @@ where
 
     pub fn fold_prove(
         &self,
-        instances: [FlcsInstance<F, CS, IO, S, I>; 2],
+        instance1: impl Into<Instance<F, CS, IO, S, I>>,
+        instance2: impl Into<Instance<F, CS, IO, S, I>>,
         witnesses: [Witness<F>; 2],
     ) -> (
         FlcsInstance<F, CS, IO, S, I>,
         Witness<F>,
         FoldingProof<F, C>,
     ) {
+        let instances = [instance1.into(), instance2.into()].map(|instance| match instance {
+            Instance::Lcs(instance) => {
+                let Ok(instance) = self.to_flcs.verify(instance, ());
+                instance
+            }
+            Instance::Flcs(flcs_instance) => flcs_instance,
+        });
         let ProverOutput {
             instance,
             witness,
@@ -122,9 +150,17 @@ where
 
     pub fn fold_verify(
         &self,
-        instances: [FlcsInstance<F, CS, IO, S, I>; 2],
+        instance1: impl Into<Instance<F, CS, IO, S, I>>,
+        instance2: impl Into<Instance<F, CS, IO, S, I>>,
         proof: FoldingProof<F, C>,
     ) -> Option<FlcsInstance<F, CS, IO, S, I>> {
+        let instances = [instance1.into(), instance2.into()].map(|instance| match instance {
+            Instance::Lcs(instance) => {
+                let Ok(instance) = self.to_flcs.verify(instance, ());
+                instance
+            }
+            Instance::Flcs(flcs_instance) => flcs_instance,
+        });
         self.folding_verifier.verify(instances, proof.0).ok()
     }
 
@@ -163,5 +199,37 @@ where
 
         let proof = self.prove(instance.clone(), witness);
         (instance, proof, output)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum Instance<F, C, const IO: usize, const S: usize, const I: usize>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    Lcs(LcsInstance<F, C, I>),
+    Flcs(FlcsInstance<F, C, IO, S, I>),
+}
+
+impl<F, C, const IO: usize, const S: usize, const I: usize> From<LcsInstance<F, C, I>>
+    for Instance<F, C, IO, S, I>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    fn from(value: LcsInstance<F, C, I>) -> Self {
+        Self::Lcs(value)
+    }
+}
+
+impl<F, C, const IO: usize, const S: usize, const I: usize> From<FlcsInstance<F, C, IO, S, I>>
+    for Instance<F, C, IO, S, I>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    fn from(value: FlcsInstance<F, C, IO, S, I>) -> Self {
+        Self::Flcs(value)
     }
 }
