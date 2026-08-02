@@ -5,6 +5,7 @@ use crate::lilium2::{
 use ark_ff::Field;
 use commit::commit2::CommitmentScheme;
 use sponge::sponge::Duplex;
+use sumcheck::sumcheck2::oracles::partial::OracleParams;
 use transcript::reduction2::{
     Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,
@@ -40,7 +41,7 @@ where
 
     type Error = Error<F, C>;
 
-    type Params = ();
+    type Params = (OracleParams, OracleParams);
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -69,7 +70,9 @@ where
         (verifier_key, prover_key)
     }
 
-    fn params(_: &Self::VerifierKey) -> Self::Params {}
+    fn params(key: &Self::VerifierKey) -> Self::Params {
+        FlcsReduction::params(&key.0)
+    }
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,

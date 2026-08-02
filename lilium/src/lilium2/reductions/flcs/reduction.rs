@@ -23,6 +23,7 @@ use sumcheck::sumcheck2::{
         self,
         composite::{CompositeOracle, CompositeReductionKey, ProverEvals},
         core::{CoreOracle, CoreOracleInstance},
+        partial::OracleParams,
     },
     zerocheck::ZerocheckSumcheckReduction,
     ProverKey as SumcheckProverKey, SumcheckError, SumcheckMessage, SumcheckVerifierKey,
@@ -99,7 +100,7 @@ where
 
     type Error = FlcsError;
 
-    type Params = ();
+    type Params = (OracleParams, OracleParams);
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -209,7 +210,9 @@ where
         (verifier_key, prover_key)
     }
 
-    fn params(_: &Self::VerifierKey) -> Self::Params {}
+    fn params(key: &Self::VerifierKey) -> Self::Params {
+        ZerocheckSumcheckReduction::params(&key.sumcheck_key)
+    }
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,

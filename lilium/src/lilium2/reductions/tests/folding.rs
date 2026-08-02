@@ -1,7 +1,7 @@
 use super::{commit_witness, Poseidon};
 use crate::{
     lilium2::{
-        reductions::{FlcsFoldingScheme, ToFlcs},
+        reductions::{FlcsArgument, FlcsFoldingScheme, ToFlcs},
         relations::{FlcsRelation, LcsRelation, LcsStructure},
     },
     testing::utils::HashChain,
@@ -51,6 +51,20 @@ where
     let verifier_instance = verifier.verify(instances, proof).unwrap();
 
     assert_eq!(verifier_instance, instance);
+
+    let prover: Prover<F, Poseidon<F>, FlcsRelation<F, C, 2, 4, 5>, (), FlcsArgument> =
+        Prover::new(&flcs_structure);
+
+    let verifier: Verifier<F, Poseidon<F>, FlcsRelation<F, C, 2, 4, 5>, (), FlcsArgument> =
+        Verifier::new(&flcs_structure);
+
+    let ProverOutput {
+        instance: _,
+        witness: _,
+        proof,
+    } = prover.prove(instance.clone(), witness);
+
+    let _: () = verifier.verify(instance, proof).unwrap();
 }
 
 #[test]
