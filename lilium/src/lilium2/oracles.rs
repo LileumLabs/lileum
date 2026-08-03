@@ -35,6 +35,7 @@ where
     vector: SF::Mles<bool>,
     committed_oracle: CommittedOracle<F, C, SF>,
     pcs: C,
+    vars: usize,
 }
 
 impl<F, SF, C, const N: usize> MatrixProductOracle<F, C, SF, N>
@@ -48,12 +49,14 @@ where
         vector: SF::Mles<bool>,
         committed_oracle: CommittedOracle<F, C, SF>,
         pcs: C,
+        vars: usize,
     ) -> Self {
         Self {
             matrices,
             vector,
             committed_oracle,
             pcs,
+            vars,
         }
     }
 
@@ -72,6 +75,10 @@ where
 
     pub fn pcs(&self) -> &C {
         &self.pcs
+    }
+
+    pub fn vars(&self) -> usize {
+        self.vars
     }
 }
 

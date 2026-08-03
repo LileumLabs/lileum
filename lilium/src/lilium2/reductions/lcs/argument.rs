@@ -137,8 +137,13 @@ where
             &data,
             Rc::clone(&mles),
         );
-        let builder2 =
-            MatrixProductOracle::new(matrices, FlcsEvals::vector(), committed_oracle, pcs.clone());
+        let builder2 = MatrixProductOracle::new(
+            matrices,
+            FlcsEvals::vector(),
+            committed_oracle,
+            pcs.clone(),
+            ccs_structure.vars(),
+        );
         let oracle = CompositeOracle::new(data, mles, builder1, builder2);
 
         FlcsStructure {
@@ -152,8 +157,7 @@ where
 fn structure<F: Field, const IO: usize, const S: usize, const I: usize>(
     ccs_structure: CcsStructure<F, IO, S>,
 ) -> Vec<FlcsEvals<F, IO, S, I>> {
-    let len = ccs_structure.trace_len.next_power_of_two();
-    let mut mles = Vec::with_capacity(len);
+    let mut mles = Vec::with_capacity(1 << ccs_structure.vars());
     //TODO: use next_power_of_two(max(trace,constraints))
     for i in 0..ccs_structure.trace_len {
         let is_input = i < ccs_structure.input_len;
@@ -173,6 +177,6 @@ fn structure<F: Field, const IO: usize, const S: usize, const I: usize>(
         mles.push(row)
     }
     let padding_row = FlcsEvals::structure(false, S, F::ZERO);
-    mles.resize(len, padding_row);
+    mles.resize(1 << ccs_structure.vars(), padding_row);
     mles
 }

@@ -128,16 +128,7 @@ where
     }
 
     fn verifier_key(structure: &MatrixProductOracle<F, C, SF, N>) -> Self::VerifierKey {
-        let vars = {
-            let rows = structure
-                .matrices()
-                .iter()
-                .map(|matrix| matrix.len())
-                .max()
-                .unwrap();
-            let vars = rows.next_power_of_two().ilog2();
-            vars as usize
-        };
+        let vars = structure.vars();
         let mles = vec![MatrixSumEvals::zero(); 1 << vars];
         let mles = Rc::new(mles);
 
@@ -177,16 +168,7 @@ where
 
         let (_, committed_oracle1) = CommittedOracle::key_pair(structure.committed_oracle());
 
-        let vars = {
-            let rows = structure
-                .matrices()
-                .iter()
-                .map(|matrix| matrix.len())
-                .max()
-                .unwrap();
-            let vars = rows.next_power_of_two().ilog2();
-            vars as usize
-        };
+        let vars = structure.vars();
 
         let (oracle, sumcheck_key) = {
             let mles = vec![MatrixSumEvals::zero(); 1 << vars];

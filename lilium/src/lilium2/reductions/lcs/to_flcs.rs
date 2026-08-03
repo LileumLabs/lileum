@@ -48,11 +48,7 @@ where
 
     fn verifier_key(structure: &LcsStructure<F, C, IO, S>) -> Self::VerifierKey {
         let LcsStructure { ccs_structure, .. } = structure;
-        let witness_len = ccs_structure.trace_len.next_power_of_two();
-        let constrains = ccs_structure.gate_selectors.len().next_power_of_two();
-        //TODO: lift this restriction
-        assert_eq!(witness_len.ilog2(), constrains.ilog2());
-        constrains.ilog2() as usize
+        ccs_structure.vars()
     }
 
     fn key_pair(structure: &LcsStructure<F, C, IO, S>) -> (Self::VerifierKey, Self::ProverKey) {

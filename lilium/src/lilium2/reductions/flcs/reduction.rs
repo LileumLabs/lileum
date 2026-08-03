@@ -135,7 +135,7 @@ where
 
         let composite_key = CompositeOracle::verifier_key(oracle);
 
-        let spark_structure = spark_structure(&ccs_structure.io_matrices, pcs);
+        let spark_structure = spark_structure(&ccs_structure.io_matrices, pcs, vars);
         let matrix_structure = ([pcs.clone(), pcs.clone()], spark_structure);
         let matrix_oracle_key = MatrixProductReduction::verifier_key(&oracle.inner_oracles().1);
         let (_, spark_structure) = matrix_structure;
@@ -187,7 +187,7 @@ where
             .each_ref()
             .map(|matrix| Rc::new(matrix.clone()));
 
-        let spark_structure = spark_structure(&ccs_structure.io_matrices, pcs);
+        let spark_structure = spark_structure(&ccs_structure.io_matrices, pcs, vars);
         let matrix_structure = ([pcs.clone(), pcs.clone()], spark_structure);
         let (_, matrix_oracle_key) = MatrixProductReduction::key_pair(&oracle.inner_oracles().1);
         let (_, spark_structure) = matrix_structure;
@@ -407,6 +407,7 @@ where
 fn spark_structure<F: Field, C: Clone, const N: usize>(
     matrices: &[Matrix; N],
     pcs: &C,
+    vars: usize,
 ) -> [FlexibleSparkStructure<F, C>; N] {
     let mut biggest_matrix = 0;
     let evals = matrices.each_ref().map(|matrix| {
@@ -423,7 +424,11 @@ fn spark_structure<F: Field, C: Clone, const N: usize>(
             })
             .collect();
 
-        evals.resize(evals.len().next_power_of_two(), (0, F::ZERO));
+        // NOTE: This is suboptimal, but having all matrices have the same number
+        // of rows as the size expected by the pcs is simpler.
+        // The ideal implementation will pad each matrix individually to its nearest
+        // power of 2.
+        evals.resize(1 << vars, (0, F::ZERO));
         biggest_matrix = evals.len().max(biggest_matrix);
         evals
     });
