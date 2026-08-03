@@ -419,7 +419,7 @@ fn spark_structure<F: Field, C: Clone, const N: usize>(
         let mut evals: Vec<(u64, F)> = evals
             .into_iter()
             .map(|(x, y)| {
-                let addr = x + (y << (x_max.highest_one().unwrap_or(0) + 1));
+                let addr = x + (y << vars);
                 (addr as u64, F::ONE)
             })
             .collect();
