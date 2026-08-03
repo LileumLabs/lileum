@@ -26,6 +26,12 @@ pub struct LcsInstance<F: Field, C: CommitmentScheme<F>, const I: usize> {
     pub(crate) public_inputs: [F; I],
 }
 
+impl<F: Field, C: CommitmentScheme<F>, const I: usize> LcsInstance<F, C, I> {
+    pub fn public_inputs(&self) -> &[F; I] {
+        &self.public_inputs
+    }
+}
+
 impl<F: Field, C: CommitmentScheme<F>, const I: usize> Message<F> for LcsInstance<F, C, I> {
     type Params = ();
 

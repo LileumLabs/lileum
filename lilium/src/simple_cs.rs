@@ -8,12 +8,15 @@
 //!
 //! For more customization, [circuit_key::CircuitKey] should be used.
 
-use crate::circuit_key;
+// use crate::circuit_key;
+use crate::lilium2::circuit_key;
 pub use crate::{
     circuits,
-    flcs::FoldableLcsInstance,
-    folding::InstancePair,
-    instances::lcs::{verifying::LcsProof, LcsInstance},
+    // flcs::FoldableLcsInstance,
+    // folding::InstancePair,
+    // instances::lcs::{verifying::LcsProof, LcsInstance},
+    lilium2::relations::FlcsInstance,
+    lilium2::relations::LcsInstance,
 };
 pub use ark_ff::{Field, PrimeField};
 use ccs::circuit::{BuildStructure, CircuitProfile};
@@ -23,8 +26,9 @@ pub use ccs::{
     gates::{self, StandardGates},
     witness::Witness,
 };
-pub use commit::CommmitmentScheme;
-pub use sumcheck::folding::SumFoldProof;
+pub use circuit_key::FoldingProof;
+use circuit_key::Instance;
+pub use commit::commit2::CommitmentScheme;
 
 const IO: usize = 5;
 const S: usize = 10;
@@ -32,20 +36,20 @@ const S: usize = 10;
 type Permutation<F> = sponge::poseidon2::PoseidonDefault<F>;
 type Sponge<F> = sponge::sponge::Sponge<F, Permutation<F>, 1, 2, 3>;
 
-pub type Proof<F, CS> = LcsProof<F, CS, IO, S>;
-
 pub struct CircuitKey<F, C, CS, const I: usize>
 where
     F: PrimeField,
-    CS: CommmitmentScheme<F>,
+    CS: CommitmentScheme<F>,
 {
     inner: circuit_key::CircuitKey<F, Sponge<F>, C, CS, I, IO, S>,
 }
 
+pub type Proof<F, C> = circuit_key::Proof<F, C, IO>;
+
 impl<F, C, CS, const I: usize> CircuitKey<F, C, CS, I>
 where
     F: PrimeField,
-    CS: CommmitmentScheme<F> + 'static,
+    CS: CommitmentScheme<F> + 'static,
 {
     pub fn new<const IN: usize, const OUT: usize, const PRIV_OUT: usize>() -> Self
     where
@@ -61,20 +65,27 @@ where
     /// Each instance may be a `FoldableLcsInstance` or an `LcsInstance`.
     pub fn fold(
         &self,
-        instances: impl Into<InstancePair<F, CS, I>>,
+        instance1: impl Into<Instance<F, CS, IO, S, I>>,
+        instance2: impl Into<Instance<F, CS, IO, S, I>>,
         witnesses: [Witness<F>; 2],
-    ) -> (FoldableLcsInstance<F, CS, I>, Vec<F>, SumFoldProof<F>) {
-        self.inner.fold(instances, witnesses)
+    ) -> (
+        FlcsInstance<F, CS, IO, S, I>,
+        Witness<F>,
+        FoldingProof<F, C>,
+    ) {
+        self.inner.fold_prove(instance1, instance2, witnesses)
     }
 
     /// Verifier side of `Self::fold`, takes 2 instances and a proof and returns a
     /// a folded instance.
     pub fn fold_instances(
         &self,
-        instances: impl Into<InstancePair<F, CS, I>>,
-        proof: SumFoldProof<F>,
-    ) -> FoldableLcsInstance<F, CS, I> {
-        self.inner.fold_instances(instances, proof)
+        instance1: impl Into<Instance<F, CS, IO, S, I>>,
+        instance2: impl Into<Instance<F, CS, IO, S, I>>,
+        proof: FoldingProof<F, C>,
+    ) -> FlcsInstance<F, CS, IO, S, I> {
+        //TODO: should leave panic to the caller.
+        self.inner.fold_verify(instance1, instance2, proof).unwrap()
     }
 
     /// Creates witness from inputs, commits to it, creates instance and proves it.
@@ -107,7 +118,7 @@ where
         self.inner.prove(instance, witness)
     }
 
-    pub fn verify(&self, instance: LcsInstance<F, CS, I>, proof: LcsProof<F, CS, IO, S>) -> bool {
+    pub fn verify(&self, instance: LcsInstance<F, CS, I>, proof: Proof<F, CS>) -> bool {
         self.inner.verify(instance, proof)
     }
 
@@ -125,7 +136,8 @@ where
 pub mod field_and_pcs {
     pub use ark_vesta::Fr;
     use ark_vesta::{Projective, VestaConfig};
-    use commit::ipa::IpaCommitmentScheme;
+    // use commit::ipa::IpaCommitmentScheme;
+    use commit::ipa2::IpaCommitmentScheme;
     use hash_to_curve::svdw::SvdwMap;
 
     /// Commitment scheme for [Fr].

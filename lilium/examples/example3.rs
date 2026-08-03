@@ -59,7 +59,7 @@ use ark_vesta::Fr;
 // Then a generic commitment scheme that supports our field.
 // In this case, IpaCommitmentScheme works for 256 bits or bigger fields
 // which are also the scalar field of some elliptic curve.
-use commit::ipa::IpaCommitmentScheme;
+use commit::ipa2::IpaCommitmentScheme;
 // Fr is the scalar field of the Vesta cuerve, thus import the types
 // representing curve points and the curve itself.
 use ark_vesta::{Projective, VestaConfig};
@@ -74,7 +74,7 @@ pub type FrScheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
 fn main_inner()
 where
     Fr: PrimeField,
-    FrScheme: CommmitmentScheme<Fr>,
+    FrScheme: CommitmentScheme<Fr>,
 {
     let circuit_key: CircuitKey<Fr, MyCircuit, FrScheme, 1> = CircuitKey::new();
 
@@ -92,7 +92,7 @@ where
     println!("balance proved: {}", balance);
 
     // We verify as usual, checking it is the instance we want.
-    assert_eq!(instance.public_io()[0], Fr::from(30));
+    assert_eq!(instance.public_inputs()[0], Fr::from(30));
     assert!(circuit_key.verify(instance, proof));
 }
 

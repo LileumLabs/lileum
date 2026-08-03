@@ -48,7 +48,7 @@ use field_and_pcs::{Fr, FrScheme};
 fn main_inner()
 where
     Fr: PrimeField,
-    FrScheme: CommmitmentScheme<Fr>,
+    FrScheme: CommitmentScheme<Fr>,
 {
     let circuit_key: CircuitKey<Fr, MyCircuit, FrScheme, 3> = CircuitKey::new();
     //--------------------
@@ -69,9 +69,9 @@ where
     // Now there is an extra check to do. We want a a valid proof
     // of the instance [fib(0),fib(1),fib(1000)], not just any
     // posible isntance.
-    assert_eq!(instance.public_io()[0], Fr::zero());
-    assert_eq!(instance.public_io()[1], Fr::one());
-    let res = instance.public_io()[2];
+    assert_eq!(instance.public_inputs()[0], Fr::zero());
+    assert_eq!(instance.public_inputs()[1], Fr::one());
+    let res = instance.public_inputs()[2];
     // Now we verify the proof
     assert!(circuit_key.verify(instance, proof));
     println!("fib(1000) = {}", res);
