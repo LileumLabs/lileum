@@ -31,7 +31,8 @@ impl<F: Field> Circuit<F> for MyCircuit {
         // variable, the 2 arguments allow to read the value of existing variables,
         // something we don't need in this case.
         let x = cs.free_variable(|_| my_number());
-        let w = cs.free_variable(|_| my_number::<F>().sqrt().expect("number is not square"));
+        // As sqrt gives -5, we negate to have a simpler number, but both would work.
+        let w = cs.free_variable(|_| -my_number::<F>().sqrt().expect("number is not square"));
 
         // Gates create new variables from existing variables, and enforce certain
         // constraints between them.
