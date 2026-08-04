@@ -12,12 +12,12 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::time::Duration;
 
 use ccs::circuit::BuildStructure;
-use commit::CommmitmentScheme;
+use commit::commit2::CommitmentScheme;
 use hash_to_curve::svdw::SvdwMap;
-use lilium::{testing::utils::HashChain, CircuitKey};
+use lilium::{lilium2::circuit_key::CircuitKey, testing::utils::HashChain};
 use sponge::{self, sponge::Duplex};
 
-type Scheme = commit::ipa::IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
+type Scheme = commit::ipa2::IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
 type Permutation = sponge::poseidon2::PoseidonDefault<Fr>;
 type Sponge = sponge::sponge::Sponge<Fr, Permutation, 1, 2, 3>;
 
@@ -37,7 +37,7 @@ fn proving_memory(c: &mut Criterion<PeakMemory>) {
 fn prove<const N: usize>(group: &mut BenchmarkGroup<'_, PeakMemory>, rng: &mut impl Rng)
 where
     Fr: Field,
-    Scheme: CommmitmentScheme<Fr>,
+    Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
     let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
@@ -59,7 +59,7 @@ where
 fn verify<const N: usize>(group: &mut BenchmarkGroup<'_, PeakMemory>, rng: &mut impl Rng)
 where
     Fr: Field,
-    Scheme: CommmitmentScheme<Fr>,
+    Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
     let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
@@ -92,7 +92,7 @@ fn verification_memory(c: &mut Criterion<PeakMemory>) {
 fn fold<const N: usize>(group: &mut BenchmarkGroup<'_, PeakMemory>, rng: &mut impl Rng)
 where
     Fr: Field,
-    Scheme: CommmitmentScheme<Fr>,
+    Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
     let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
@@ -107,9 +107,8 @@ where
             let (instance, witness, _) = key.commit_witness([preimage]);
 
             bench_memory(b, || {
-                let instances = (instance.clone(), instance.clone());
                 let witnesses = [witness.clone(), witness.clone()];
-                let _folded = key.fold(instances, witnesses);
+                let _folded = key.fold_prove(instance.clone(), instance.clone(), witnesses);
             });
         },
     );
@@ -128,7 +127,7 @@ fn folding_memory(c: &mut Criterion<PeakMemory>) {
 fn commit_and_fold<const N: usize>(group: &mut BenchmarkGroup<'_, PeakMemory>, rng: &mut impl Rng)
 where
     Fr: Field,
-    Scheme: CommmitmentScheme<Fr>,
+    Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
     let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
@@ -144,9 +143,8 @@ where
             bench_memory(b, || {
                 let preimage = Fr::rand(rng);
                 let (instance2, witness2, _) = key.commit_witness([preimage]);
-                let instances = (instance1.clone(), instance2);
                 let witnesses = [witness1.clone(), witness2];
-                let _folded = key.fold(instances, witnesses);
+                let _folded = key.fold_prove(instance1.clone(), instance2, witnesses);
             });
         },
     );
@@ -166,7 +164,7 @@ fn commit_folding_memory(c: &mut Criterion<PeakMemory>) {
 // Used to check SRS footprint
 fn srs<CS, const N: usize>(group: &mut BenchmarkGroup<'_, PeakMemory>, name: &str)
 where
-    CS: CommmitmentScheme<Fr>,
+    CS: CommitmentScheme<Fr>,
 {
     let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
     let vars = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::structure::<5>().vars();
@@ -195,7 +193,7 @@ fn srs_memory(c: &mut Criterion<PeakMemory>) {
 fn setup<const N: usize>(group: &mut BenchmarkGroup<'_, PeakMemory>)
 where
     Fr: Field,
-    Scheme: CommmitmentScheme<Fr>,
+    Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
     let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
