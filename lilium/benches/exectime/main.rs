@@ -1,17 +1,17 @@
 use ark_ff::{Field, UniformRand};
 use ark_vesta::{Fr, Projective, VestaConfig};
 use ccs::circuit::BuildStructure;
-use commit::CommmitmentScheme;
+use commit::commit2::CommitmentScheme;
 use criterion::{
     criterion_group, criterion_main, measurement::WallTime, BatchSize, BenchmarkGroup, BenchmarkId,
     Criterion, SamplingMode,
 };
 use hash_to_curve::svdw::SvdwMap;
-use lilium::{testing::utils::HashChain, CircuitKey};
+use lilium::{lilium2::circuit_key::CircuitKey, testing::utils::HashChain};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use sponge::{self, sponge::Duplex};
 
-type Scheme = commit::ipa::IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
+type Scheme = commit::ipa2::IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
 type Permutation = sponge::poseidon2::PoseidonDefault<Fr>;
 type Sponge = sponge::sponge::Sponge<Fr, Permutation, 1, 2, 3>;
 
@@ -59,7 +59,7 @@ fn proving(c: &mut Criterion) {
 fn prove<const N: usize>(group: &mut BenchmarkGroup<'_, WallTime>, rng: &mut impl Rng)
 where
     Fr: Field,
-    Scheme: CommmitmentScheme<Fr>,
+    Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
     let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
@@ -81,7 +81,7 @@ where
 fn fold<const N: usize>(group: &mut BenchmarkGroup<'_, WallTime>, rng: &mut impl Rng)
 where
     Fr: Field,
-    Scheme: CommmitmentScheme<Fr>,
+    Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
     let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
@@ -99,7 +99,7 @@ where
 
             b.iter_batched(
                 || (instances.clone(), witnesses.clone()),
-                |(instances, witnesses)| key.fold(instances, witnesses),
+                |((ins1, ins2), witnesses)| key.fold_prove(ins1, ins2, witnesses),
                 BatchSize::PerIteration,
             );
         },
@@ -126,7 +126,7 @@ fn folding(c: &mut Criterion) {
 fn commit_and_fold<const N: usize>(group: &mut BenchmarkGroup<'_, WallTime>, rng: &mut impl Rng)
 where
     Fr: Field,
-    Scheme: CommmitmentScheme<Fr>,
+    Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
     let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
@@ -142,9 +142,9 @@ where
             b.iter(|| {
                 let preimage = Fr::rand(rng);
                 let (instance2, witness2, _) = key.commit_witness([preimage]);
-                let instances = (instance1.clone(), instance2);
+                // let instances = (instance1.clone(), instance2);
                 let witnesses = [witness1.clone(), witness2];
-                let _folded = key.fold(instances, witnesses);
+                let _folded = key.fold_prove(instance1.clone(), instance2, witnesses);
             });
         },
     );
@@ -171,7 +171,7 @@ fn commit_folding(c: &mut Criterion) {
 fn verify<const N: usize>(group: &mut BenchmarkGroup<'_, WallTime>, rng: &mut impl Rng)
 where
     Fr: Field,
-    Scheme: CommmitmentScheme<Fr>,
+    Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
     let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();

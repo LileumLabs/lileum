@@ -38,6 +38,7 @@ pub struct CircuitKey<
     pcs: CS,
 }
 
+#[derive(Clone)]
 pub enum Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
     Flcs(flcs::argument::Proof<F, C, IO>),
 }
