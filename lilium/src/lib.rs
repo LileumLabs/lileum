@@ -1,12 +1,9 @@
-use ark_ff::Field;
-use commit::{batching::BatchingError, CommmitmentScheme};
-use sumcheck::SumcheckError;
-
 pub mod circuits;
 pub mod lilium2;
 pub mod simple_cs;
 pub mod testing;
 
+/*
 #[derive(Debug, Clone)]
 pub enum Error<F: Field, C: CommmitmentScheme<F>> {
     TranscriptError(transcript::Error),
@@ -43,3 +40,4 @@ impl<F: Field, C: CommmitmentScheme<F>> From<BatchingError<F, C>> for Error<F, C
         Self::Batching(value)
     }
 }
+*/
