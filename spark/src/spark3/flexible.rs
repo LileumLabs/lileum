@@ -111,7 +111,11 @@ where
     }
 
     fn verifier_key(structure: &FlexibleSparkStructure<F, C>) -> Self::VerifierKey {
-        let FlexibleSparkStructure { evals, pcs: _ } = structure;
+        let FlexibleSparkStructure {
+            evals,
+            pcs: _,
+            vars: structure_bits,
+        } = structure;
         assert!(evals.len().is_power_of_two());
         let max: u64 = evals
             .iter()
@@ -119,6 +123,8 @@ where
         let bits = max.next_power_of_two().ilog2();
 
         use VerifierKey::*;
+        let bits = structure_bits.unwrap_or(bits as usize);
+
         if bits == 0 {
             let structure = structure.static_structure();
             return S1(SparkReduction::verifier_key(&structure));
@@ -152,6 +158,8 @@ where
             .iter()
             .fold(0, |acc, (addr, _)| std::cmp::max(acc, *addr));
         let bits = max.next_power_of_two().ilog2();
+
+        let bits = structure.vars.unwrap_or(bits as usize);
 
         if bits == 0 {
             let structure = structure.static_structure();

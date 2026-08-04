@@ -147,11 +147,26 @@ where
 pub struct FlexibleSparkStructure<F: Field, C> {
     evals: Rc<Vec<(u64, F)>>,
     pcs: C,
+    vars: Option<usize>,
 }
 
 impl<F: Field, C> FlexibleSparkStructure<F, C> {
     pub fn new(evals: Rc<Vec<(u64, F)>>, pcs: C) -> Self {
-        Self { evals, pcs }
+        Self {
+            evals,
+            pcs,
+            vars: None,
+        }
+    }
+
+    /// Allows to set the number of variables instead of it being computed
+    /// from `evals`.
+    pub fn new_fixed(evals: Rc<Vec<(u64, F)>>, pcs: C, vars: usize) -> Self {
+        Self {
+            evals,
+            pcs,
+            vars: Some(vars),
+        }
     }
 
     pub fn eval(&self, point: MultiPoint<F>) -> F {

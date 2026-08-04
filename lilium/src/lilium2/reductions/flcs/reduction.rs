@@ -434,6 +434,6 @@ fn spark_structure<F: Field, C: Clone, const N: usize>(
     });
     evals.map(|mut evals| {
         evals.resize(biggest_matrix, (0, F::ZERO));
-        FlexibleSparkStructure::new(Rc::new(evals), pcs.clone())
+        FlexibleSparkStructure::new_fixed(Rc::new(evals), pcs.clone(), vars * 2)
     })
 }

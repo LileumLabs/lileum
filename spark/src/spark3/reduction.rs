@@ -154,7 +154,7 @@ where
         transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
         //TODO: allow more flexibility
-        assert_eq!(instance.point.vars(), N * 8);
+        assert!(instance.point.vars() >= N * 8);
         let points = instance
             .point
             .inner()
