@@ -1,22 +1,17 @@
 //! A linear sumcheck prover
 
-pub(crate) mod barycentric_eval;
-pub(crate) mod degree;
+mod barycentric_eval;
 pub mod eq;
-pub mod eval_check;
+mod eval_check;
 mod eval_impls;
 pub mod folding;
-pub(crate) mod message;
+mod message;
 pub mod polynomials;
 pub mod sumcheck;
 pub mod sumcheck2;
-mod symbolic;
-mod tests;
+// mod symbolic;
 pub mod utils;
-pub mod zerocheck;
-
-pub use tests::prove_and_verify;
-pub use tests::TestSponge;
+mod zerocheck;
 
 #[derive(Debug, Clone)]
 pub enum SumcheckError {

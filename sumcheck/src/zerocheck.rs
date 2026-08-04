@@ -1,18 +1,12 @@
 //! Utilities for zerocheck.
 
-use crate::{
-    polynomials::{Evals, MultiPoint},
-    sumcheck::{Proof, ProverOutput, SumcheckFunction, SumcheckProver},
-    SumcheckError,
-};
+use crate::polynomials::MultiPoint;
 use ark_ff::Field;
-use sponge::sponge::Duplex;
 use std::{
     iter::successors,
     ops::{Add, Mul},
-    vec::IntoIter,
 };
-use transcript::{params::ParamResolver, Transcript};
+use transcript::params::ParamResolver;
 
 /// Multilinear polynomial of form:
 /// p(x_0) = x_0 * ß + (1 - x_0) * c
@@ -222,137 +216,6 @@ fn powers_over_domain() {
 
     let challs = [(); 3].map(|_| chall());
     compact_powers_over_domain(challs);
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Eq, Ord)]
-pub enum ZeroCheckIdx<I> {
-    ZeroCheckChallenge,
-    Inner(I),
-}
-
-#[derive(Clone, Debug)]
-pub struct ZeroCheckMles<V, I> {
-    zerocheck: V,
-    inner: I,
-}
-
-impl<V, I> ZeroCheckMles<V, I> {
-    pub const fn new(zerocheck: V, inner: I) -> Self {
-        Self { zerocheck, inner }
-    }
-
-    pub fn map<V2, I2, M1, M2>(self, f: M1, inner_f: M2) -> ZeroCheckMles<V2, I2>
-    where
-        M1: Fn(V) -> V2,
-        M2: Fn(I) -> I2,
-    {
-        let Self { zerocheck, inner } = self;
-        let zerocheck = f(zerocheck);
-        let inner = inner_f(inner);
-        ZeroCheckMles { zerocheck, inner }
-    }
-
-    pub const fn inner(&self) -> &I {
-        &self.inner
-    }
-}
-
-impl<V: Copy, I: Evals<V>> Evals<V> for ZeroCheckMles<V, I> {
-    type Idx = ZeroCheckIdx<I::Idx>;
-
-    fn index(&self, index: Self::Idx) -> &V {
-        match index {
-            ZeroCheckIdx::ZeroCheckChallenge => &self.zerocheck,
-            ZeroCheckIdx::Inner(idx) => self.inner.index(idx),
-        }
-    }
-
-    fn combine<C: Fn(V, V) -> V>(&self, other: &Self, f: C) -> Self {
-        let zerocheck = f(self.zerocheck, other.zerocheck);
-        let inner = self.inner.combine(&other.inner, f);
-        ZeroCheckMles { zerocheck, inner }
-    }
-
-    fn flatten(self, vec: &mut Vec<V>) {
-        let Self { zerocheck, inner } = self;
-        vec.push(zerocheck);
-        inner.flatten(vec);
-    }
-
-    fn unflatten(elems: &mut IntoIter<V>) -> Self {
-        let zerocheck = elems.next().unwrap();
-        let inner = I::unflatten(elems);
-        Self { zerocheck, inner }
-    }
-}
-
-impl<F: Field, SF, I> SumcheckProver<F, SF>
-where
-    I: Evals<F>,
-    SF: SumcheckFunction<F, Mles<F> = ZeroCheckMles<F, I>>,
-{
-    pub fn prove_zerocheck<S: Duplex<F>>(
-        &self,
-        powers: CompactPowers<F>,
-        transcript: &mut Transcript<F, S>,
-        mle: Vec<SF::Mles<F>>,
-        challs: &SF::Challs,
-    ) -> Result<ProverOutput<F, SF>, SumcheckError> {
-        let nvars = powers.coefficients.len();
-        let mut messages = Vec::with_capacity(nvars);
-
-        let mut vars = vec![];
-        let mut shrinking_powers = ShrinkingPowers::new(powers);
-        let mles = (0..nvars).try_fold(mle, |mle, _| {
-            let mle: Vec<SF::Mles<F>> = mle;
-            let m = self.message_symbolic(&mle, challs);
-            let [var] = transcript
-                .send_message(&m)
-                .map_err(SumcheckError::TranscriptError)?;
-            messages.push(m);
-            vars.push(var);
-            Ok(Self::fix_vars_custom(mle, &mut shrinking_powers, var))
-        })?;
-
-        vars.reverse();
-        let point = MultiPoint::new(vars);
-        debug_assert_eq!(mles.len(), 1);
-        let evals = mles[0].clone();
-
-        let proof = Proof::from_messages(messages);
-
-        Ok(ProverOutput {
-            point,
-            proof,
-            evals,
-        })
-    }
-
-    /// Fixes variables like `EvalsExt::fix_var` for the inner MLEs,
-    /// But handles the zerocheck MLE differently, as it is the product of univariate
-    /// polynomials and just treated as a single MLE for convenience.
-    fn fix_vars_custom(
-        mut mle: Vec<ZeroCheckMles<F, I>>,
-        shrinking_powers: &mut ShrinkingPowers<F>,
-        var: F,
-    ) -> Vec<ZeroCheckMles<F, I>> {
-        let half_len = mle.len() / 2;
-        let one_minus_var = F::one() - var;
-        let (left, right) = mle.split_at_mut(half_len);
-
-        let mut powers = shrinking_powers.fix(var).into_iter();
-
-        let f = |a, b| one_minus_var * a + var * b;
-        for (left, right) in left.iter_mut().zip(right) {
-            let left_inner: &mut I = &mut left.inner;
-            let inner = left_inner.combine(&right.inner, f);
-
-            let zerocheck = powers.next().unwrap();
-            *left = ZeroCheckMles { zerocheck, inner };
-        }
-        mle.truncate(half_len);
-        mle
-    }
 }
 
 /// Structure holding a partially fixed `CompactPowers`.

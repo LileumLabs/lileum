@@ -1,63 +1,13 @@
-use crate::{
-    barycentric_eval::BarycentricWeights,
-    polynomials::Evals,
-    sumcheck::{DegreeParam, Env, Var},
-};
+use crate::{barycentric_eval::BarycentricWeights, sumcheck::Var};
 use ark_ff::Field;
-use std::ops::{Add, AddAssign, Index, Mul, MulAssign, Sub};
-use transcript::params::ParamResolver;
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Message<F: Field>(Vec<F>);
 
-impl<F: Field> transcript::Message<F> for Message<F> {
-    fn len(_vars: usize, param_resolver: &ParamResolver) -> usize {
-        let degree = param_resolver.get::<DegreeParam>();
-        degree + 1
-    }
-
-    fn to_field_elements(&self) -> Vec<F> {
-        self.0.clone()
-    }
-}
-
 impl<F: Field> Message<F> {
     pub(crate) fn new(evals: Vec<F>) -> Self {
         Self(evals)
-    }
-
-    pub(crate) fn inner(&self) -> &[F] {
-        &self.0
-    }
-
-    pub(crate) fn new_degree_n(eval_at_0: F, eval_at_1: F, degree: usize) -> Self {
-        assert!(degree >= 1, "degree should be >= 1");
-        // e0, e1
-        // P(x) = (e1 - e0)x + e0
-        // TODO: it may be possible to exploit this structure further
-        let mut message = Vec::with_capacity(degree + 1);
-        let diff = eval_at_1 - eval_at_0;
-        let mut last = F::zero();
-        //as x is 0..d multiplication is unnecessary
-        for _ in 0..=degree {
-            message.push(last + eval_at_0);
-            last += diff;
-        }
-        Message(message)
-    }
-
-    pub(crate) fn degree(&self) -> usize {
-        self.0.len() - 1
-    }
-
-    /// Adds an extra evaluation to handle a bigger degree.
-    pub(crate) fn extend(self, weights: &BarycentricWeights<F>) -> Self {
-        assert_eq!(self.0.len(), weights.domain_size());
-        // The message length equals the weights length, so the next point is the constant
-        // out-of-domain point that weights.extend(...) has already been precomputed for
-        let message_extra_eval = weights.extend(&self.0);
-        let evals = self.0.into_iter().chain([message_extra_eval]);
-        Self(evals.collect())
     }
 }
 
@@ -171,41 +121,5 @@ impl<F: Field> Var<F> for Message<F> {}
 impl<F: Field> AddAssign for Message<F> {
     fn add_assign(&mut self, rhs: Self) {
         *self = rhs + &*self;
-    }
-}
-pub struct MessageEnv<'a, E, C> {
-    evals_left: &'a E,
-    evals_right: &'a E,
-    challs: C,
-    degree: usize,
-}
-
-impl<'a, E, C> MessageEnv<'a, E, C> {
-    pub fn new(evals_left: &'a E, evals_right: &'a E, degree: usize, challs: C) -> Self {
-        Self {
-            evals_left,
-            evals_right,
-            degree,
-            challs,
-        }
-    }
-}
-
-impl<I1, I2, F, E, C> Env<F, Message<F>, I1, I2> for MessageEnv<'_, E, C>
-where
-    I1: Copy,
-    F: Field,
-    E: Evals<F, Idx = I1>,
-    C: Index<I2, Output = F>,
-{
-    fn get(&self, i: I1) -> Message<F> {
-        let e0 = self.evals_left.index(i);
-        let e1 = self.evals_right.index(i);
-        Message::new_degree_n(*e0, *e1, self.degree)
-    }
-    fn get_chall(&self, chall_idx: I2) -> Message<F> {
-        let chall = self.challs[chall_idx];
-        // Not optimal, but this Environment won't be performance critical.
-        Message::new_degree_n(chall, chall, self.degree)
     }
 }

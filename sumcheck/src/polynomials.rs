@@ -53,9 +53,6 @@ impl<F: Field> MultiPoint<F> {
         let var = self.0.pop().unwrap();
         (self, var)
     }
-    pub(crate) fn pop_mut(&mut self) -> F {
-        self.0.pop().unwrap()
-    }
     pub fn vars(&self) -> usize {
         self.0.len()
     }
@@ -220,65 +217,5 @@ impl<V: Copy> Evals<V> for SingleEval<V> {
 impl<F: Clone> SingleEval<F> {
     pub fn from_field_elements(evals: &[F]) -> Vec<Self> {
         evals.iter().cloned().map(SingleEval).collect()
-    }
-}
-
-pub mod simple_eval {
-    use super::Evals;
-    use crate::utils::ZeroCheckAvailable;
-    use std::fmt::Debug;
-
-    #[derive(Clone, Copy, Debug)]
-    pub struct SimpleEval<F, const N: usize>([F; N]);
-
-    impl<F, const N: usize> SimpleEval<F, N> {
-        pub const fn new(inner: [F; N]) -> Self {
-            Self(inner)
-        }
-
-        pub fn map<V, M>(self, f: M) -> SimpleEval<V, N>
-        where
-            M: Fn(F) -> V,
-        {
-            SimpleEval(self.0.map(f))
-        }
-
-        pub fn inner(&self) -> &[F; N] {
-            &self.0
-        }
-    }
-
-    impl ZeroCheckAvailable for usize {
-        /// This fixes the index to be 0
-        fn zerocheck_eq() -> Self {
-            0
-        }
-    }
-
-    impl<V: Copy + Debug, const N: usize> Evals<V> for SimpleEval<V, N> {
-        type Idx = usize;
-
-        fn index(&self, index: Self::Idx) -> &V {
-            &self.0[index]
-        }
-
-        fn combine<C: Fn(V, V) -> V>(&self, other: &Self, f: C) -> Self {
-            let mut res = self.0;
-            for (i, res) in res.iter_mut().enumerate() {
-                *res = f(*res, other.0[i]);
-            }
-            Self(res)
-        }
-
-        fn flatten(self, vec: &mut Vec<V>) {
-            for i in 0..N {
-                vec.push(self.0[i]);
-            }
-        }
-
-        fn unflatten(elems: &mut std::vec::IntoIter<V>) -> Self {
-            let elems: Vec<V> = elems.take(N).collect();
-            Self(elems.try_into().unwrap())
-        }
     }
 }
