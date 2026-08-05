@@ -96,7 +96,6 @@ where
 
         // Check against sums if provided.
         {
-            let message = message.to_message();
             assert_eq!(instance[0].sum, message.eval_at_0());
             assert_eq!(instance[1].sum, message.eval_at_1());
         }
@@ -120,7 +119,6 @@ where
         // Checking that message agrees with sum.
         {
             let sum = instance[0].sum * (F::ONE - beta) + instance[1].sum * beta;
-            let message = message.to_message();
             let eval_zero = message.eval_at_0();
             let eval_one = message.eval_at_1();
             assert_eq!(sum, eval_zero + eval_one);
@@ -173,7 +171,6 @@ where
         let (msg, [r]) = transcript
             .receive_message(Clone::clone, &proof, &(key.degree + 1))
             .map_err(SumcheckError::Degree)?;
-        let msg = msg.to_message();
 
         if sum != msg.eval_at_0() + msg.eval_at_1() {
             return Err(SumcheckError::RoundSum);

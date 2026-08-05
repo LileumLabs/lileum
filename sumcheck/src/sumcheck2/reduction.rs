@@ -16,12 +16,6 @@ use transcript::reduction2::{
     VerifierTranscript,
 };
 
-impl<F: Field> SumcheckMessage<F> {
-    pub fn to_message(&self) -> crate::message::Message<F> {
-        crate::message::Message::new(self.0.clone())
-    }
-}
-
 /// A sumcheck message had an unexpected degree.
 #[derive(Clone, Copy, Debug)]
 pub struct UnexpectedDegree;
@@ -143,8 +137,6 @@ impl<F: Field, O: Oracle<F>> Reduction<F, SumcheckRelation<F, O>, QueryRelation<
             let (message, [r]) = transcript
                 .receive_message(|proof| proof[i].clone(), &proof, &key.degree)
                 .map_err(SumcheckError::Degree)?;
-
-            let message = message.to_message();
 
             let e0 = message.eval_at_0();
             let e1 = message.eval_at_1();

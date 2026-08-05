@@ -176,7 +176,6 @@ where
         let (msg, [r]) = transcript
             .receive_message(Clone::clone, &proof, &(key.degree + key.vars + 1))
             .map_err(SumcheckError::Degree)?;
-        let msg = msg.to_message();
 
         if sum != msg.eval_at_0() + msg.eval_at_1() {
             return Err(SumcheckError::RoundSum);
