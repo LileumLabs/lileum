@@ -1,4 +1,4 @@
-use crate::zerocheck::CompactPowers;
+use crate::sumcheck2::powers::CompactPowers;
 use ark_ff::Field;
 use std::ops::{Add, Mul};
 

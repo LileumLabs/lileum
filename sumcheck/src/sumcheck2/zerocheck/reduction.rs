@@ -1,14 +1,12 @@
-use crate::{
-    sumcheck2::{
-        evals::{Evals, Mles},
-        oracles::{partial::OracleParams, Oracle, OracleData, QueryRelation, SumcheckFunction},
-        prove,
-        reduction::SumcheckVerifierKey,
-        zerocheck::{ZeroSumcheck, ZeroSumcheckInstance, Zerocheck},
-        MultiPoint, OracleQueryInstance, SumcheckError, SumcheckInstance, SumcheckMessage,
-        SumcheckReduction,
-    },
-    zerocheck::{CompactPowers, ShrinkingPowers},
+use crate::sumcheck2::{
+    evals::{Evals, Mles},
+    oracles::{partial::OracleParams, Oracle, OracleData, QueryRelation, SumcheckFunction},
+    powers::{CompactPowers, ShrinkingPowers},
+    prove,
+    reduction::SumcheckVerifierKey,
+    zerocheck::{ZeroSumcheck, ZeroSumcheckInstance, Zerocheck},
+    MultiPoint, OracleQueryInstance, SumcheckError, SumcheckInstance, SumcheckMessage,
+    SumcheckReduction,
 };
 use ark_ff::Field;
 use sponge::sponge::Duplex;

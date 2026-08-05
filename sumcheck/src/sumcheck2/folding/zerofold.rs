@@ -4,10 +4,10 @@ use crate::{
         evals::{EvalsCore, Mles},
         folding::{folding_degree, FieldFolder, Foldable},
         oracles::{partial::OracleParams, Oracle, OracleData, SumcheckFunction},
+        powers::CompactPowers,
         zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
         SumcheckError, SumcheckMessage,
     },
-    zerocheck::CompactPowers,
 };
 use ark_ff::Field;
 use sponge::sponge::Duplex;

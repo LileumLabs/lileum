@@ -1,4 +1,4 @@
-use crate::{sumcheck2::oracles::Oracle, zerocheck::CompactPowers};
+use crate::sumcheck2::{oracles::Oracle, powers::CompactPowers};
 use ark_ff::Field;
 
 pub use reduction::{ZerocheckReduction, ZerocheckSumcheckReduction};

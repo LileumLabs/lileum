@@ -6,6 +6,7 @@ pub mod folding;
 mod message;
 pub mod oracles;
 mod point;
+mod powers;
 mod prove;
 mod reduction;
 mod relation;
