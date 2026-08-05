@@ -1,4 +1,4 @@
-use crate::{barycentric_eval::BarycentricWeights, sumcheck::Var};
+use crate::{barycentric_eval::BarycentricWeights, sumcheck2::Var};
 use ark_ff::Field;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 

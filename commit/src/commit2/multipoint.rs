@@ -8,7 +8,6 @@ use std::{fmt::Debug, marker::PhantomData, rc::Rc, vec::IntoIter};
 use sumcheck::{
     eq::eq,
     polynomials::MultiPoint,
-    sumcheck::Var,
     sumcheck2::{
         evals::{Evals, EvalsCore},
         oracles::{
@@ -20,7 +19,7 @@ use sumcheck::{
             SumcheckFunction,
         },
         ProverKey as SumcheckProverKey, SumcheckError, SumcheckInstance, SumcheckMessage,
-        SumcheckReduction, SumcheckVerifierKey,
+        SumcheckReduction, SumcheckVerifierKey, Var,
     },
 };
 use sumcheck_derive::EvalsCore;

@@ -5,7 +5,6 @@ pub mod eq;
 mod eval_check;
 mod message;
 pub mod polynomials;
-pub mod sumcheck;
 pub mod sumcheck2;
 // Currently unused but may be used again in the future.
 // mod symbolic;

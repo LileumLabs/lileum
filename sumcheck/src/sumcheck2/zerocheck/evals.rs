@@ -1,9 +1,7 @@
-use crate::{
-    sumcheck::Var,
-    sumcheck2::{
-        evals::{Evals, EvalsCore},
-        oracles::{partial::Nature, EvalLocation, SumcheckFunction},
-    },
+use crate::sumcheck2::{
+    evals::{Evals, EvalsCore},
+    oracles::{partial::Nature, EvalLocation, SumcheckFunction},
+    Var,
 };
 use ark_ff::Field;
 use std::fmt::Debug;

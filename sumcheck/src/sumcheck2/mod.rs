@@ -21,15 +21,34 @@ pub use relation::{SumcheckInstance, SumcheckRelation};
 /// the evaluations of polynomial over the domain 0..d.
 pub struct SumcheckMessage<F>(Vec<F>);
 
-pub(crate) mod degree {
-    use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+use ark_ff::Field;
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
-    use crate::{
-        sumcheck::Var,
-        sumcheck2::evals::{Evals, Mles},
-        sumcheck2::oracles::{EvalLocation, Oracle},
+pub trait Var<F: Field>:
+    Sized
+    + Add<Self, Output = Self>
+    + for<'a> Add<&'a Self, Output = Self>
+    + Sub<Self, Output = Self>
+    + for<'a> Sub<&'a Self, Output = Self>
+    + Mul<Self, Output = Self>
+    + for<'a> Mul<&'a Self, Output = Self>
+    + Add<F, Output = Self>
+    + Sub<F, Output = Self>
+    + Mul<F, Output = Self>
+    + for<'a> AddAssign<&'a Self>
+    + MulAssign<F>
+    + Clone
+{
+}
+
+pub(crate) mod degree {
+    use crate::sumcheck2::{
+        evals::{Evals, Mles},
+        oracles::{EvalLocation, Oracle},
+        Var,
     };
     use ark_ff::Field;
+    use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
     #[derive(Clone, Copy, Debug)]
     pub struct Degree(pub usize);

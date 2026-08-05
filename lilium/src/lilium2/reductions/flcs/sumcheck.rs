@@ -6,7 +6,6 @@ use std::{fmt::Debug, rc::Rc, vec::IntoIter};
 use sumcheck::{
     eq::eq_subset,
     polynomials::MultiPoint,
-    sumcheck::Var,
     sumcheck2::{
         evals::{Evals, EvalsCore},
         oracles::{
@@ -14,6 +13,7 @@ use sumcheck::{
             core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, Func},
             SumcheckFunction,
         },
+        Var,
     },
 };
 use sumcheck_derive::EvalsCore;

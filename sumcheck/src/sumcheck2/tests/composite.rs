@@ -1,7 +1,6 @@
 use super::Poseidon;
 use crate::{
     polynomials::MultiPoint,
-    sumcheck::Var,
     sumcheck2::{
         evals::{Evals, EvalsCore},
         oracles::{
@@ -11,7 +10,7 @@ use crate::{
             partial::PartialQueryRelation,
             QueryRelation, SumcheckFunction,
         },
-        SumcheckInstance, SumcheckReduction, SumcheckRelation,
+        SumcheckInstance, SumcheckReduction, SumcheckRelation, Var,
     },
 };
 use ark_ff::{Field, PrimeField};

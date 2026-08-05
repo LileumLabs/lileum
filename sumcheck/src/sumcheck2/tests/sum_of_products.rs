@@ -1,14 +1,11 @@
 use super::Poseidon;
-use crate::{
-    sumcheck::Var,
-    sumcheck2::{
-        evals::{Evals, EvalsCore},
-        oracles::{
-            testing::{TestingNature, TestingOracle},
-            QueryRelation, SumcheckFunction,
-        },
-        SumcheckInstance, SumcheckReduction,
+use crate::sumcheck2::{
+    evals::{Evals, EvalsCore},
+    oracles::{
+        testing::{TestingNature, TestingOracle},
+        QueryRelation, SumcheckFunction,
     },
+    SumcheckInstance, SumcheckReduction, Var,
 };
 use ark_ff::{Field, PrimeField};
 use rand::{rngs::StdRng, SeedableRng};

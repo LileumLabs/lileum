@@ -1,7 +1,4 @@
-use crate::{
-    sumcheck::Var,
-    sumcheck2::{evals::Evals, oracles::partial::Nature},
-};
+use crate::sumcheck2::{evals::Evals, oracles::partial::Nature, Var};
 use ark_ff::Field;
 use std::fmt::Debug;
 

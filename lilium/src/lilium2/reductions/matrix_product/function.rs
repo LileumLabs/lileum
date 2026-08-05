@@ -2,12 +2,10 @@ use crate::lilium2::reductions::matrix_product::matrix_sum::{MatrixSumNature, Ma
 use ark_ff::Field;
 use ccs::matrix::Matrix;
 use commit::commit2::oracle::{CommittedNature, CommittedOracle};
-use std::fmt::Debug;
-use std::vec::IntoIter;
+use std::{fmt::Debug, vec::IntoIter};
 use sumcheck::{
     eq::eq,
     polynomials::MultiPoint,
-    sumcheck::Var,
     sumcheck2::{
         evals::{Evals, EvalsCore},
         oracles::{
@@ -16,6 +14,7 @@ use sumcheck::{
             partial::OracleEval,
             SumcheckFunction,
         },
+        Var,
     },
 };
 use sumcheck_derive::EvalsCore;
