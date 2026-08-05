@@ -1,17 +1,14 @@
 use super::Poseidon;
-use crate::{
-    polynomials::MultiPoint,
-    sumcheck2::{
-        evals::{Evals, EvalsCore},
-        oracles::{
-            composite::{CompositeOracle, CompositeOracleInstance, Either},
-            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, CoreQueryRelation},
-            empty::{EmptyInstance, EmptyRelation, NoNature},
-            partial::PartialQueryRelation,
-            QueryRelation, SumcheckFunction,
-        },
-        SumcheckInstance, SumcheckReduction, SumcheckRelation, Var,
+use crate::sumcheck2::{
+    evals::{Evals, EvalsCore},
+    oracles::{
+        composite::{CompositeOracle, CompositeOracleInstance, Either},
+        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, CoreQueryRelation},
+        empty::{EmptyInstance, EmptyRelation, NoNature},
+        partial::PartialQueryRelation,
+        QueryRelation, SumcheckFunction,
     },
+    MultiPoint, SumcheckInstance, SumcheckReduction, SumcheckRelation, Var,
 };
 use ark_ff::{Field, PrimeField};
 use rand::{rngs::StdRng, SeedableRng};

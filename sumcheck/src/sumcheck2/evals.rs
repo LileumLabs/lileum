@@ -1,4 +1,4 @@
-use crate::{eq::eq, polynomials::MultiPoint};
+use crate::{eq::eq, sumcheck2::MultiPoint};
 use ark_ff::Field;
 use std::{fmt::Debug, vec::IntoIter};
 

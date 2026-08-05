@@ -1,11 +1,11 @@
 use crate::{
     barycentric_eval::BarycentricWeights,
-    polynomials::MultiPoint,
     sumcheck2::{
         degree,
         evals::Mles,
         oracles::{Oracle, QueryRelation},
-        prove, OracleQueryInstance, SumcheckInstance, SumcheckMessage, SumcheckRelation,
+        prove, MultiPoint, OracleQueryInstance, SumcheckInstance, SumcheckMessage,
+        SumcheckRelation,
     },
 };
 use ark_ff::Field;

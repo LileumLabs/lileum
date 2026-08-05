@@ -1,11 +1,8 @@
-use crate::{
-    polynomials::MultiPoint,
-    sumcheck2::{
-        degree,
-        evals::{Evals, Mles},
-        oracles::{EvalLocation, Oracle, OracleData, SumcheckFunction},
-        SumcheckMessage,
-    },
+use crate::sumcheck2::{
+    degree,
+    evals::{Evals, Mles},
+    oracles::{EvalLocation, Oracle, OracleData, SumcheckFunction},
+    MultiPoint, SumcheckMessage,
 };
 use ark_ff::Field;
 use sponge::sponge::Duplex;

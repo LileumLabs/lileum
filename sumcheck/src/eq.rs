@@ -21,7 +21,7 @@
 //! for 0x and modify the other copy into the 1x evaluations with 2 multiplications.
 //! And so on we continue until having all the evaluations.
 
-use crate::polynomials::MultiPoint;
+use crate::sumcheck2::MultiPoint;
 use ark_ff::Field;
 use std::ops::Mul;
 

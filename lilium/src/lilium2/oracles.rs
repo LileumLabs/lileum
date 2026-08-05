@@ -8,18 +8,16 @@ use commit::commit2::{
     CommitmentScheme,
 };
 use std::{marker::PhantomData, ops::Add, rc::Rc};
-use sumcheck::{
-    polynomials::MultiPoint,
-    sumcheck2::{
-        evals::EvalsCore,
-        folding::{FieldFolder, Foldable},
-        oracles::{
-            composite::{CompositeOracle, Either},
-            core::CoreOracle,
-            partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
-            EvalLocation, Oracle, SumcheckFunction,
-        },
+use sumcheck::sumcheck2::{
+    evals::EvalsCore,
+    folding::{FieldFolder, Foldable},
+    oracles::{
+        composite::{CompositeOracle, Either},
+        core::CoreOracle,
+        partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
+        EvalLocation, Oracle, SumcheckFunction,
     },
+    MultiPoint,
 };
 use transcript::reduction2::{Message, NoError, Relation};
 

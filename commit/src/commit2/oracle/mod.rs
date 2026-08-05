@@ -2,17 +2,13 @@ use crate::commit2::{CommitmentScheme, OpenInstance, OpeningRelation};
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::{convert::identity, marker::PhantomData, rc::Rc};
-use sumcheck::{
-    polynomials::MultiPoint,
-    sumcheck2::{
-        evals::{EvalsCore, EvalsExt},
-        oracles::{
-            partial::{
-                merge, Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance,
-            },
-            EvalLocation, SumcheckFunction,
-        },
+use sumcheck::sumcheck2::{
+    evals::{EvalsCore, EvalsExt},
+    oracles::{
+        partial::{merge, Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
+        EvalLocation, SumcheckFunction,
     },
+    MultiPoint,
 };
 use transcript::reduction2::{
     GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,

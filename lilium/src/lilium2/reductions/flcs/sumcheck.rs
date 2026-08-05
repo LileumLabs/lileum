@@ -5,7 +5,6 @@ use commit::commit2::oracle::CommittedNature;
 use std::{fmt::Debug, rc::Rc, vec::IntoIter};
 use sumcheck::{
     eq::eq_subset,
-    polynomials::MultiPoint,
     sumcheck2::{
         evals::{Evals, EvalsCore},
         oracles::{
@@ -13,7 +12,7 @@ use sumcheck::{
             core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, Func},
             SumcheckFunction,
         },
-        Var,
+        MultiPoint, Var,
     },
 };
 use sumcheck_derive::EvalsCore;

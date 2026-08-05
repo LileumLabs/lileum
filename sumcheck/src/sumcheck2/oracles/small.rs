@@ -1,9 +1,6 @@
-use crate::{
-    polynomials::MultiPoint,
-    sumcheck2::{
-        oracles::{EvalLocation, Oracle, QueryRelation, SumcheckFunction},
-        OracleQueryInstance,
-    },
+use crate::sumcheck2::{
+    oracles::{EvalLocation, Oracle, QueryRelation, SumcheckFunction},
+    MultiPoint, OracleQueryInstance,
 };
 use ark_ff::Field;
 use sponge::sponge::Duplex;

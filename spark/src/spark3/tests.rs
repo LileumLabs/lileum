@@ -8,7 +8,7 @@ use hash_to_curve::svdw::SvdwMap;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use sponge::{poseidon2::PoseidonDefault, sponge::Sponge};
 use std::{iter::repeat, rc::Rc};
-use sumcheck::polynomials::MultiPoint;
+use sumcheck::sumcheck2::MultiPoint;
 use transcript::reduction2::{Prover, ProverOutput, Relation, Verifier};
 
 type Poseidon<F> = Sponge<F, PoseidonDefault<F>, 2, 1, 3>;

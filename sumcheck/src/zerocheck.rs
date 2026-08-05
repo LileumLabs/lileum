@@ -1,6 +1,6 @@
 //! Utilities for zerocheck.
 
-use crate::polynomials::MultiPoint;
+use crate::sumcheck2::MultiPoint;
 use ark_ff::Field;
 use std::{
     iter::successors,

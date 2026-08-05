@@ -7,10 +7,12 @@ use sponge::sponge::Duplex;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
     eq::eq,
-    polynomials::MultiPoint,
-    sumcheck2::oracles::{
-        partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
-        EvalLocation, UnexpectedVars,
+    sumcheck2::{
+        oracles::{
+            partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
+            EvalLocation, UnexpectedVars,
+        },
+        MultiPoint,
     },
 };
 use transcript::reduction2::{

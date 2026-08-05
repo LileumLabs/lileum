@@ -1,17 +1,14 @@
-use crate::{
-    polynomials::MultiPoint,
-    sumcheck2::{
-        evals::{EvalsCore, EvalsExt},
-        folding::{FieldFolder, Foldable},
-        oracles::{
-            partial::{
-                Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance,
-                PartialQueryRelation,
-            },
-            EvalLocation, Oracle, QueryRelation, SumcheckFunction,
+use crate::sumcheck2::{
+    evals::{EvalsCore, EvalsExt},
+    folding::{FieldFolder, Foldable},
+    oracles::{
+        partial::{
+            Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance,
+            PartialQueryRelation,
         },
-        OracleQueryInstance,
+        EvalLocation, Oracle, QueryRelation, SumcheckFunction,
     },
+    MultiPoint, OracleQueryInstance,
 };
 use ark_ff::Field;
 use core::panic;

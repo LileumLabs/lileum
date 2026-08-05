@@ -7,8 +7,8 @@ use commit::commit2::{oracle::CommittedOracle, CommitmentScheme};
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
     eq,
-    polynomials::MultiPoint,
     sumcheck2::oracles::{composite::CompositeOracle, core::CoreOracle},
+    sumcheck2::MultiPoint,
 };
 use transcript::reduction2::Relation;
 

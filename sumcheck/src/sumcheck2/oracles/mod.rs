@@ -1,7 +1,4 @@
-use crate::{
-    polynomials::MultiPoint,
-    sumcheck2::{evals::Mles, Var},
-};
+use crate::sumcheck2::{evals::Mles, MultiPoint, Var};
 use ark_ff::Field;
 use std::{fmt::Debug, marker::PhantomData, rc::Rc};
 use transcript::reduction2::{Message, Relation};

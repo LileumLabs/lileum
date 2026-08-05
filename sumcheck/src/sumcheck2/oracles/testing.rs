@@ -1,9 +1,7 @@
-use crate::{
-    polynomials::MultiPoint,
-    sumcheck2::{
-        evals::{EvalsExt, Mles},
-        oracles::{partial::Nature, EvalLocation, Oracle, SumcheckFunction},
-    },
+use crate::sumcheck2::{
+    evals::{EvalsExt, Mles},
+    oracles::{partial::Nature, EvalLocation, Oracle, SumcheckFunction},
+    MultiPoint,
 };
 use ark_ff::Field;
 use std::rc::Rc;

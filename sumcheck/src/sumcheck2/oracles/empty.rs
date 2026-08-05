@@ -1,9 +1,9 @@
-use crate::{
-    polynomials::MultiPoint,
-    sumcheck2::oracles::{
+use crate::sumcheck2::{
+    oracles::{
         partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
         EvalLocation, SumcheckFunction,
     },
+    MultiPoint,
 };
 use ark_ff::Field;
 use std::{marker::PhantomData, rc::Rc};

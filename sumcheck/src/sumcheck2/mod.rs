@@ -4,6 +4,7 @@ pub mod evals;
 pub mod folding;
 mod message;
 pub mod oracles;
+mod point;
 mod prove;
 mod reduction;
 mod relation;
@@ -12,6 +13,7 @@ mod tests;
 pub mod zerocheck;
 
 pub use oracles::OracleQueryInstance;
+pub use point::MultiPoint;
 pub use prove::ProverKey;
 pub use reduction::{SumcheckError, SumcheckReduction, SumcheckVerifierKey};
 pub use relation::{SumcheckInstance, SumcheckRelation};

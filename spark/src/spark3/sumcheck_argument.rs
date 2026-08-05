@@ -2,17 +2,14 @@ use crate::spark3::SparseMle;
 use ark_ff::Field;
 use commit::commit2::oracle::CommittedNature;
 use std::{fmt::Debug, vec::IntoIter};
-use sumcheck::{
-    polynomials::MultiPoint,
-    sumcheck2::{
-        evals::{Evals, EvalsCore},
-        oracles::{
-            composite::Either,
-            core::{Coeffs, CoreNature, Func},
-            SumcheckFunction,
-        },
-        Var,
+use sumcheck::sumcheck2::{
+    evals::{Evals, EvalsCore},
+    oracles::{
+        composite::Either,
+        core::{Coeffs, CoreNature, Func},
+        SumcheckFunction,
     },
+    MultiPoint, Var,
 };
 use sumcheck_derive::EvalsCore;
 

@@ -13,14 +13,13 @@ use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::{
     eq,
-    polynomials::MultiPoint,
     sumcheck2::{
         self,
         oracles::{
             composite::{CompositeOracle, CompositeReductionKey},
             core::CoreOracle,
         },
-        SumcheckReduction,
+        MultiPoint, SumcheckReduction,
     },
 };
 use transcript::reduction2::{ProverOutput, Reduction, Transcript};

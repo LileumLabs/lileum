@@ -1,14 +1,12 @@
-use crate::{
-    polynomials::MultiPoint,
-    sumcheck2::{
-        evals::EvalsCore,
-        folding::{FieldFolder, Foldable},
-        oracles::{
-            composite::Either,
-            partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
-            EvalLocation, SumcheckFunction,
-        },
+use crate::sumcheck2::{
+    evals::EvalsCore,
+    folding::{FieldFolder, Foldable},
+    oracles::{
+        composite::Either,
+        partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
+        EvalLocation, SumcheckFunction,
     },
+    MultiPoint,
 };
 use ark_ff::Field;
 use sponge::sponge::Duplex;

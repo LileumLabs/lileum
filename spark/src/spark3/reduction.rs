@@ -11,19 +11,15 @@ use commit::commit2::{
 };
 use sponge::sponge::Duplex;
 use std::marker::PhantomData;
-use sumcheck::{
-    polynomials::MultiPoint,
-    sumcheck2::{
-        oracles::{
-            composite::{
-                CompositeOracle, CompositeOracleInstance, CompositeReductionKey, ProverEvals,
-            },
-            core::{CoreOracle, CoreOracleInstance},
-            partial::{Nature, PartialOracle, PartialQueryInstance},
-            SumcheckFunction,
-        },
-        SumcheckError, SumcheckInstance, SumcheckMessage, SumcheckReduction, SumcheckVerifierKey,
+use sumcheck::sumcheck2::{
+    oracles::{
+        composite::{CompositeOracle, CompositeOracleInstance, CompositeReductionKey, ProverEvals},
+        core::{CoreOracle, CoreOracleInstance},
+        partial::{Nature, PartialOracle, PartialQueryInstance},
+        SumcheckFunction,
     },
+    MultiPoint, SumcheckError, SumcheckInstance, SumcheckMessage, SumcheckReduction,
+    SumcheckVerifierKey,
 };
 use transcript::reduction2::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,

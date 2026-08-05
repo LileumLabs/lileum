@@ -1,12 +1,12 @@
 use crate::{
-    polynomials::MultiPoint,
     sumcheck2::{
         evals::{Evals, Mles},
         oracles::{partial::OracleParams, Oracle, OracleData, QueryRelation, SumcheckFunction},
         prove,
         reduction::SumcheckVerifierKey,
         zerocheck::{ZeroSumcheck, ZeroSumcheckInstance, Zerocheck},
-        OracleQueryInstance, SumcheckError, SumcheckInstance, SumcheckMessage, SumcheckReduction,
+        MultiPoint, OracleQueryInstance, SumcheckError, SumcheckInstance, SumcheckMessage,
+        SumcheckReduction,
     },
     zerocheck::{CompactPowers, ShrinkingPowers},
 };

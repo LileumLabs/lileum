@@ -7,7 +7,6 @@ use sponge::sponge::Duplex;
 use std::{fmt::Debug, marker::PhantomData, rc::Rc, vec::IntoIter};
 use sumcheck::{
     eq::eq,
-    polynomials::MultiPoint,
     sumcheck2::{
         evals::{Evals, EvalsCore},
         oracles::{
@@ -18,8 +17,8 @@ use sumcheck::{
             core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
             SumcheckFunction,
         },
-        ProverKey as SumcheckProverKey, SumcheckError, SumcheckInstance, SumcheckMessage,
-        SumcheckReduction, SumcheckVerifierKey, Var,
+        MultiPoint, ProverKey as SumcheckProverKey, SumcheckError, SumcheckInstance,
+        SumcheckMessage, SumcheckReduction, SumcheckVerifierKey, Var,
     },
 };
 use sumcheck_derive::EvalsCore;
