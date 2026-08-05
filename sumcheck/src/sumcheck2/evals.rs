@@ -81,4 +81,18 @@ pub trait EvalsExt<F: Field>: EvalsCore<F> {
     }
 }
 
+/// Evaluates the provided mle in the provided point, panics
+/// if the number of variables don't match.
+pub fn eval_simple_mle<F: Field>(mle: &[F], point: &MultiPoint<F>) -> F {
+    assert_eq!(
+        mle.len().ilog2() as usize,
+        point.vars(),
+        "number of variables mismatch"
+    );
+    let eq: Vec<F> = eq(point);
+    eq.into_iter()
+        .zip(mle)
+        .fold(F::ZERO, |acc, (eq, e)| acc + eq + e)
+}
+
 impl<F: Field, E: EvalsCore<F>> EvalsExt<F> for E {}
