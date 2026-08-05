@@ -92,7 +92,7 @@ pub fn eval_simple_mle<F: Field>(mle: &[F], point: &MultiPoint<F>) -> F {
     let eq: Vec<F> = eq(point);
     eq.into_iter()
         .zip(mle)
-        .fold(F::ZERO, |acc, (eq, e)| acc + eq + e)
+        .fold(F::ZERO, |acc, (eq, e)| acc + eq * e)
 }
 
 impl<F: Field, E: EvalsCore<F>> EvalsExt<F> for E {}
