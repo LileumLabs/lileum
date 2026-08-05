@@ -2,8 +2,8 @@ use crate::commit2::CommitmentSchemeCore;
 use ark_ff::Field;
 use std::{fmt::Debug, marker::PhantomData};
 use sumcheck::{
-    polynomials::{EvalsExt, MultiPoint, SingleEval},
-    sumcheck2::oracles::UnexpectedVars,
+    polynomials::MultiPoint,
+    sumcheck2::{evals::eval_simple_mle, oracles::UnexpectedVars},
 };
 use transcript::reduction2::{Message, Relation};
 
@@ -62,10 +62,9 @@ impl<F: Field, C: CommitmentSchemeCore<F>> Relation for OpeningRelation<F, C> {
         } = instance;
         assert_eq!(witness.len(), 1 << point.vars());
 
-        let expected_eval =
-            EvalsExt::eval_iter(witness.iter().cloned().map(SingleEval), point.clone());
+        let expected_eval = eval_simple_mle(witness, point);
 
-        if expected_eval.0 != *eval {
+        if expected_eval != *eval {
             return false;
         }
 

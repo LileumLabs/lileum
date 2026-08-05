@@ -125,7 +125,7 @@ pub fn eq_subset<F: Field>(point: &MultiPoint<F>, n_log: usize) -> Vec<F> {
 
 #[test]
 fn test_eq() {
-    use crate::polynomials::{EvalsExt, SingleEval};
+    use crate::sumcheck2::evals::eval_simple_mle;
     use ark_vesta::Fr;
     use rand::{thread_rng, Rng};
 
@@ -144,10 +144,9 @@ fn test_eq() {
         .iter()
         .cloned()
         .zip(check_poly.iter())
-        .fold(Fr::from(0), |sum, (a, b)| sum + a * b);
+        .fold(Fr::ZERO, |sum, (a, b)| sum + a * b);
 
-    let check_poly: Vec<_> = check_poly.into_iter().map(SingleEval).collect();
-    let check_eval = EvalsExt::eval_slow(check_poly, point).0;
+    let check_eval = eval_simple_mle(&check_poly, &point);
     assert_eq!(eq_eval, check_eval);
 }
 

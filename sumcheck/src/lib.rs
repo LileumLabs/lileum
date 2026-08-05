@@ -3,7 +3,6 @@
 mod barycentric_eval;
 pub mod eq;
 mod eval_check;
-mod eval_impls;
 pub mod folding;
 mod message;
 pub mod polynomials;
