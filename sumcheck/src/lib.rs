@@ -9,13 +9,3 @@ pub mod sumcheck2;
 // mod symbolic;
 pub mod utils;
 mod zerocheck;
-
-#[derive(Debug, Clone)]
-pub enum SumcheckError {
-    /// Message has incorrect degree
-    MessageDegree,
-    /// The sum of both halves differ from the claimed sum
-    RoundSum,
-    // Transcript error
-    TranscriptError(transcript::Error),
-}
