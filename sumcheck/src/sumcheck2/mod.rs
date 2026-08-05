@@ -44,3 +44,5 @@ pub trait Var<F: Field>:
     + Clone
 {
 }
+
+impl<F: Field> Var<F> for F {}
