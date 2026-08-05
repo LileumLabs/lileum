@@ -9,11 +9,10 @@ use commit::commit2::{
 };
 use std::{marker::PhantomData, ops::Add, rc::Rc};
 use sumcheck::{
-    folding::utils::FieldFolder,
     polynomials::MultiPoint,
     sumcheck2::{
         evals::EvalsCore,
-        folding::Foldable,
+        folding::{FieldFolder, Foldable},
         oracles::{
             composite::{CompositeOracle, Either},
             core::CoreOracle,

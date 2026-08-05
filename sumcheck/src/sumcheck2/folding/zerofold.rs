@@ -1,9 +1,8 @@
 use crate::{
     barycentric_eval::BarycentricWeights,
-    folding::utils::FieldFolder,
     sumcheck2::{
         evals::{EvalsCore, Mles},
-        folding::{folding_degree, Foldable},
+        folding::{folding_degree, FieldFolder, Foldable},
         oracles::{partial::OracleParams, Oracle, OracleData, SumcheckFunction},
         zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
         SumcheckError, SumcheckMessage,

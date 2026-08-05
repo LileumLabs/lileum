@@ -1,9 +1,8 @@
 use crate::{
-    folding::utils::FieldFolder,
     polynomials::MultiPoint,
     sumcheck2::{
         evals::{EvalsCore, EvalsExt},
-        folding::Foldable,
+        folding::{FieldFolder, Foldable},
         oracles::{
             partial::{
                 Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance,
