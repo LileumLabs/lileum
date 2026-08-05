@@ -1,7 +1,7 @@
 use ark_ff::Field;
 use commit::commit2::CommitmentScheme;
 use std::{marker::PhantomData, rc::Rc};
-use sumcheck::{eq, sumcheck2::oracles::UnexpectedVars, sumcheck2::MultiPoint};
+use sumcheck::{eq, oracles::UnexpectedVars, MultiPoint};
 use transcript::reduction2::{Message, Relation};
 
 mod committed;

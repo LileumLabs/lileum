@@ -7,19 +7,16 @@ use sponge::sponge::Duplex;
 use std::{fmt::Debug, marker::PhantomData, rc::Rc, vec::IntoIter};
 use sumcheck::{
     eq::eq,
-    sumcheck2::{
-        evals::{Evals, EvalsCore},
-        oracles::{
-            composite::{
-                CompositeOracle, CompositeOracleInstance, CompositeReductionKey, Either,
-                ProverEvals,
-            },
-            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
-            SumcheckFunction,
+    evals::{Evals, EvalsCore},
+    oracles::{
+        composite::{
+            CompositeOracle, CompositeOracleInstance, CompositeReductionKey, Either, ProverEvals,
         },
-        MultiPoint, ProverKey as SumcheckProverKey, SumcheckError, SumcheckInstance,
-        SumcheckMessage, SumcheckReduction, SumcheckVerifierKey, Var,
+        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
+        SumcheckFunction,
     },
+    MultiPoint, ProverKey as SumcheckProverKey, SumcheckError, SumcheckInstance, SumcheckMessage,
+    SumcheckReduction, SumcheckVerifierKey, Var,
 };
 use sumcheck_derive::EvalsCore;
 use transcript::reduction2::{

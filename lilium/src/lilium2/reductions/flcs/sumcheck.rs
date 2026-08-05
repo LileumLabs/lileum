@@ -5,15 +5,13 @@ use commit::commit2::oracle::CommittedNature;
 use std::{fmt::Debug, rc::Rc, vec::IntoIter};
 use sumcheck::{
     eq::eq_subset,
-    sumcheck2::{
-        evals::{Evals, EvalsCore},
-        oracles::{
-            composite::Either,
-            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, Func},
-            SumcheckFunction,
-        },
-        MultiPoint, Var,
+    evals::{Evals, EvalsCore},
+    oracles::{
+        composite::Either,
+        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, Func},
+        SumcheckFunction,
     },
+    MultiPoint, Var,
 };
 use sumcheck_derive::EvalsCore;
 
@@ -233,7 +231,7 @@ where
 #[test]
 fn print_natures() {
     use ark_vesta::Fr;
-    use sumcheck::sumcheck2::oracles::EvalLocation;
+    use sumcheck::oracles::EvalLocation;
 
     let natures = <FlcsEvals<(), 4, 3, 3> as SumcheckFunction<Fr>>::natures();
     let natures = FlcsEvals::map_evals(&natures, |nature| EvalLocation::from(*nature));

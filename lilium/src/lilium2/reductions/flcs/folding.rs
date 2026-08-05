@@ -8,7 +8,7 @@ use ccs::matrix::Matrix;
 use commit::commit2::CommitmentScheme;
 use sponge::sponge::Duplex;
 use std::rc::Rc;
-use sumcheck::sumcheck2::{
+use sumcheck::{
     folding::{ZeroFold, ZeroFoldKey},
     oracles::{partial::OracleParams, Oracle},
     SumcheckError, SumcheckMessage,

@@ -18,7 +18,7 @@ use commit::commit2::{
 use spark::spark3::{FlexibleSparkRelation, SparkInstance};
 use sponge::sponge::Duplex;
 use std::{marker::PhantomData, rc::Rc};
-use sumcheck::sumcheck2::{
+use sumcheck::{
     evals::EvalsCore,
     oracles::{
         composite::{CompositeOracle, CompositeOracleInstance, CompositeReductionKey, ProverEvals},

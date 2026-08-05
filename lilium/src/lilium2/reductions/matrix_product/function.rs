@@ -5,16 +5,14 @@ use commit::commit2::oracle::{CommittedNature, CommittedOracle};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck::{
     eq::eq,
-    sumcheck2::{
-        evals::{Evals, EvalsCore},
-        oracles::{
-            composite::{CompositeOracle, Either},
-            core::{CoreNature, CoreOracle},
-            partial::OracleEval,
-            SumcheckFunction,
-        },
-        MultiPoint, Var,
+    evals::{Evals, EvalsCore},
+    oracles::{
+        composite::{CompositeOracle, Either},
+        core::{CoreNature, CoreOracle},
+        partial::OracleEval,
+        SumcheckFunction,
     },
+    MultiPoint, Var,
 };
 use sumcheck_derive::EvalsCore;
 

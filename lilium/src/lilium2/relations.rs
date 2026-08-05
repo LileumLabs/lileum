@@ -11,7 +11,7 @@ use ccs::{
 };
 use commit::commit2::CommitmentScheme;
 use std::marker::PhantomData;
-use sumcheck::sumcheck2::{
+use sumcheck::{
     oracles::{partial::OracleParams, Oracle},
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
 };

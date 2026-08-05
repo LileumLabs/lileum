@@ -2,7 +2,7 @@ use crate::spark3::SparseMle;
 use ark_ff::Field;
 use commit::commit2::oracle::CommittedNature;
 use std::{fmt::Debug, vec::IntoIter};
-use sumcheck::sumcheck2::{
+use sumcheck::{
     evals::{Evals, EvalsCore},
     oracles::{
         composite::Either,

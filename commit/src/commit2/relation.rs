@@ -1,7 +1,7 @@
 use crate::commit2::CommitmentSchemeCore;
 use ark_ff::Field;
 use std::{fmt::Debug, marker::PhantomData};
-use sumcheck::sumcheck2::{evals::eval_simple_mle, oracles::UnexpectedVars, MultiPoint};
+use sumcheck::{evals::eval_simple_mle, oracles::UnexpectedVars, MultiPoint};
 use transcript::reduction2::{Message, Relation};
 
 /// For structure pcs.

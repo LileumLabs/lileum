@@ -12,15 +12,12 @@ use commit::commit2::{
 use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::{
-    eq,
-    sumcheck2::{
-        self,
-        oracles::{
-            composite::{CompositeOracle, CompositeReductionKey},
-            core::CoreOracle,
-        },
-        MultiPoint, SumcheckReduction,
+    self, eq,
+    oracles::{
+        composite::{CompositeOracle, CompositeReductionKey},
+        core::CoreOracle,
     },
+    MultiPoint, SumcheckReduction,
 };
 use transcript::reduction2::{ProverOutput, Reduction, Transcript};
 
@@ -32,7 +29,7 @@ pub struct ProverKey<F: Field, C: CommitmentScheme<F>, const N: usize> {
     minor_structure: Rc<MinorStructure<N>>,
     sumcheck_structure: Rc<Vec<SparkEvals<F, N>>>,
     pcs: C,
-    sumcheck_key: sumcheck2::ProverKey<F, SparkOracle<F, C, N>>,
+    sumcheck_key: sumcheck::ProverKey<F, SparkOracle<F, C, N>>,
     oracle_key: OracleKey<F, C, SparkEvals<(), N>>,
     core_oracle: CoreOracle<F, SparkEvals<(), N>>,
     committed_oracle_key: oracle::ProverKey<F, SparkEvals<(), N>, C>,

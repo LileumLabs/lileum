@@ -2,7 +2,7 @@ use crate::commit2::{CommitmentScheme, OpenInstance, OpeningRelation};
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::{convert::identity, marker::PhantomData, rc::Rc};
-use sumcheck::sumcheck2::{
+use sumcheck::{
     evals::{EvalsCore, EvalsExt},
     oracles::{
         partial::{merge, Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},

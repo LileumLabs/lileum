@@ -7,13 +7,11 @@ use sponge::sponge::Duplex;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
     eq::eq,
-    sumcheck2::{
-        oracles::{
-            partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
-            EvalLocation, UnexpectedVars,
-        },
-        MultiPoint,
+    oracles::{
+        partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
+        EvalLocation, UnexpectedVars,
     },
+    MultiPoint,
 };
 use transcript::reduction2::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,

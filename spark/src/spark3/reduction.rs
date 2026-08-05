@@ -11,7 +11,7 @@ use commit::commit2::{
 };
 use sponge::sponge::Duplex;
 use std::marker::PhantomData;
-use sumcheck::sumcheck2::{
+use sumcheck::{
     oracles::{
         composite::{CompositeOracle, CompositeOracleInstance, CompositeReductionKey, ProverEvals},
         core::{CoreOracle, CoreOracleInstance},

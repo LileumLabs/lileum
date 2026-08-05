@@ -18,7 +18,7 @@ use spark::spark3::{
 };
 use sponge::sponge::Duplex;
 use std::rc::Rc;
-use sumcheck::sumcheck2::{
+use sumcheck::{
     oracles::{
         self,
         composite::{CompositeOracle, CompositeReductionKey, ProverEvals},

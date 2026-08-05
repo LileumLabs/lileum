@@ -8,7 +8,7 @@ use commit::commit2::{
     CommitmentScheme,
 };
 use std::{marker::PhantomData, ops::Add, rc::Rc};
-use sumcheck::sumcheck2::{
+use sumcheck::{
     evals::EvalsCore,
     folding::{FieldFolder, Foldable},
     oracles::{

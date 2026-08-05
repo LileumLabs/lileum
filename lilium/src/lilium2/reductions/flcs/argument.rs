@@ -5,7 +5,7 @@ use crate::lilium2::{
 use ark_ff::Field;
 use commit::commit2::CommitmentScheme;
 use sponge::sponge::Duplex;
-use sumcheck::sumcheck2::oracles::partial::OracleParams;
+use sumcheck::oracles::partial::OracleParams;
 use transcript::reduction2::{
     Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,

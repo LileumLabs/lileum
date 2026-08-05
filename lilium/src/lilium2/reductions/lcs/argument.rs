@@ -14,7 +14,7 @@ use ccs::structure::CcsStructure;
 use commit::commit2::{oracle::CommittedOracle, CommitmentScheme};
 use sponge::sponge::Duplex;
 use std::rc::Rc;
-use sumcheck::sumcheck2::oracles::{composite::CompositeOracle, core::CoreOracle};
+use sumcheck::oracles::{composite::CompositeOracle, core::CoreOracle};
 use transcript::reduction2::{Argument, Reduction};
 use transcript::reduction2::{
     GuardedProof, ProverOutput, Transcript, TranscriptBuilder, VerifierTranscript,
@@ -112,7 +112,7 @@ where
     C: CommitmentScheme<F>,
 {
     pub fn to_flcs<const I: usize>(&self) -> FlcsStructure<F, C, IO, S, I> {
-        use sumcheck::sumcheck2::oracles::partial::PartialOracle;
+        use sumcheck::oracles::partial::PartialOracle;
         let LcsStructure { ccs_structure, pcs } = self;
         let (ccs_structure, pcs) = (ccs_structure.clone(), pcs.clone());
 

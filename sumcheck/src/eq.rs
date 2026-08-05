@@ -21,7 +21,7 @@
 //! for 0x and modify the other copy into the 1x evaluations with 2 multiplications.
 //! And so on we continue until having all the evaluations.
 
-use crate::sumcheck2::MultiPoint;
+use crate::MultiPoint;
 use ark_ff::Field;
 use std::ops::Mul;
 
@@ -125,7 +125,7 @@ pub fn eq_subset<F: Field>(point: &MultiPoint<F>, n_log: usize) -> Vec<F> {
 
 #[test]
 fn test_eq() {
-    use crate::sumcheck2::evals::eval_simple_mle;
+    use crate::evals::eval_simple_mle;
     use ark_vesta::Fr;
     use rand::{thread_rng, Rng};
 
