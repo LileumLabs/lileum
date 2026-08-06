@@ -4,7 +4,7 @@ use crate::{
 };
 use ark_ff::Field;
 use std::{marker::PhantomData, ops::Add};
-use transcript::reduction2::{Message, Relation};
+use transcript::{Message, Relation};
 
 fn merge<F: Field, O: Oracle<F>>(
     structure: &Mles<O::Function, F>,

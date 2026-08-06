@@ -1,7 +1,7 @@
 use crate::{evals::Mles, MultiPoint, Var};
 use ark_ff::Field;
 use std::{fmt::Debug, marker::PhantomData, rc::Rc};
-use transcript::reduction2::{Message, Relation};
+use transcript::{Message, Relation};
 
 pub mod composite;
 pub mod core;

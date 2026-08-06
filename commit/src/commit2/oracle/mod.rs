@@ -10,7 +10,7 @@ use sumcheck::{
     },
     MultiPoint,
 };
-use transcript::reduction2::{
+use transcript::{
     GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };

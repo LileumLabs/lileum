@@ -10,7 +10,7 @@ use sumcheck::{
     oracles::{composite::CompositeOracleInstance, core::CoreOracleInstance},
     zerocheck::ZerocheckReduction,
 };
-use transcript::reduction2::{
+use transcript::{
     GuardedProof, NoError, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };

@@ -7,7 +7,7 @@ use crate::{
 };
 use ark_ff::Field;
 use std::{any::Any, fmt::Debug, marker::PhantomData, rc::Rc};
-use transcript::reduction2::{Message, Relation};
+use transcript::{Message, Relation};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PartialQueryInstance<F, SF, O>

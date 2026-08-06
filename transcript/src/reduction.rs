@@ -1,7 +1,5 @@
 use super::Relation;
-use crate::reduction2::{
-    FoldingRelation, GuardedProof, Transcript, TranscriptBuilder, VerifierTranscript,
-};
+use crate::{FoldingRelation, GuardedProof, Transcript, TranscriptBuilder, VerifierTranscript};
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::fmt::Debug;

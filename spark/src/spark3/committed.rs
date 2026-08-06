@@ -10,7 +10,7 @@ use sumcheck::{
     oracles::{composite::CompositeOracle, core::CoreOracle},
     MultiPoint,
 };
-use transcript::reduction2::Relation;
+use transcript::Relation;
 
 pub struct CommittedSparkRelation<F, C, const N: usize>(PhantomData<(F, C)>);
 

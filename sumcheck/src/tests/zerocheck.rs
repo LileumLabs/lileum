@@ -12,7 +12,7 @@ use ark_ff::{Field, PrimeField};
 use rand::{rngs::StdRng, SeedableRng};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
-use transcript::reduction2::{Prover, ProverOutput, Relation, Verifier};
+use transcript::{Prover, ProverOutput, Relation, Verifier};
 
 type Reduction1<F> = ZerocheckReduction<F, TestingOracle<F, ProductGate<()>>>;
 type Reduction2<F> = ZerocheckSumcheckReduction<F, TestingOracle<F, ProductGate<()>>>;

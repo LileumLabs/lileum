@@ -14,7 +14,7 @@ use ark_ff::Field;
 use core::panic;
 use sponge::sponge::Duplex;
 use std::{fmt::Debug, marker::PhantomData, rc::Rc};
-use transcript::reduction2::{
+use transcript::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };

@@ -2,7 +2,7 @@ use ark_ff::Field;
 use commit::commit2::CommitmentScheme;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{eq, oracles::UnexpectedVars, MultiPoint};
-use transcript::reduction2::{Message, Relation};
+use transcript::{Message, Relation};
 
 mod committed;
 pub mod flexible;

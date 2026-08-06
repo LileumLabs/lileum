@@ -5,7 +5,7 @@ use crate::{
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::{fmt::Debug, rc::Rc};
-use transcript::reduction2::{
+use transcript::{
     Argument, GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };

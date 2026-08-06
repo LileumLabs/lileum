@@ -12,7 +12,7 @@ use ark_ff::{Field, PrimeField};
 use rand::{rngs::StdRng, SeedableRng};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
-use transcript::reduction2::{FoldingRelation, Prover, ProverOutput, Relation, Verifier};
+use transcript::{FoldingRelation, Prover, ProverOutput, Relation, Verifier};
 
 type FoldingScheme<F> = SumFold<F, TestingOracle<F, ProductSum<()>>>;
 

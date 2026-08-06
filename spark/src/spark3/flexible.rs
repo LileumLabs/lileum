@@ -9,7 +9,7 @@ use ark_ff::Field;
 use commit::commit2::{CommitmentScheme, OpenInstance, OpeningRelation};
 use sponge::sponge::Duplex;
 use std::rc::Rc;
-use transcript::reduction2::{
+use transcript::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 

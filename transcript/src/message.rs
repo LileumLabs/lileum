@@ -1,4 +1,4 @@
-use crate::reduction2::NoError;
+use crate::NoError;
 use ark_ff::{BigInteger, Field, PrimeField};
 use std::{any::Any, fmt::Debug, marker::PhantomData};
 

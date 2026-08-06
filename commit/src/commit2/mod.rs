@@ -3,7 +3,7 @@ use std::{
     fmt::Debug,
     ops::{Add, Mul},
 };
-use transcript::reduction2::{Argument, Message, NoError};
+use transcript::{Argument, Message, NoError};
 
 pub mod multipoint;
 pub mod oracle;

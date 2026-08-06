@@ -15,9 +15,9 @@ use commit::commit2::{oracle::CommittedOracle, CommitmentScheme};
 use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::oracles::{composite::CompositeOracle, core::CoreOracle};
-use transcript::reduction2::{Argument, Reduction};
-use transcript::reduction2::{
-    GuardedProof, ProverOutput, Transcript, TranscriptBuilder, VerifierTranscript,
+use transcript::{
+    Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
+    VerifierTranscript,
 };
 
 #[derive(Clone, Debug)]

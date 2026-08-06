@@ -5,12 +5,9 @@ use hash_to_curve::CurveMap;
 use rand::{rngs::StdRng, SeedableRng};
 use sponge::sponge::Duplex;
 use transcript::{
-    reduction2::{
-        self,
-        message::{ForeignElement, SingleElement},
-        Message, NoError, Transcript,
-    },
+    message::{ForeignElement, SingleElement},
     utils::cycle_cast,
+    Message, NoError, Transcript,
 };
 
 mod poly_comm;
@@ -228,7 +225,7 @@ impl<G: CurveGroup> Message<Scalar<G>> for RoundMsg<G> {
     type Error = NoError;
 
     fn len(_: &()) -> usize {
-        reduction2::message::ForeignElement::<G::BaseField, Scalar<G>>::len(&()) * 4
+        ForeignElement::<G::BaseField, Scalar<G>>::len(&()) * 4
     }
 
     fn to_field_elements(&self, _: &()) -> Result<Vec<Scalar<G>>, Self::Error> {

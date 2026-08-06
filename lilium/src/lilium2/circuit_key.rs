@@ -14,7 +14,7 @@ use ccs::{
 use commit::commit2::CommitmentScheme;
 use sponge::sponge::Duplex;
 use std::marker::PhantomData;
-use transcript::reduction2::{FoldingRelation, Prover, ProverOutput, Verifier};
+use transcript::{FoldingRelation, Prover, ProverOutput, Verifier};
 
 type FoldingProver<F, D, R> = Prover<F, D, FoldingRelation<R>, R, FlcsFoldingScheme>;
 type FoldingVerifier<F, D, R> = Verifier<F, D, FoldingRelation<R>, R, FlcsFoldingScheme>;

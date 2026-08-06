@@ -10,7 +10,7 @@ use crate::{
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::marker::PhantomData;
-use transcript::reduction2::{
+use transcript::{
     FoldingRelation, FoldingScheme, GuardedProof, Message, ProverOutput, Reduction, Relation,
     Transcript, TranscriptBuilder, VerifierTranscript,
 };

@@ -13,7 +13,7 @@ use sumcheck::{
     oracles::{partial::OracleParams, Oracle},
     SumcheckError, SumcheckMessage,
 };
-use transcript::reduction2::{
+use transcript::{
     FoldingRelation, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };

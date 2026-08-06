@@ -1,6 +1,4 @@
-use crate::reduction2::{
-    message::PointRound, transcript_builder::Round, Error, GuardedProof, Message,
-};
+use crate::{message::PointRound, transcript_builder::Round, Error, GuardedProof, Message};
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::{

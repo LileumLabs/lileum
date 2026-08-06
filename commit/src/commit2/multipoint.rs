@@ -19,7 +19,7 @@ use sumcheck::{
     SumcheckReduction, SumcheckVerifierKey, Var,
 };
 use sumcheck_derive::EvalsCore;
-use transcript::reduction2::{
+use transcript::{
     GuardedProof, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };

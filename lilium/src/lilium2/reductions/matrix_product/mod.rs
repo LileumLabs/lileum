@@ -29,7 +29,7 @@ use sumcheck::{
     ProverKey as SumcheckProver, SumcheckError, SumcheckInstance, SumcheckMessage,
     SumcheckReduction, SumcheckVerifierKey,
 };
-use transcript::reduction2::{
+use transcript::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 

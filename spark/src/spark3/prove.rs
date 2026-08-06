@@ -19,7 +19,7 @@ use sumcheck::{
     },
     MultiPoint, SumcheckReduction,
 };
-use transcript::reduction2::{ProverOutput, Reduction, Transcript};
+use transcript::{ProverOutput, Reduction, Transcript};
 
 type OracleKey<F, C, SF> =
     CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;

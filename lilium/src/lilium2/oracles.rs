@@ -19,7 +19,7 @@ use sumcheck::{
     },
     MultiPoint,
 };
-use transcript::reduction2::{Message, NoError, Relation};
+use transcript::{Message, NoError, Relation};
 
 #[derive(Clone, Debug)]
 pub struct MatrixProductOracle<F, C, SF, const N: usize>

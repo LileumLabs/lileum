@@ -11,7 +11,7 @@ use ark_ff::{Field, PrimeField};
 use rand::{rngs::StdRng, SeedableRng};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
-use transcript::reduction2::{Prover, ProverOutput, Relation, Verifier};
+use transcript::{Prover, ProverOutput, Relation, Verifier};
 
 /// The concrete reduction to be used in this test, being the SumcheckReduction
 /// instanciated with the TestingOracle oracle over the ProductSum polynomial.

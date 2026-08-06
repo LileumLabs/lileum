@@ -7,7 +7,7 @@ use crate::{
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::rc::Rc;
-use transcript::reduction2::Transcript;
+use transcript::Transcript;
 
 pub struct ProverKey<F: Field, O: Oracle<F>> {
     degree: usize,

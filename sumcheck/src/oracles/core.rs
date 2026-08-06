@@ -11,7 +11,7 @@ use crate::{
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::{convert::identity, marker::PhantomData, rc::Rc};
-use transcript::reduction2::{
+use transcript::{
     Argument, GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };

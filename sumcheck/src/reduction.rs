@@ -8,7 +8,7 @@ use crate::{
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::{fmt::Debug, marker::PhantomData};
-use transcript::reduction2::{
+use transcript::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };

@@ -1,4 +1,4 @@
-use crate::reduction2::{
+use crate::{
     transcript::VerifierTranscript, transcript_builder::TranscriptDescriptor, GuardedProof,
     Message, Reduction, Relation, TranscriptBuilder,
 };

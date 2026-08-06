@@ -1,6 +1,4 @@
-use crate::reduction2::{
-    transcript_builder::TranscriptDescriptor, Message, ProverOutput, Reduction, Relation,
-};
+use crate::{transcript_builder::TranscriptDescriptor, Message, ProverOutput, Reduction, Relation};
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 

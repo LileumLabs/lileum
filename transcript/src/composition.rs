@@ -1,11 +1,11 @@
 use super::{
     transcript::VerifierTranscript, GuardedProof, ProverOutput, Reduction, Relation, Transcript,
 };
-use crate::reduction2::{Message, TranscriptBuilder};
+use crate::{Message, TranscriptBuilder};
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 
-pub use crate::reduction2::relations::CompoundRelation;
+pub use crate::relations::CompoundRelation;
 
 /// Sequential composition of reductions A and B, to and
 /// from R respectively.

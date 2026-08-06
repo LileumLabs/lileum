@@ -15,7 +15,7 @@ use sumcheck::{
     oracles::{partial::OracleParams, Oracle},
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
 };
-use transcript::reduction2::{Message, NoError, Relation};
+use transcript::{Message, NoError, Relation};
 
 #[derive(Clone, Copy, Debug)]
 pub struct LcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);

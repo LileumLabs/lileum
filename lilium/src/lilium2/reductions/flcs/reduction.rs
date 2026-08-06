@@ -28,7 +28,7 @@ use sumcheck::{
     zerocheck::ZerocheckSumcheckReduction,
     ProverKey as SumcheckProverKey, SumcheckError, SumcheckMessage, SumcheckVerifierKey,
 };
-use transcript::reduction2::{
+use transcript::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 

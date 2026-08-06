@@ -1,4 +1,4 @@
-use crate::reduction2::{message::PointRound, Message, Reduction, Relation, Transcript};
+use crate::{message::PointRound, Message, Reduction, Relation, Transcript};
 use ark_ff::Field;
 use sponge::sponge::{Duplex, SpongeBuilder};
 use std::any::{type_name, TypeId};

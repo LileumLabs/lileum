@@ -6,7 +6,7 @@ use crate::{
 };
 use ark_ff::Field;
 use std::marker::PhantomData;
-use transcript::reduction2::{Message, Relation};
+use transcript::{Message, Relation};
 
 /// The sumcheck relation over a given oracle.
 #[derive(Clone, Copy, Debug)]

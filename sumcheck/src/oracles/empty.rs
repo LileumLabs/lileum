@@ -7,7 +7,7 @@ use crate::{
 };
 use ark_ff::Field;
 use std::{marker::PhantomData, rc::Rc};
-use transcript::reduction2::{Message, NoError, Relation};
+use transcript::{Message, NoError, Relation};
 
 // #[derive(Clone, Copy, Debug)]
 // pub struct EmptyOracle<F, SF>(PhantomData<(F, SF)>);

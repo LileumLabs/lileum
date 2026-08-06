@@ -6,7 +6,7 @@ use ark_ff::Field;
 use commit::commit2::CommitmentScheme;
 use sponge::sponge::Duplex;
 use sumcheck::oracles::partial::OracleParams;
-use transcript::reduction2::{
+use transcript::{
     Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };

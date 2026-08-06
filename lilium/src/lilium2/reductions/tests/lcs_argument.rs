@@ -9,7 +9,7 @@ use crate::{
 use ark_ff::PrimeField;
 use ccs::{circuit::BuildStructure, structure::CcsStructure};
 use commit::commit2::CommitmentScheme;
-use transcript::reduction2::{Prover, ProverOutput, Relation, Verifier};
+use transcript::{Prover, ProverOutput, Relation, Verifier};
 
 fn test<F, C, const N: usize>()
 where

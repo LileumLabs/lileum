@@ -10,12 +10,10 @@ use sponge::sponge::Duplex;
 use std::ops::{Add, Mul};
 use sumcheck::eq::eq;
 use transcript::{
-    reduction2::{
-        message::{ForeignElement, SingleElement},
-        Argument, GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
-        TranscriptBuilder, VerifierTranscript,
-    },
+    message::{ForeignElement, SingleElement},
     utils::cycle_cast,
+    Argument, GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
+    TranscriptBuilder, VerifierTranscript,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
