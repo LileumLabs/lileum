@@ -82,7 +82,7 @@ where
 {
     let mut rng = StdRng::seed_from_u64(0);
 
-    let addresses: Vec<[u8; 2]> = repeat(()).map(|_| rng.gen()).take(1 << VARS).collect();
+    let addresses: Vec<[u8; 2]> = repeat(()).map(|_| rng.r#gen()).take(1 << VARS).collect();
     let values: Vec<F> = repeat(())
         .map(|_| F::rand(&mut rng))
         .take(1 << VARS)
@@ -201,7 +201,7 @@ where
     let mut rng = StdRng::seed_from_u64(0);
 
     let addresses: Vec<u64> = repeat(())
-        .map(|_| rng.gen::<u16>() as u64)
+        .map(|_| rng.r#gen::<u16>() as u64)
         .take(1 << VARS)
         .collect();
     let values: Vec<F> = repeat(())

@@ -131,7 +131,7 @@ fn test_eq() {
 
     // let point = MultiPoint::r
     let mut rng = thread_rng();
-    let mut r_point = || rng.gen::<Fr>();
+    let mut r_point = || rng.r#gen::<Fr>();
     let vars = 4;
     let point = vec![r_point(); vars];
     let point = MultiPoint::new(point);

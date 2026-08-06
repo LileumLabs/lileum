@@ -113,7 +113,7 @@ mod tests {
         let mut rng = thread_rng();
         for _ in 0..16 {
             let poly = DensePolynomial::<Fr>::rand(degree as usize, &mut rng);
-            let bytes: [u8; 30] = rng.gen();
+            let bytes: [u8; 30] = rng.r#gen();
             let point = Fr::from_random_bytes(&bytes).unwrap();
             let true_eval = poly.evaluate(&point);
 
