@@ -7,7 +7,7 @@ use crate::{
 };
 use ark_ff::Field;
 use ccs::matrix::Matrix;
-use commit::commit2::{
+use commit::{
     self,
     oracle::{
         CommittedNature, CommittedOracle, CommittedOracleInstance,
@@ -63,14 +63,14 @@ where
     C: CommitmentScheme<F>,
     SF: SumcheckFunction<F>,
 {
-    committed_oracle1: commit2::oracle::ProverKey<F, SF, C>,
+    committed_oracle1: commit::oracle::ProverKey<F, SF, C>,
     sumcheck_key: SumcheckProver<F, Oracle<F, Func<N>, C, N>>,
     vars: usize,
     matrices: [Rc<Matrix>; N],
     // Filter to select the vector MLE.
     vector: SF::Mles<bool>,
     composite_key: CompositeKey<F, C, N, Func<N>>,
-    committed_oracle2: commit2::oracle::ProverKey<F, MatrixSumEvals<(), N>, C>,
+    committed_oracle2: commit::oracle::ProverKey<F, MatrixSumEvals<(), N>, C>,
 }
 
 #[derive(Clone, Debug)]

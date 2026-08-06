@@ -1,7 +1,7 @@
 use ark_ff::{Field, UniformRand};
 use ark_vesta::{Fr, Projective, VestaConfig};
 use ccs::circuit::BuildStructure;
-use commit::commit2::CommitmentScheme;
+use commit::CommitmentScheme;
 use criterion::{
     criterion_group, criterion_main, measurement::WallTime, BatchSize, BenchmarkGroup, BenchmarkId,
     Criterion, SamplingMode,

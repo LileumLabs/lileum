@@ -8,7 +8,7 @@ use crate::{
 };
 use ark_ff::Field;
 use ccs::matrix::Matrix;
-use commit::commit2::{
+use commit::{
     multipoint::{self, MultipointBatching},
     CommitmentScheme, OpenInstance, OpeningRelation,
 };

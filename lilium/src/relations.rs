@@ -9,7 +9,7 @@ use ccs::{
     structure::{CcsStructure, Exp},
     witness::LinearCombinations,
 };
-use commit::commit2::CommitmentScheme;
+use commit::CommitmentScheme;
 use std::marker::PhantomData;
 use sumcheck::{
     oracles::{partial::OracleParams, Oracle},

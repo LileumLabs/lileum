@@ -28,7 +28,7 @@ pub use ccs::{
 };
 pub use circuit_key::FoldingProof;
 use circuit_key::Instance;
-pub use commit::commit2::CommitmentScheme;
+pub use commit::CommitmentScheme;
 
 const IO: usize = 5;
 const S: usize = 10;

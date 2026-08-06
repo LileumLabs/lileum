@@ -11,7 +11,7 @@ use ccs::{
     structure::CcsStructure,
     witness::Witness,
 };
-use commit::commit2::CommitmentScheme;
+use commit::CommitmentScheme;
 use sponge::sponge::Duplex;
 use std::marker::PhantomData;
 use transcript::{FoldingRelation, Prover, ProverOutput, Verifier};

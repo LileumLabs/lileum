@@ -5,7 +5,7 @@ use crate::{
     SparkInstance, StaticSparkRelation, StaticSparkStructure,
 };
 use ark_ff::Field;
-use commit::commit2::{
+use commit::{
     oracle::{CommittedOracle, CommittedOracleInstance},
     CommitmentScheme, OpenInstance, OpeningRelation,
 };

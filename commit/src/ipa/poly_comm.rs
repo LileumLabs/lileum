@@ -1,9 +1,9 @@
 use crate::{
-    commit2::{CommitmentScheme, CommitmentSchemeCore, OpenInstance, OpeningRelation},
     ipa::{
         vector_utils::{challenge_combinations, compute_inner_product},
         IpaScheme, Proof, RoundMsg, Scalar,
     },
+    {CommitmentScheme, CommitmentSchemeCore, OpenInstance, OpeningRelation},
 };
 use ark_ec::{AffineRepr, CurveGroup, VariableBaseMSM};
 use ark_ff::PrimeField;

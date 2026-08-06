@@ -6,7 +6,7 @@ use crate::{
     StaticSparkStructure,
 };
 use ark_ff::Field;
-use commit::commit2::{CommitmentScheme, OpenInstance, OpeningRelation};
+use commit::{CommitmentScheme, OpenInstance, OpeningRelation};
 use sponge::sponge::Duplex;
 use std::rc::Rc;
 use transcript::{

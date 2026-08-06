@@ -1,6 +1,6 @@
 use crate::SparseMle;
 use ark_ff::Field;
-use commit::commit2::oracle::CommittedNature;
+use commit::oracle::CommittedNature;
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck::{
     evals::{Evals, EvalsCore},

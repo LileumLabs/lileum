@@ -6,7 +6,7 @@ use crate::{
 };
 use ark_ff::PrimeField;
 use ccs::{circuit::BuildStructure, structure::CcsStructure};
-use commit::commit2::CommitmentScheme;
+use commit::CommitmentScheme;
 use transcript::{Prover, ProverOutput, Relation, Verifier};
 
 fn test<F, C, const N: usize>()

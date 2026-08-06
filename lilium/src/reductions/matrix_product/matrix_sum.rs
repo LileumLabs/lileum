@@ -1,7 +1,7 @@
 use crate::reductions::matrix_product::function::MatrixSumEvals;
 use ark_ff::Field;
 use ccs::matrix::Matrix;
-use commit::commit2::CommitmentScheme;
+use commit::CommitmentScheme;
 use spark::{FlexibleSparkRelation, SparkInstance};
 use sponge::sponge::Duplex;
 use std::{marker::PhantomData, rc::Rc};

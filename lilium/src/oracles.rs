@@ -1,6 +1,6 @@
 use ark_ff::Field;
 use ccs::matrix::Matrix;
-use commit::commit2::{
+use commit::{
     oracle::{
         CommittedNature, CommittedOracle, CommittedOracleInstance, CommittedQueryRelation,
         VerifierKey as CommittedVerifierKey,

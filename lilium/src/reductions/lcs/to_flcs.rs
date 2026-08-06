@@ -4,7 +4,7 @@ use crate::{
     relations::{FlcsInstance, FlcsRelation, LcsInstance, LcsRelation, LcsStructure},
 };
 use ark_ff::Field;
-use commit::commit2::CommitmentScheme;
+use commit::CommitmentScheme;
 use sponge::sponge::Duplex;
 use sumcheck::{
     oracles::{composite::CompositeOracleInstance, core::CoreOracleInstance},

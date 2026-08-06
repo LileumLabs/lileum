@@ -1,4 +1,4 @@
-use crate::commit2::{
+use crate::{
     oracle::{self, CommittedNature, CommittedOracle, CommittedOracleInstance},
     CommitmentScheme, OpenInstance, OpeningRelation,
 };

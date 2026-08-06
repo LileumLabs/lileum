@@ -1,7 +1,7 @@
 use crate::oracles::MatrixNature;
 use ark_ff::Field;
 use ccs::{matrix::Matrix, structure::Exp};
-use commit::commit2::oracle::CommittedNature;
+use commit::oracle::CommittedNature;
 use std::{fmt::Debug, rc::Rc, vec::IntoIter};
 use sumcheck::{
     eq::eq_subset,

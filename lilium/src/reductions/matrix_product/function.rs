@@ -1,7 +1,7 @@
 use crate::reductions::matrix_product::matrix_sum::{MatrixSumNature, MatrixSumOracle};
 use ark_ff::Field;
 use ccs::matrix::Matrix;
-use commit::commit2::oracle::{CommittedNature, CommittedOracle};
+use commit::oracle::{CommittedNature, CommittedOracle};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck::{
     eq::eq,

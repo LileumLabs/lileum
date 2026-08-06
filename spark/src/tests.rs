@@ -3,7 +3,7 @@ use crate::{
     SparseMle, StaticSparkRelation, StaticSparkStructure,
 };
 use ark_ff::PrimeField;
-use commit::commit2::{CommitmentScheme, OpeningRelation};
+use commit::{CommitmentScheme, OpeningRelation};
 use hash_to_curve::svdw::SvdwMap;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use sponge::{poseidon2::PoseidonDefault, sponge::Sponge};

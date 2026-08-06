@@ -5,17 +5,16 @@ mod allocator;
 use allocator::{bench_memory, PeakMemory, PeakTrackingAllocator};
 use ark_ff::{Field, UniformRand};
 use ark_vesta::{Fr, Projective, VestaConfig};
+use ccs::circuit::BuildStructure;
+use commit::CommitmentScheme;
 use criterion::{
     criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion, SamplingMode,
 };
-use rand::{rngs::StdRng, Rng, SeedableRng};
-use std::time::Duration;
-
-use ccs::circuit::BuildStructure;
-use commit::commit2::CommitmentScheme;
 use hash_to_curve::svdw::SvdwMap;
 use lilium::{circuit_key::CircuitKey, testing::utils::HashChain};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use sponge::{self, sponge::Duplex};
+use std::time::Duration;
 
 type Scheme = commit::ipa::IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
 type Permutation = sponge::poseidon2::PoseidonDefault<Fr>;

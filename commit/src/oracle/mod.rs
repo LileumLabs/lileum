@@ -1,4 +1,4 @@
-use crate::commit2::{CommitmentScheme, OpenInstance, OpeningRelation};
+use crate::{CommitmentScheme, OpenInstance, OpeningRelation};
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::{convert::identity, marker::PhantomData, rc::Rc};

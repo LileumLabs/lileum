@@ -5,7 +5,7 @@ use crate::{
     SparseMle,
 };
 use ark_ff::{batch_inversion, Field};
-use commit::commit2::{
+use commit::{
     oracle::{self, CommittedOracle},
     CommitmentScheme, OpeningRelation,
 };

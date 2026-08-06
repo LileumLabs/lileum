@@ -1,6 +1,6 @@
 use crate::{relations::LcsInstance, testing::utils::HashChain};
 use ark_ff::Field;
-use commit::commit2::CommitmentScheme;
+use commit::CommitmentScheme;
 use sponge::{poseidon2::PoseidonDefault, sponge::Sponge};
 
 mod folding;

@@ -3,7 +3,7 @@ use crate::{
     StaticSparkStructure, BYTE,
 };
 use ark_ff::{batch_inversion, Field};
-use commit::commit2::{oracle::CommittedOracle, CommitmentScheme};
+use commit::{oracle::CommittedOracle, CommitmentScheme};
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
     eq,

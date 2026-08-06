@@ -1,4 +1,4 @@
-use crate::commit2::CommitmentSchemeCore;
+use crate::CommitmentSchemeCore;
 use ark_ff::Field;
 use std::{fmt::Debug, marker::PhantomData};
 use sumcheck::{evals::eval_simple_mle, oracles::UnexpectedVars, MultiPoint};

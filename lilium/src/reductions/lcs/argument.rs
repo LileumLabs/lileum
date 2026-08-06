@@ -11,7 +11,7 @@ use crate::{
 };
 use ark_ff::Field;
 use ccs::structure::CcsStructure;
-use commit::commit2::{oracle::CommittedOracle, CommitmentScheme};
+use commit::{oracle::CommittedOracle, CommitmentScheme};
 use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::oracles::{composite::CompositeOracle, core::CoreOracle};

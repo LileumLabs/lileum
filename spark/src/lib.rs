@@ -1,5 +1,5 @@
 use ark_ff::Field;
-use commit::commit2::CommitmentScheme;
+use commit::CommitmentScheme;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{eq, oracles::UnexpectedVars, MultiPoint};
 use transcript::{Message, Relation};
