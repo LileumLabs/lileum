@@ -218,11 +218,11 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
             let constraint: Constraint<WitnessIndex, MAX_IO> = constraint;
             let Constraint { io, len, selector } = constraint;
 
-            if let Some(constant_selector) = constant_selector {
-                if constant_selector == selector {
-                    let constant = reverse_constant_table.get(&io[0].0).unwrap();
-                    constants.insert(i, *constant);
-                }
+            if let Some(constant_selector) = constant_selector
+                && constant_selector == selector
+            {
+                let constant = reverse_constant_table.get(&io[0].0).unwrap();
+                constants.insert(i, *constant);
             }
             for i in 0..len {
                 io_matrices[i].push_row_single_value(io[i].0);
