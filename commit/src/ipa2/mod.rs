@@ -1,4 +1,4 @@
-use crate::ipa::vector_utils::{fold_basis, fold_vec};
+use crate::ipa2::vector_utils::{fold_basis, fold_vec};
 use ark_ec::{AffineRepr, CurveGroup, Group, VariableBaseMSM};
 use ark_ff::Field;
 use hash_to_curve::CurveMap;
@@ -11,6 +11,7 @@ use transcript::{
 };
 
 mod poly_comm;
+mod vector_utils;
 
 pub use poly_comm::{IpaCommitment, IpaCommitmentScheme, IpaError};
 
