@@ -59,7 +59,7 @@ use ark_vesta::Fr;
 // Then a generic commitment scheme that supports our field.
 // In this case, IpaCommitmentScheme works for 256 bits or bigger fields
 // which are also the scalar field of some elliptic curve.
-use commit::ipa2::IpaCommitmentScheme;
+use commit::ipa::IpaCommitmentScheme;
 // Fr is the scalar field of the Vesta cuerve, thus import the types
 // representing curve points and the curve itself.
 use ark_vesta::{Projective, VestaConfig};

@@ -11,7 +11,7 @@ use lilium::{lilium2::circuit_key::CircuitKey, testing::utils::HashChain};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use sponge::{self, sponge::Duplex};
 
-type Scheme = commit::ipa2::IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
+type Scheme = commit::ipa::IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
 type Permutation = sponge::poseidon2::PoseidonDefault<Fr>;
 type Sponge = sponge::sponge::Sponge<Fr, Permutation, 1, 2, 3>;
 

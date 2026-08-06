@@ -1,4 +1,4 @@
 #[cfg(feature = "ipa")]
-pub mod ipa2;
+pub mod ipa;
 
 pub mod commit2;

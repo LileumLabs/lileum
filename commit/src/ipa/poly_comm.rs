@@ -1,6 +1,6 @@
 use crate::{
     commit2::{CommitmentScheme, CommitmentSchemeCore, OpenInstance, OpeningRelation},
-    ipa2::{
+    ipa::{
         vector_utils::{challenge_combinations, compute_inner_product},
         IpaScheme, Proof, RoundMsg, Scalar,
     },

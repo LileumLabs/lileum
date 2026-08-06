@@ -70,7 +70,7 @@ where
 #[test]
 fn flcs_fold() {
     use ark_vesta::{Fr, Projective, VestaConfig};
-    use commit::ipa2::IpaCommitmentScheme;
+    use commit::ipa::IpaCommitmentScheme;
     use hash_to_curve::svdw::SvdwMap;
 
     type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;

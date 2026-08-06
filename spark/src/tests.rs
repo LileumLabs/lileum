@@ -69,7 +69,7 @@ where
 #[test]
 fn single_dimension() {
     use ark_vesta::{Fr, Projective, VestaConfig};
-    use commit::ipa2::IpaCommitmentScheme;
+    use commit::ipa::IpaCommitmentScheme;
     // pub type FrScheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
     type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
     single_dimension_test::<Fr, Scheme>();
@@ -124,7 +124,7 @@ where
 #[test]
 fn two_dimensions() {
     use ark_vesta::{Fr, Projective, VestaConfig};
-    use commit::ipa2::IpaCommitmentScheme;
+    use commit::ipa::IpaCommitmentScheme;
 
     type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
     two_dimensions_test::<Fr, Scheme>();
@@ -187,7 +187,7 @@ where
 #[test]
 fn single_dimension_flexible() {
     use ark_vesta::{Fr, Projective, VestaConfig};
-    use commit::ipa2::IpaCommitmentScheme;
+    use commit::ipa::IpaCommitmentScheme;
 
     type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
     single_dimension_flex_test::<Fr, Scheme>();
@@ -247,7 +247,7 @@ where
 #[test]
 fn two_dimensions_flexible() {
     use ark_vesta::{Fr, Projective, VestaConfig};
-    use commit::ipa2::IpaCommitmentScheme;
+    use commit::ipa::IpaCommitmentScheme;
 
     type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
     two_dimensions_flex_test::<Fr, Scheme>();
@@ -306,7 +306,7 @@ where
 #[test]
 fn flexible_edge_cases() {
     use ark_vesta::{Fr, Projective, VestaConfig};
-    use commit::ipa2::IpaCommitmentScheme;
+    use commit::ipa::IpaCommitmentScheme;
 
     type Scheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
 

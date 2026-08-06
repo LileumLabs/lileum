@@ -137,7 +137,7 @@ pub mod field_and_pcs {
     pub use ark_vesta::Fr;
     use ark_vesta::{Projective, VestaConfig};
     // use commit::ipa::IpaCommitmentScheme;
-    use commit::ipa2::IpaCommitmentScheme;
+    use commit::ipa::IpaCommitmentScheme;
     use hash_to_curve::svdw::SvdwMap;
 
     /// Commitment scheme for [Fr].
