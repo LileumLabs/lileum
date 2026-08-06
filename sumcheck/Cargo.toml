@@ -1,7 +1,7 @@
 [package]
 name = "lilium-sumcheck"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "generic Sumcheck implementation for Lilium"
 repository = "https://github.com/fabrizio-m/lilium"
 license = "MIT OR Apache-2.0"
