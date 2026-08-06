@@ -1,11 +1,10 @@
-pub mod circuits;
-pub mod simple_cs;
-pub mod testing;
-
 pub mod circuit_key;
+pub mod circuits;
 mod oracles;
 pub mod reductions;
 pub mod relations;
+pub mod simple_cs;
+pub mod testing;
 
 /*
 #[derive(Debug, Clone)]
