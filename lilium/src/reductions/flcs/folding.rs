@@ -1,4 +1,4 @@
-use crate::lilium2::{
+use crate::{
     oracles::FlcsOracle,
     reductions::flcs::{compute_sumcheck_witness, FlcsEvals},
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},

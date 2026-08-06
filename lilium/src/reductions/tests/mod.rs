@@ -1,4 +1,4 @@
-use crate::{lilium2::relations::LcsInstance, testing::utils::HashChain};
+use crate::{relations::LcsInstance, testing::utils::HashChain};
 use ark_ff::Field;
 use commit::commit2::CommitmentScheme;
 use sponge::{poseidon2::PoseidonDefault, sponge::Sponge};

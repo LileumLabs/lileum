@@ -9,14 +9,14 @@
 //! For more customization, [circuit_key::CircuitKey] should be used.
 
 // use crate::circuit_key;
-use crate::lilium2::circuit_key;
+use crate::circuit_key;
 pub use crate::{
     circuits,
     // flcs::FoldableLcsInstance,
     // folding::InstancePair,
     // instances::lcs::{verifying::LcsProof, LcsInstance},
-    lilium2::relations::FlcsInstance,
-    lilium2::relations::LcsInstance,
+    relations::FlcsInstance,
+    relations::LcsInstance,
 };
 pub use ark_ff::{Field, PrimeField};
 use ccs::circuit::{BuildStructure, CircuitProfile};

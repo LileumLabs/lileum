@@ -1,4 +1,4 @@
-use crate::lilium2::reductions::matrix_product::function::MatrixSumEvals;
+use crate::reductions::matrix_product::function::MatrixSumEvals;
 use ark_ff::Field;
 use ccs::matrix::Matrix;
 use commit::commit2::CommitmentScheme;

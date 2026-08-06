@@ -1,7 +1,11 @@
 pub mod circuits;
-pub mod lilium2;
 pub mod simple_cs;
 pub mod testing;
+
+pub mod circuit_key;
+mod oracles;
+pub mod reductions;
+pub mod relations;
 
 /*
 #[derive(Debug, Clone)]

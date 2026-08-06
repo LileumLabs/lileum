@@ -1,4 +1,4 @@
-use crate::lilium2::{
+use crate::{
     oracles::{MatrixNature, MatrixOracleQuery, MatrixProductInstance, MatrixProductOracle},
     reductions::matrix_product::{
         function::{MatrixSumEvals, Oracle},

@@ -14,7 +14,7 @@ use std::time::Duration;
 use ccs::circuit::BuildStructure;
 use commit::commit2::CommitmentScheme;
 use hash_to_curve::svdw::SvdwMap;
-use lilium::{lilium2::circuit_key::CircuitKey, testing::utils::HashChain};
+use lilium::{circuit_key::CircuitKey, testing::utils::HashChain};
 use sponge::{self, sponge::Duplex};
 
 type Scheme = commit::ipa::IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;

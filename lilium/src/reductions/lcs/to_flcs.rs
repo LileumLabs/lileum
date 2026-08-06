@@ -1,4 +1,4 @@
-use crate::lilium2::{
+use crate::{
     oracles::{FlcsOracle, MatrixProductInstance},
     reductions::flcs::FlcsEvals,
     relations::{FlcsInstance, FlcsRelation, LcsInstance, LcsRelation, LcsStructure},

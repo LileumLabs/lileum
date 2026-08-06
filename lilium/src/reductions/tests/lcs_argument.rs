@@ -1,9 +1,7 @@
 use super::{commit_witness, Poseidon};
 use crate::{
-    lilium2::{
-        reductions::LcsArgument,
-        relations::{LcsRelation, LcsStructure},
-    },
+    reductions::LcsArgument,
+    relations::{LcsRelation, LcsStructure},
     testing::utils::HashChain,
 };
 use ark_ff::PrimeField;

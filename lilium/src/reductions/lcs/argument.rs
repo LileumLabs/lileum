@@ -1,4 +1,4 @@
-use crate::lilium2::{
+use crate::{
     oracles::MatrixProductOracle,
     reductions::{
         flcs::{

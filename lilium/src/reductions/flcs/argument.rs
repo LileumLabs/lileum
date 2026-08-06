@@ -1,4 +1,4 @@
-use crate::lilium2::{
+use crate::{
     reductions::{flcs::reduction, FlcsReduction},
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };

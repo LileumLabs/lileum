@@ -1,4 +1,4 @@
-use crate::lilium2::{
+use crate::{
     reductions::{
         flcs::{self, folding},
         FlcsArgument, FlcsFoldingScheme, ToFlcs,
