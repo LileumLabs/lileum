@@ -12,7 +12,7 @@ use commit::commit2::{
     multipoint::{self, MultipointBatching},
     CommitmentScheme, OpenInstance, OpeningRelation,
 };
-use spark::spark3::{
+use spark::{
     flexible::{self, FlexibleSparkError},
     FlexibleSpark, FlexibleSparkStructure,
 };

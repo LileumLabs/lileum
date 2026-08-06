@@ -1,4 +1,4 @@
-use crate::spark3::{
+use crate::{
     sumcheck_argument::SparkEvals, SparkInstance, SparseMle, StaticSparkRelation,
     StaticSparkStructure, BYTE,
 };

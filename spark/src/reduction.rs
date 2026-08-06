@@ -1,4 +1,4 @@
-use crate::spark3::{
+use crate::{
     committed::{MinorStructure, SparkOracle},
     prove::ProverKey,
     sumcheck_argument::{SparkChallenges, SparkEvals},

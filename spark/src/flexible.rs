@@ -1,4 +1,4 @@
-use crate::spark3::{
+use crate::{
     prove,
     reduction::{self, SparkError},
     sumcheck_argument::SparkEvals,

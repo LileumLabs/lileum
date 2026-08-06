@@ -1,4 +1,4 @@
-use crate::spark3::{
+use crate::{
     FlexibleSpark, FlexibleSparkRelation, FlexibleSparkStructure, SparkInstance, SparkReduction,
     SparseMle, StaticSparkRelation, StaticSparkStructure,
 };

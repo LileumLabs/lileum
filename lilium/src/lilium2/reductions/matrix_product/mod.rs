@@ -15,7 +15,7 @@ use commit::commit2::{
     },
     CommitmentScheme, OpenInstance, OpeningRelation,
 };
-use spark::spark3::{FlexibleSparkRelation, SparkInstance};
+use spark::{FlexibleSparkRelation, SparkInstance};
 use sponge::sponge::Duplex;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
