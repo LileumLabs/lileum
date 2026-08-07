@@ -1,5 +1,5 @@
 [package]
-name = "lilium-transcript"
+name = "lilium-reduction"
 version = "0.1.0"
 edition = "2024"
 description = "Transcript implementation for Lilium"
