@@ -2,17 +2,17 @@
 
 mod allocator;
 
-use allocator::{bench_memory, PeakMemory, PeakTrackingAllocator};
+use allocator::{PeakMemory, PeakTrackingAllocator, bench_memory};
 use ark_ff::{Field, UniformRand};
 use ark_vesta::{Fr, Projective, VestaConfig};
 use ccs::circuit::BuildStructure;
 use commit::CommitmentScheme;
 use criterion::{
-    criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion, SamplingMode,
+    BenchmarkGroup, BenchmarkId, Criterion, SamplingMode, criterion_group, criterion_main,
 };
 use hash_to_curve::svdw::SvdwMap;
-use lilium::{circuit_key::CircuitKey, testing::utils::HashChain};
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use lileum::{circuit_key::CircuitKey, testing::utils::HashChain};
+use rand::{Rng, SeedableRng, rngs::StdRng};
 use sponge::{self, sponge::Duplex};
 use std::time::Duration;
 

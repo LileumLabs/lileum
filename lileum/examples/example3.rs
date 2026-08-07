@@ -1,5 +1,5 @@
 use ark_ff::BigInteger;
-use lilium::{circuits::Uint, simple_cs::*};
+use lileum::{circuits::Uint, simple_cs::*};
 
 // This circuit allows proving that some secret number is greater
 // than the value of the single public input provided.

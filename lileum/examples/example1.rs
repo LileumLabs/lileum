@@ -1,4 +1,4 @@
-use lilium::simple_cs::*;
+use lileum::simple_cs::*;
 
 // A circuit is a trait implementation, to define a circuit we
 // first define some type, an empty struct is enough.

@@ -1,5 +1,5 @@
 [package]
-name = "lilium"
+name = "lileum"
 version = "0.1.0"
 edition = "2024"
 description = "The Lilium proof-system"

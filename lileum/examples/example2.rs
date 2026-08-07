@@ -1,5 +1,5 @@
 use ark_ff::{One, Zero};
-use lilium::simple_cs::*;
+use lileum::simple_cs::*;
 
 // Given:
 // f(0) = 0
