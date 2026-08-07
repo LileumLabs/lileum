@@ -4,7 +4,7 @@ members = [
     "automata",
     "ccs",
     "commit",
-    "lilium", 
+    "lileum", 
     "reduction",
     "spark",
     "sponge",
