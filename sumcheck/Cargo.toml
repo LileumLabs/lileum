@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 ark-ff = "0.4"
-transcript = { workspace = true } 
+reduction = { workspace = true } 
 sponge = { workspace = true } 
 automata = { workspace = true } 
 sumcheck-derive = { workspace = true }

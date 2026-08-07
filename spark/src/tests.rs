@@ -5,11 +5,11 @@ use crate::{
 use ark_ff::PrimeField;
 use commit::{CommitmentScheme, OpeningRelation};
 use hash_to_curve::svdw::SvdwMap;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{Rng, SeedableRng, rngs::StdRng};
+use reduction::{Prover, ProverOutput, Relation, Verifier};
 use sponge::{poseidon2::PoseidonDefault, sponge::Sponge};
 use std::{iter::repeat, rc::Rc};
 use sumcheck::MultiPoint;
-use transcript::{Prover, ProverOutput, Relation, Verifier};
 
 type Poseidon<F> = Sponge<F, PoseidonDefault<F>, 2, 1, 3>;
 

@@ -1,17 +1,16 @@
 use crate::{
-    prove,
+    FlexibleSparkRelation, FlexibleSparkStructure, SparkInstance, SparkReduction, SparseMle,
+    StaticSparkStructure, prove,
     reduction::{self, SparkError},
     sumcheck_argument::SparkEvals,
-    FlexibleSparkRelation, FlexibleSparkStructure, SparkInstance, SparkReduction, SparseMle,
-    StaticSparkStructure,
+};
+use ::reduction::{
+    GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 use ark_ff::Field;
 use commit::{CommitmentScheme, OpenInstance, OpeningRelation};
 use sponge::sponge::Duplex;
 use std::rc::Rc;
-use transcript::{
-    GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
-};
 
 /// Wrapper which dynamically chooses N as required, currently implemented up to
 /// 64 bits/8 segments.

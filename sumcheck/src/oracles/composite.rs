@@ -1,23 +1,23 @@
 use crate::{
+    MultiPoint, OracleQueryInstance,
     evals::{EvalsCore, EvalsExt},
     folding::{FieldFolder, Foldable},
     oracles::{
+        EvalLocation, Oracle, QueryRelation, SumcheckFunction,
         partial::{
             Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance,
             PartialQueryRelation,
         },
-        EvalLocation, Oracle, QueryRelation, SumcheckFunction,
     },
-    MultiPoint, OracleQueryInstance,
 };
 use ark_ff::Field;
 use core::panic;
-use sponge::sponge::Duplex;
-use std::{fmt::Debug, marker::PhantomData, rc::Rc};
-use transcript::{
+use reduction::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };
+use sponge::sponge::Duplex;
+use std::{fmt::Debug, marker::PhantomData, rc::Rc};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Either<A, B> {

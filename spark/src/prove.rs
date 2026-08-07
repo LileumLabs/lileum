@@ -1,25 +1,24 @@
 use crate::{
-    committed::{MinorStructure, SparkOracle},
-    reduction::{self, sumcheck_instance, Proof},
-    sumcheck_argument::{SparkChallenges, SparkEvals},
     SparseMle,
+    committed::{MinorStructure, SparkOracle},
+    reduction::{self, Proof, sumcheck_instance},
+    sumcheck_argument::{SparkChallenges, SparkEvals},
 };
-use ark_ff::{batch_inversion, Field};
+use ::reduction::{ProverOutput, Reduction, Transcript};
+use ark_ff::{Field, batch_inversion};
 use commit::{
-    oracle::{self, CommittedOracle},
     CommitmentScheme, OpeningRelation,
+    oracle::{self, CommittedOracle},
 };
 use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::{
-    self, eq,
+    self, MultiPoint, SumcheckReduction, eq,
     oracles::{
         composite::{CompositeOracle, CompositeReductionKey},
         core::CoreOracle,
     },
-    MultiPoint, SumcheckReduction,
 };
-use transcript::{ProverOutput, Reduction, Transcript};
 
 type OracleKey<F, C, SF> =
     CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;

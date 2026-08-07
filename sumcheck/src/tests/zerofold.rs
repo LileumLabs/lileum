@@ -1,19 +1,19 @@
 use super::Poseidon;
 use crate::{
+    Var,
     evals::{Evals, EvalsCore},
     folding::ZeroFold,
     oracles::{
-        testing::{TestingNature, TestingOracle},
         SumcheckFunction,
+        testing::{TestingNature, TestingOracle},
     },
     zerocheck::{ZeroSumcheck, Zerocheck, ZerocheckReduction},
-    Var,
 };
 use ark_ff::{Field, PrimeField};
-use rand::{rngs::StdRng, SeedableRng};
+use rand::{SeedableRng, rngs::StdRng};
+use reduction::{FoldingRelation, Prover, ProverOutput, Relation, Verifier};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
-use transcript::{FoldingRelation, Prover, ProverOutput, Relation, Verifier};
 
 // As the folding scheme is [ZeroSumcheck;2] -> ZeroSumcheck, but we start
 // with [Zerocheck;2], we need first to reduce [Zerocheck;2] -> [ZeroSumcheck;2].

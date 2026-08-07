@@ -1,7 +1,7 @@
 use crate::{
     oracles::{FlcsOracle, MatrixProductOracle},
     reductions::{
-        flcs::{compute_sumcheck_witness, FlcsEvals},
+        flcs::{FlcsEvals, compute_sumcheck_witness},
         matrix_product::{self, MatrixProductReduction},
     },
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
@@ -9,16 +9,20 @@ use crate::{
 use ark_ff::Field;
 use ccs::matrix::Matrix;
 use commit::{
-    multipoint::{self, MultipointBatching},
     CommitmentScheme, OpenInstance, OpeningRelation,
+    multipoint::{self, MultipointBatching},
+};
+use reduction::{
+    GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 use spark::{
-    flexible::{self, FlexibleSparkError},
     FlexibleSpark, FlexibleSparkStructure,
+    flexible::{self, FlexibleSparkError},
 };
 use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::{
+    ProverKey as SumcheckProverKey, SumcheckError, SumcheckMessage, SumcheckVerifierKey,
     oracles::{
         self,
         composite::{CompositeOracle, CompositeReductionKey, ProverEvals},
@@ -26,10 +30,6 @@ use sumcheck::{
         partial::OracleParams,
     },
     zerocheck::ZerocheckSumcheckReduction,
-    ProverKey as SumcheckProverKey, SumcheckError, SumcheckMessage, SumcheckVerifierKey,
-};
-use transcript::{
-    GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 
 /// FLCS -> CommitOpening

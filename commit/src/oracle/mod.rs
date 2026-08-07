@@ -1,18 +1,18 @@
 use crate::{CommitmentScheme, OpenInstance, OpeningRelation};
 use ark_ff::Field;
+use reduction::{
+    GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
+    TranscriptBuilder, VerifierTranscript,
+};
 use sponge::sponge::Duplex;
 use std::{convert::identity, marker::PhantomData, rc::Rc};
 use sumcheck::{
+    MultiPoint,
     evals::{EvalsCore, EvalsExt},
     oracles::{
-        partial::{merge, Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
         EvalLocation, SumcheckFunction,
+        partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance, merge},
     },
-    MultiPoint,
-};
-use transcript::{
-    GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
-    TranscriptBuilder, VerifierTranscript,
 };
 
 /// An oracle based on a commitment scheme.

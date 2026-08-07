@@ -1,28 +1,28 @@
 use crate::{
-    oracle::{self, CommittedNature, CommittedOracle, CommittedOracleInstance},
     CommitmentScheme, OpenInstance, OpeningRelation,
+    oracle::{self, CommittedNature, CommittedOracle, CommittedOracleInstance},
 };
 use ark_ff::Field;
+use reduction::{
+    GuardedProof, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
+    VerifierTranscript,
+};
 use sponge::sponge::Duplex;
 use std::{fmt::Debug, marker::PhantomData, rc::Rc, vec::IntoIter};
 use sumcheck::{
+    MultiPoint, ProverKey as SumcheckProverKey, SumcheckError, SumcheckInstance, SumcheckMessage,
+    SumcheckReduction, SumcheckVerifierKey, Var,
     eq::eq,
     evals::{Evals, EvalsCore},
     oracles::{
+        SumcheckFunction,
         composite::{
             CompositeOracle, CompositeOracleInstance, CompositeReductionKey, Either, ProverEvals,
         },
         core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
-        SumcheckFunction,
     },
-    MultiPoint, ProverKey as SumcheckProverKey, SumcheckError, SumcheckInstance, SumcheckMessage,
-    SumcheckReduction, SumcheckVerifierKey, Var,
 };
 use sumcheck_derive::EvalsCore;
-use transcript::{
-    GuardedProof, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
-    VerifierTranscript,
-};
 
 pub struct MultipointBatching<F, C, const N: usize>(PhantomData<(F, C)>);
 

@@ -1,17 +1,18 @@
 use crate::{
+    MultiPoint, OracleQueryInstance, SumcheckInstance, SumcheckMessage, SumcheckRelation,
     barycentric_eval::BarycentricWeights,
     degree,
     evals::Mles,
     oracles::{Oracle, QueryRelation},
-    prove, MultiPoint, OracleQueryInstance, SumcheckInstance, SumcheckMessage, SumcheckRelation,
+    prove,
 };
 use ark_ff::Field;
-use sponge::sponge::Duplex;
-use std::{fmt::Debug, marker::PhantomData};
-use transcript::{
+use reduction::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };
+use sponge::sponge::Duplex;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// A sumcheck message had an unexpected degree.
 #[derive(Clone, Copy, Debug)]

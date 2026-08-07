@@ -1,12 +1,12 @@
 use crate::{
     evals::Mles,
-    oracles::{partial::OracleParams, Oracle},
+    oracles::{Oracle, partial::OracleParams},
     relation::oracle_evals,
     zerocheck::ZeroSumcheckInstance,
 };
 use ark_ff::Field;
+use reduction::{Message, Relation};
 use std::marker::PhantomData;
-use transcript::{Message, Relation};
 
 /// The sumcheck relation over a given oracle.
 #[derive(Clone, Copy, Debug)]

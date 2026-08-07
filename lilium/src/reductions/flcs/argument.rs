@@ -1,15 +1,15 @@
 use crate::{
-    reductions::{flcs::reduction, FlcsReduction},
+    reductions::{FlcsReduction, flcs::reduction},
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
+};
+use ::reduction::{
+    Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
+    VerifierTranscript,
 };
 use ark_ff::Field;
 use commit::CommitmentScheme;
 use sponge::sponge::Duplex;
 use sumcheck::oracles::partial::OracleParams;
-use transcript::{
-    Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
-    VerifierTranscript,
-};
 
 #[derive(Clone, Copy, Debug)]
 /// FLCS -> ()

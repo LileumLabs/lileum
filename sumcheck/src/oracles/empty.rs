@@ -1,13 +1,13 @@
 use crate::{
-    oracles::{
-        partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
-        EvalLocation, SumcheckFunction,
-    },
     MultiPoint,
+    oracles::{
+        EvalLocation, SumcheckFunction,
+        partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
+    },
 };
 use ark_ff::Field;
+use reduction::{Message, NoError, Relation};
 use std::{marker::PhantomData, rc::Rc};
-use transcript::{Message, NoError, Relation};
 
 // #[derive(Clone, Copy, Debug)]
 // pub struct EmptyOracle<F, SF>(PhantomData<(F, SF)>);

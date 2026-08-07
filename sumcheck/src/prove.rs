@@ -1,13 +1,12 @@
 use crate::{
-    degree,
+    MultiPoint, SumcheckMessage, degree,
     evals::{Evals, Mles},
     oracles::{EvalLocation, Oracle, OracleData, SumcheckFunction},
-    MultiPoint, SumcheckMessage,
 };
 use ark_ff::Field;
+use reduction::Transcript;
 use sponge::sponge::Duplex;
 use std::rc::Rc;
-use transcript::Transcript;
 
 pub struct ProverKey<F: Field, O: Oracle<F>> {
     degree: usize,

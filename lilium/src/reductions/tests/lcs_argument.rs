@@ -1,4 +1,4 @@
-use super::{commit_witness, Poseidon};
+use super::{Poseidon, commit_witness};
 use crate::{
     reductions::LcsArgument,
     relations::{LcsRelation, LcsStructure},
@@ -7,7 +7,7 @@ use crate::{
 use ark_ff::PrimeField;
 use ccs::{circuit::BuildStructure, structure::CcsStructure};
 use commit::CommitmentScheme;
-use transcript::{Prover, ProverOutput, Relation, Verifier};
+use reduction::{Prover, ProverOutput, Relation, Verifier};
 
 fn test<F, C, const N: usize>()
 where

@@ -1,13 +1,13 @@
 use crate::{
-    oracles::{
-        composite::{CompositeOracleInstance, Either},
-        EvalLocation, SumcheckFunction,
-    },
     MultiPoint,
+    oracles::{
+        EvalLocation, SumcheckFunction,
+        composite::{CompositeOracleInstance, Either},
+    },
 };
 use ark_ff::Field;
+use reduction::{Message, Relation};
 use std::{any::Any, fmt::Debug, marker::PhantomData, rc::Rc};
-use transcript::{Message, Relation};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PartialQueryInstance<F, SF, O>
@@ -112,10 +112,10 @@ where
     type Nature: Into<EvalLocation> + Copy + Debug + Nature;
 
     type QueryRelation: Relation<
-        Structure = Self,
-        Instance = PartialQueryInstance<F, SF, Self::Instance>,
-        Witness = Vec<SF::Mles<F>>,
-    >;
+            Structure = Self,
+            Instance = PartialQueryInstance<F, SF, Self::Instance>,
+            Witness = Vec<SF::Mles<F>>,
+        >;
 
     fn build(builder: Self::Builder, data: &SF::Data, structure: Rc<Vec<SF::Mles<F>>>) -> Self;
 

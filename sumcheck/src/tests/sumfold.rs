@@ -1,18 +1,18 @@
 use super::Poseidon;
 use crate::{
+    SumcheckInstance, SumcheckRelation, Var,
     evals::{Evals, EvalsCore},
     folding::SumFold,
     oracles::{
-        testing::{TestingNature, TestingOracle},
         SumcheckFunction,
+        testing::{TestingNature, TestingOracle},
     },
-    SumcheckInstance, SumcheckRelation, Var,
 };
 use ark_ff::{Field, PrimeField};
-use rand::{rngs::StdRng, SeedableRng};
+use rand::{SeedableRng, rngs::StdRng};
+use reduction::{FoldingRelation, Prover, ProverOutput, Relation, Verifier};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
-use transcript::{FoldingRelation, Prover, ProverOutput, Relation, Verifier};
 
 type FoldingScheme<F> = SumFold<F, TestingOracle<F, ProductSum<()>>>;
 

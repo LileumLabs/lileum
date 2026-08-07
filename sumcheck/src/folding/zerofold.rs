@@ -1,19 +1,19 @@
 use crate::{
+    SumcheckError, SumcheckMessage,
     barycentric_eval::BarycentricWeights,
     evals::{EvalsCore, Mles},
-    folding::{folding_degree, FieldFolder, Foldable},
-    oracles::{partial::OracleParams, Oracle, OracleData, SumcheckFunction},
+    folding::{FieldFolder, Foldable, folding_degree},
+    oracles::{Oracle, OracleData, SumcheckFunction, partial::OracleParams},
     powers::CompactPowers,
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
-    SumcheckError, SumcheckMessage,
 };
 use ark_ff::Field;
-use sponge::sponge::Duplex;
-use std::marker::PhantomData;
-use transcript::{
+use reduction::{
     FoldingRelation, FoldingScheme, GuardedProof, Message, ProverOutput, Reduction, Relation,
     Transcript, TranscriptBuilder, VerifierTranscript,
 };
+use sponge::sponge::Duplex;
+use std::marker::PhantomData;
 
 /// Folding scheme for zerocheck.
 #[derive(Clone, Copy, Debug)]

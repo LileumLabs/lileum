@@ -2,13 +2,13 @@ use crate::ipa::vector_utils::{fold_basis, fold_vec};
 use ark_ec::{AffineRepr, CurveGroup, Group, VariableBaseMSM};
 use ark_ff::Field;
 use hash_to_curve::CurveMap;
-use rand::{rngs::StdRng, SeedableRng};
-use sponge::sponge::Duplex;
-use transcript::{
+use rand::{SeedableRng, rngs::StdRng};
+use reduction::{
+    Message, NoError, Transcript,
     message::{ForeignElement, SingleElement},
     utils::cycle_cast,
-    Message, NoError, Transcript,
 };
+use sponge::sponge::Duplex;
 
 mod poly_comm;
 mod vector_utils;

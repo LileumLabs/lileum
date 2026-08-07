@@ -1,22 +1,22 @@
 use crate::{
     ipa::{
-        vector_utils::{challenge_combinations, compute_inner_product},
         IpaScheme, Proof, RoundMsg, Scalar,
+        vector_utils::{challenge_combinations, compute_inner_product},
     },
     {CommitmentScheme, CommitmentSchemeCore, OpenInstance, OpeningRelation},
 };
 use ark_ec::{AffineRepr, CurveGroup, VariableBaseMSM};
 use ark_ff::PrimeField;
 use hash_to_curve::CurveMap;
+use reduction::{
+    Argument, GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
+    TranscriptBuilder, VerifierTranscript,
+    message::{ForeignElement, SingleElement},
+    utils::cycle_cast,
+};
 use sponge::sponge::Duplex;
 use std::ops::{Add, Mul};
 use sumcheck::eq::eq;
-use transcript::{
-    message::{ForeignElement, SingleElement},
-    utils::cycle_cast,
-    Argument, GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
-    TranscriptBuilder, VerifierTranscript,
-};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IpaCommitmentScheme<F, G, M>

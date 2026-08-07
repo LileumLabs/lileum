@@ -5,14 +5,14 @@ use crate::{
 };
 use ark_ff::Field;
 use commit::CommitmentScheme;
+use reduction::{
+    GuardedProof, NoError, ProverOutput, Reduction, Transcript, TranscriptBuilder,
+    VerifierTranscript,
+};
 use sponge::sponge::Duplex;
 use sumcheck::{
     oracles::{composite::CompositeOracleInstance, core::CoreOracleInstance},
     zerocheck::ZerocheckReduction,
-};
-use transcript::{
-    GuardedProof, NoError, ProverOutput, Reduction, Transcript, TranscriptBuilder,
-    VerifierTranscript,
 };
 
 #[derive(Clone, Debug)]

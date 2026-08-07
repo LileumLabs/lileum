@@ -1,9 +1,9 @@
 use ark_ff::Field;
+use reduction::{Argument, Message, NoError};
 use std::{
     fmt::Debug,
     ops::{Add, Mul},
 };
-use transcript::{Argument, Message, NoError};
 
 pub mod multipoint;
 pub mod oracle;

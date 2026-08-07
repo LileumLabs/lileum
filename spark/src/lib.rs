@@ -1,8 +1,8 @@
+use ::reduction::{Message, Relation};
 use ark_ff::Field;
 use commit::CommitmentScheme;
 use std::{marker::PhantomData, rc::Rc};
-use sumcheck::{eq, oracles::UnexpectedVars, MultiPoint};
-use transcript::{Message, Relation};
+use sumcheck::{MultiPoint, eq, oracles::UnexpectedVars};
 
 mod committed;
 pub mod flexible;

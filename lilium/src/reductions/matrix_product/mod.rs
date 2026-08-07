@@ -8,29 +8,28 @@ use crate::{
 use ark_ff::Field;
 use ccs::matrix::Matrix;
 use commit::{
-    self,
+    self, CommitmentScheme, OpenInstance, OpeningRelation,
     oracle::{
         CommittedNature, CommittedOracle, CommittedOracleInstance,
         VerifierKey as CommittedVerifierKey,
     },
-    CommitmentScheme, OpenInstance, OpeningRelation,
+};
+use reduction::{
+    GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 use spark::{FlexibleSparkRelation, SparkInstance};
 use sponge::sponge::Duplex;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
+    ProverKey as SumcheckProver, SumcheckError, SumcheckInstance, SumcheckMessage,
+    SumcheckReduction, SumcheckVerifierKey,
     evals::EvalsCore,
     oracles::{
+        SumcheckFunction,
         composite::{CompositeOracle, CompositeOracleInstance, CompositeReductionKey, ProverEvals},
         core::{CoreOracle, CoreOracleInstance},
         partial::{Nature, PartialQueryInstance},
-        SumcheckFunction,
     },
-    ProverKey as SumcheckProver, SumcheckError, SumcheckInstance, SumcheckMessage,
-    SumcheckReduction, SumcheckVerifierKey,
-};
-use transcript::{
-    GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 
 mod function;

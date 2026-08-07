@@ -1,17 +1,17 @@
 use super::Poseidon;
 use crate::{
+    SumcheckInstance, SumcheckReduction, Var,
     evals::{Evals, EvalsCore},
     oracles::{
-        testing::{TestingNature, TestingOracle},
         QueryRelation, SumcheckFunction,
+        testing::{TestingNature, TestingOracle},
     },
-    SumcheckInstance, SumcheckReduction, Var,
 };
 use ark_ff::{Field, PrimeField};
-use rand::{rngs::StdRng, SeedableRng};
+use rand::{SeedableRng, rngs::StdRng};
+use reduction::{Prover, ProverOutput, Relation, Verifier};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
-use transcript::{Prover, ProverOutput, Relation, Verifier};
 
 /// The concrete reduction to be used in this test, being the SumcheckReduction
 /// instanciated with the TestingOracle oracle over the ProductSum polynomial.

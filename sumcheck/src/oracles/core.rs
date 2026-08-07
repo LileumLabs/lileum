@@ -1,20 +1,20 @@
 use crate::{
+    MultiPoint,
     evals::EvalsCore,
     folding::{FieldFolder, Foldable},
     oracles::{
+        EvalLocation, SumcheckFunction,
         composite::Either,
         partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
-        EvalLocation, SumcheckFunction,
     },
-    MultiPoint,
 };
 use ark_ff::Field;
-use sponge::sponge::Duplex;
-use std::{convert::identity, marker::PhantomData, rc::Rc};
-use transcript::{
+use reduction::{
     Argument, GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };
+use sponge::sponge::Duplex;
+use std::{convert::identity, marker::PhantomData, rc::Rc};
 
 pub type Func<F> = fn(&[F], &MultiPoint<F>) -> F;
 

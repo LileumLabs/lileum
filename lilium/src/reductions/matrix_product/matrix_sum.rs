@@ -2,20 +2,20 @@ use crate::reductions::matrix_product::function::MatrixSumEvals;
 use ark_ff::Field;
 use ccs::matrix::Matrix;
 use commit::CommitmentScheme;
+use reduction::{
+    GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
+    VerifierTranscript,
+};
 use spark::{FlexibleSparkRelation, SparkInstance};
 use sponge::sponge::Duplex;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
+    MultiPoint,
     eq::eq,
     oracles::{
-        partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
         EvalLocation, UnexpectedVars,
+        partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
     },
-    MultiPoint,
-};
-use transcript::{
-    GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
-    VerifierTranscript,
 };
 
 /// An oracle to partially evaluated matrices.

@@ -1,6 +1,6 @@
 use crate::{
     oracles::{FlcsOracle, FlcsOracleParams},
-    reductions::flcs::{compute_sumcheck_witness, FlcsEvals},
+    reductions::flcs::{FlcsEvals, compute_sumcheck_witness},
 };
 use ark_ff::Field;
 use ccs::{
@@ -10,12 +10,12 @@ use ccs::{
     witness::LinearCombinations,
 };
 use commit::CommitmentScheme;
+use reduction::{Message, NoError, Relation};
 use std::marker::PhantomData;
 use sumcheck::{
-    oracles::{partial::OracleParams, Oracle},
+    oracles::{Oracle, partial::OracleParams},
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
 };
-use transcript::{Message, NoError, Relation};
 
 #[derive(Clone, Copy, Debug)]
 pub struct LcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);

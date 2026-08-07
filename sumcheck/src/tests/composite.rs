@@ -1,20 +1,20 @@
 use super::Poseidon;
 use crate::{
+    MultiPoint, SumcheckInstance, SumcheckReduction, SumcheckRelation, Var,
     evals::{Evals, EvalsCore},
     oracles::{
+        QueryRelation, SumcheckFunction,
         composite::{CompositeOracle, CompositeOracleInstance, Either},
         core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, CoreQueryRelation},
         empty::{EmptyInstance, EmptyRelation, NoNature},
         partial::PartialQueryRelation,
-        QueryRelation, SumcheckFunction,
     },
-    MultiPoint, SumcheckInstance, SumcheckReduction, SumcheckRelation, Var,
 };
 use ark_ff::{Field, PrimeField};
-use rand::{rngs::StdRng, SeedableRng};
+use rand::{SeedableRng, rngs::StdRng};
+use reduction::{Prover, ProverOutput, Relation, UnsafeVerifier, Verifier};
 use std::{fmt::Debug, iter::successors, rc::Rc, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
-use transcript::{Prover, ProverOutput, Relation, UnsafeVerifier, Verifier};
 
 type Oracle<F, SF = SmallEvals<()>> = CompositeOracle<F, SF, CoreOracle<F, SF>, ()>;
 type Sumcheck<F> = SumcheckReduction<F, Oracle<F>>;

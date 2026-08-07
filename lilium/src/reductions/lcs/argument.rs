@@ -1,24 +1,24 @@
 use crate::{
     oracles::MatrixProductOracle,
     reductions::{
-        flcs::{
-            argument::{Error, Proof},
-            FlcsData, FlcsEvals,
-        },
         FlcsArgument, ToFlcs,
+        flcs::{
+            FlcsData, FlcsEvals,
+            argument::{Error, Proof},
+        },
     },
     relations::{FlcsRelation, FlcsStructure, LcsInstance, LcsRelation, LcsStructure},
 };
 use ark_ff::Field;
 use ccs::structure::CcsStructure;
-use commit::{oracle::CommittedOracle, CommitmentScheme};
-use sponge::sponge::Duplex;
-use std::rc::Rc;
-use sumcheck::oracles::{composite::CompositeOracle, core::CoreOracle};
-use transcript::{
+use commit::{CommitmentScheme, oracle::CommittedOracle};
+use reduction::{
     Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };
+use sponge::sponge::Duplex;
+use std::rc::Rc;
+use sumcheck::oracles::{composite::CompositeOracle, core::CoreOracle};
 
 #[derive(Clone, Debug)]
 /// LCS -> ()

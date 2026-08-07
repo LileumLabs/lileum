@@ -1,21 +1,21 @@
 use crate::{
     oracles::FlcsOracle,
-    reductions::flcs::{compute_sumcheck_witness, FlcsEvals},
+    reductions::flcs::{FlcsEvals, compute_sumcheck_witness},
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
 use ark_ff::Field;
 use ccs::matrix::Matrix;
 use commit::CommitmentScheme;
+use reduction::{
+    FoldingRelation, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
+    VerifierTranscript,
+};
 use sponge::sponge::Duplex;
 use std::rc::Rc;
 use sumcheck::{
-    folding::{ZeroFold, ZeroFoldKey},
-    oracles::{partial::OracleParams, Oracle},
     SumcheckError, SumcheckMessage,
-};
-use transcript::{
-    FoldingRelation, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
-    VerifierTranscript,
+    folding::{ZeroFold, ZeroFoldKey},
+    oracles::{Oracle, partial::OracleParams},
 };
 
 #[derive(Clone, Copy, Debug)]

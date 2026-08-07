@@ -1,25 +1,25 @@
 use ark_ff::Field;
 use ccs::matrix::Matrix;
 use commit::{
+    CommitmentScheme,
     oracle::{
         CommittedNature, CommittedOracle, CommittedOracleInstance, CommittedQueryRelation,
         VerifierKey as CommittedVerifierKey,
     },
-    CommitmentScheme,
 };
+use reduction::{Message, NoError, Relation};
 use std::{marker::PhantomData, ops::Add, rc::Rc};
 use sumcheck::{
+    MultiPoint,
     evals::EvalsCore,
     folding::{FieldFolder, Foldable},
     oracles::{
+        EvalLocation, Oracle, SumcheckFunction,
         composite::{CompositeOracle, Either},
         core::CoreOracle,
         partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
-        EvalLocation, Oracle, SumcheckFunction,
     },
-    MultiPoint,
 };
-use transcript::{Message, NoError, Relation};
 
 #[derive(Clone, Debug)]
 pub struct MatrixProductOracle<F, C, SF, const N: usize>

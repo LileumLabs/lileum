@@ -1,8 +1,8 @@
 use crate::CommitmentSchemeCore;
 use ark_ff::Field;
+use reduction::{Message, Relation};
 use std::{fmt::Debug, marker::PhantomData};
-use sumcheck::{evals::eval_simple_mle, oracles::UnexpectedVars, MultiPoint};
-use transcript::{Message, Relation};
+use sumcheck::{MultiPoint, evals::eval_simple_mle, oracles::UnexpectedVars};
 
 /// For structure pcs.
 /// For multilineal polynomial P, point x and eval y.

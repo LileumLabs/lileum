@@ -1,28 +1,28 @@
 use crate::{
+    SparkInstance, StaticSparkRelation, StaticSparkStructure,
     committed::{MinorStructure, SparkOracle},
     prove::ProverKey,
     sumcheck_argument::{SparkChallenges, SparkEvals},
-    SparkInstance, StaticSparkRelation, StaticSparkStructure,
 };
 use ark_ff::Field;
 use commit::{
-    oracle::{CommittedOracle, CommittedOracleInstance},
     CommitmentScheme, OpenInstance, OpeningRelation,
+    oracle::{CommittedOracle, CommittedOracleInstance},
+};
+use reduction::{
+    GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 use sponge::sponge::Duplex;
 use std::marker::PhantomData;
 use sumcheck::{
+    MultiPoint, SumcheckError, SumcheckInstance, SumcheckMessage, SumcheckReduction,
+    SumcheckVerifierKey,
     oracles::{
+        SumcheckFunction,
         composite::{CompositeOracle, CompositeOracleInstance, CompositeReductionKey, ProverEvals},
         core::{CoreOracle, CoreOracleInstance},
         partial::{Nature, PartialOracle, PartialQueryInstance},
-        SumcheckFunction,
     },
-    MultiPoint, SumcheckError, SumcheckInstance, SumcheckMessage, SumcheckReduction,
-    SumcheckVerifierKey,
-};
-use transcript::{
-    GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 
 #[derive(Clone, Copy, Debug)]

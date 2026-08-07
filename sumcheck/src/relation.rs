@@ -3,8 +3,8 @@ use crate::{
     oracles::{EvalLocation, Oracle},
 };
 use ark_ff::Field;
+use reduction::{Message, Relation};
 use std::{marker::PhantomData, ops::Add};
-use transcript::{Message, Relation};
 
 fn merge<F: Field, O: Oracle<F>>(
     structure: &Mles<O::Function, F>,

@@ -1,20 +1,20 @@
 use crate::{
+    MultiPoint, OracleQueryInstance, SumcheckError, SumcheckInstance, SumcheckMessage,
+    SumcheckReduction,
     evals::{Evals, Mles},
-    oracles::{partial::OracleParams, Oracle, OracleData, QueryRelation, SumcheckFunction},
+    oracles::{Oracle, OracleData, QueryRelation, SumcheckFunction, partial::OracleParams},
     powers::{CompactPowers, ShrinkingPowers},
     prove,
     reduction::SumcheckVerifierKey,
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance, Zerocheck},
-    MultiPoint, OracleQueryInstance, SumcheckError, SumcheckInstance, SumcheckMessage,
-    SumcheckReduction,
 };
 use ark_ff::Field;
-use sponge::sponge::Duplex;
-use std::marker::PhantomData;
-use transcript::{
+use reduction::{
     GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };
+use sponge::sponge::Duplex;
+use std::marker::PhantomData;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ZerocheckReduction<F, O>(PhantomData<(F, O)>);

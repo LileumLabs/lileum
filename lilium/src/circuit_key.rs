@@ -1,7 +1,7 @@
 use crate::{
     reductions::{
-        flcs::{self, folding},
         FlcsArgument, FlcsFoldingScheme, ToFlcs,
+        flcs::{self, folding},
     },
     relations::{FlcsInstance, FlcsRelation, LcsInstance, LcsRelation, LcsStructure},
 };
@@ -12,9 +12,9 @@ use ccs::{
     witness::Witness,
 };
 use commit::CommitmentScheme;
+use reduction::{FoldingRelation, Prover, ProverOutput, Verifier};
 use sponge::sponge::Duplex;
 use std::marker::PhantomData;
-use transcript::{FoldingRelation, Prover, ProverOutput, Verifier};
 
 type FoldingProver<F, D, R> = Prover<F, D, FoldingRelation<R>, R, FlcsFoldingScheme>;
 type FoldingVerifier<F, D, R> = Verifier<F, D, FoldingRelation<R>, R, FlcsFoldingScheme>;

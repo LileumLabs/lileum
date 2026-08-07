@@ -1,16 +1,15 @@
 use crate::{
-    sumcheck_argument::SparkEvals, SparkInstance, SparseMle, StaticSparkRelation,
-    StaticSparkStructure, BYTE,
+    BYTE, SparkInstance, SparseMle, StaticSparkRelation, StaticSparkStructure,
+    sumcheck_argument::SparkEvals,
 };
-use ark_ff::{batch_inversion, Field};
-use commit::{oracle::CommittedOracle, CommitmentScheme};
+use ark_ff::{Field, batch_inversion};
+use commit::{CommitmentScheme, oracle::CommittedOracle};
+use reduction::Relation;
 use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
-    eq,
+    MultiPoint, eq,
     oracles::{composite::CompositeOracle, core::CoreOracle},
-    MultiPoint,
 };
-use transcript::Relation;
 
 pub struct CommittedSparkRelation<F, C, const N: usize>(PhantomData<(F, C)>);
 

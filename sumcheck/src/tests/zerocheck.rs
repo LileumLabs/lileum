@@ -1,18 +1,18 @@
 use super::Poseidon;
 use crate::{
+    Var,
     evals::{Evals, EvalsCore},
     oracles::{
-        testing::{TestingNature, TestingOracle},
         Oracle, QueryRelation, SumcheckFunction,
+        testing::{TestingNature, TestingOracle},
     },
     zerocheck::{ZeroSumcheck, Zerocheck, ZerocheckReduction, ZerocheckSumcheckReduction},
-    Var,
 };
 use ark_ff::{Field, PrimeField};
-use rand::{rngs::StdRng, SeedableRng};
+use rand::{SeedableRng, rngs::StdRng};
+use reduction::{Prover, ProverOutput, Relation, Verifier};
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
-use transcript::{Prover, ProverOutput, Relation, Verifier};
 
 type Reduction1<F> = ZerocheckReduction<F, TestingOracle<F, ProductGate<()>>>;
 type Reduction2<F> = ZerocheckSumcheckReduction<F, TestingOracle<F, ProductGate<()>>>;

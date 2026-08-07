@@ -1,17 +1,17 @@
 use crate::{
+    ProverKey, SumcheckError, SumcheckInstance, SumcheckMessage, SumcheckRelation,
     barycentric_eval::BarycentricWeights,
     evals::{EvalsCore, Mles},
-    folding::{folding_degree, FieldFolder, Foldable},
+    folding::{FieldFolder, Foldable, folding_degree},
     oracles::{Oracle, OracleData},
-    ProverKey, SumcheckError, SumcheckInstance, SumcheckMessage, SumcheckRelation,
 };
 use ark_ff::Field;
-use sponge::sponge::Duplex;
-use std::marker::PhantomData;
-use transcript::{
+use reduction::{
     FoldingRelation, FoldingScheme, GuardedProof, ProverOutput, Reduction, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };
+use sponge::sponge::Duplex;
+use std::marker::PhantomData;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SumFold<F, O>(PhantomData<(F, O)>);
