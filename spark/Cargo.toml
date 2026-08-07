@@ -1,5 +1,5 @@
 [package]
-name = "lilium-spark"
+name = "lileum-spark"
 version = "0.1.0"
 edition = "2024"
 description = "Liliums' Spark implementation"

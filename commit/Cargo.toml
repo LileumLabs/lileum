@@ -1,5 +1,5 @@
 [package]
-name = "lilium-commit"
+name = "lileum-commit"
 version = "0.1.0"
 edition = "2024"
 description = "Commitment scheme traits and implementations for Lilium"

@@ -16,12 +16,12 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-ccs             = { path = "ccs",             version = "0.1.0", package = "lilium-lcs" }
-hash-to-curve   = { path = "hash-to-curve",   version = "0.1.0", package = "lilium-htc" }
-automata        = { path = "automata",        version = "0.1.0", package = "lilium-automata" }
-sponge          = { path = "sponge",          version = "0.1.0", package = "lilium-sponge" }
-reduction       = { path = "reduction",       version = "0.1.0", package = "lilium-reduction" }
-sumcheck        = { path = "sumcheck",        version = "0.1.0", package = "lilium-sumcheck" }
-sumcheck-derive = { path = "sumcheck/derive", version = "0.1.0", package = "lilium-sumcheck-derive" }
-commit          = { path = "commit",          version = "0.1.0", package = "lilium-commit" }
-spark           = { path = "spark",           version = "0.1.0", package = "lilium-spark" }
+ccs             = { path = "ccs",             version = "0.1.0", package = "lileum-lcs" }
+hash-to-curve   = { path = "hash-to-curve",   version = "0.1.0", package = "lileum-htc" }
+automata        = { path = "automata",        version = "0.1.0", package = "lileum-automata" }
+sponge          = { path = "sponge",          version = "0.1.0", package = "lileum-sponge" }
+reduction       = { path = "reduction",       version = "0.1.0", package = "lileum-reduction" }
+sumcheck        = { path = "sumcheck",        version = "0.1.0", package = "lileum-sumcheck" }
+sumcheck-derive = { path = "sumcheck/derive", version = "0.1.0", package = "lileum-sumcheck-derive" }
+commit          = { path = "commit",          version = "0.1.0", package = "lileum-commit" }
+spark           = { path = "spark",           version = "0.1.0", package = "lileum-spark" }

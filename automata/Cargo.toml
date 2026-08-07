@@ -1,5 +1,5 @@
 [package]
-name = "lilium-automata"
+name = "lileum-automata"
 version = "0.1.0"
 edition = "2024"
 description = "Abstract machine utilities used in Lilium"

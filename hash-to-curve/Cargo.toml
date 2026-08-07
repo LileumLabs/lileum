@@ -1,5 +1,5 @@
 [package]
-name = "lilium-htc"
+name = "lileum-htc"
 version = "0.1.0"
 edition = "2024"
 description = "Hash-to-curve implementation"
