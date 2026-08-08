@@ -26,6 +26,9 @@ pub struct SumFoldKey<F: Field, O: Oracle<F>> {
     data: OracleData<F, O>,
 }
 
+// NOTE: See https://eprint.iacr.org/2024/1606.pdf, 3.
+// SumFold is essentially a single-round sumcheck protocol.
+
 impl<F, O> Reduction<F, FoldingRelation<SumcheckRelation<F, O>>, SumcheckRelation<F, O>>
     for SumFold<F, O>
 where

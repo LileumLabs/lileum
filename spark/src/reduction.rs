@@ -96,6 +96,34 @@ pub enum SparkError {
     CoreOracle,
 }
 
+// NOTE: https://eprint.iacr.org/2019/550.pdf, 7.
+// There are other papers, the newer ones explain it a bit better, but this is
+// I think the first one.
+//
+// This is the implementation of a modified spark, optimized to work with public
+// committments to matrices. The main changes are:
+// - Some of the checks in the opening reduction ensure that the commitment has a correct
+// shape, as we work with public commitments, we don't need those checks.
+// - A matrix usually has 2 dimensions, but this spark splits whatever sparse MLE provided
+// into as many dimensions such that each dimension has an 8 bits address space.
+// - The lookup argument used is logup, which has the worst commitment costs, but thanks
+// to the previous point they can be optimized away. As such, the logup implementation
+// looks quite different than usual due to all the implementations.
+//
+//
+// NOTE: https://eprint.iacr.org/2022/1530.pdf
+// That's the original Logup/mvlookup paper as far as I know.
+//
+// The design choices made in spark turn the lookups into a more specific case:
+// Fixed-pattern 2^N lookups into a 2^8 table.
+// While the general case requires 2 2^N size committments done by the prover,
+// this specific case requires only 2^N applications of the committment's
+// homomorphism. Using IPA for example, that means 2^N EC additions instead of
+// a 2^N size MSM.
+// The fixed pattern can be further leveraged to be left with prover work equivalent
+// to only a 2^8 commitment, but that isn't currently implemented. That potentially leaves
+// sumcheck as only linear prover work.
+
 impl<F, C, const N: usize> Reduction<F, Rel1<F, C, N>, Rel2<F, C>> for SparkReduction<F, C, N>
 where
     F: Field,

@@ -19,6 +19,35 @@ use std::marker::PhantomData;
 #[derive(Clone, Copy, Debug)]
 pub struct ZerocheckReduction<F, O>(PhantomData<(F, O)>);
 
+// NOTE: See https://eprint.iacr.org/2024/1606.pdf, 4.
+// ZeroFold is a zerocheck reduction based on some other protocol from
+//
+// https://eprint.iacr.org/2014/846.pdf and adapted to work with sumfold.
+// There are 2 sumcheck-based zerocheck arguments I know about, one involves
+// multiplying by eq(x,r) for challenge r and the other multiplies instead
+// by the powers of some challenge r like r^x.
+// Neither works with sumfold, but the second one can be adapted, zerofold
+// splits the powers on 2 a makes 2 small (sqrt(N)) commitments to them, then
+// uses a sumcheck argument to prove they have the correct shape.
+//
+// As I didn't like the idea of having those extra commitments and argument,
+// I tried to come up with a simpler argument. Something that didn't need
+// any extra commitment or sumcheck arguments.
+// While my starting point was the eq-based zerocheck, I ultimately ended up
+// with something closer to zerofold, and I think it could now be considered
+// variant or generalization of zerofold.
+// To make the explanation easier, let's start with zerofold, for 2*v variables,
+// instead of splitting the powers in 2 v-variate polynomials, we keep splitting
+// until we have instead 2*v univariate polynomials.
+// From there, just 2 field elements are enough to represent each polynomial,
+// eliminating the need for commitments, their shape is also correct by
+// construction, and no further argument is required to check it.
+//
+// The tradeoff is that 2 elements per polynomial usually implies more communication
+// than 2 commitments. Splitting in more parts also makes the degree of sumfold higher,
+// and while the message will be bigger, the prover can be optimized to not pay the
+// cost of the higher sumcheck degree.
+
 impl<F, O> Reduction<F, Zerocheck<F, O>, ZeroSumcheck<F, O>> for ZerocheckReduction<F, O>
 where
     F: Field,
