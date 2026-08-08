@@ -1,17 +1,17 @@
 use crate::oracles::MatrixNature;
 use ark_ff::Field;
-use ccs::{matrix::Matrix, structure::Exp};
 use commit::oracle::CommittedNature;
+use lcs::{matrix::Matrix, structure::Exp};
 use std::{fmt::Debug, rc::Rc, vec::IntoIter};
 use sumcheck::{
+    MultiPoint, Var,
     eq::eq_subset,
     evals::{Evals, EvalsCore},
     oracles::{
+        SumcheckFunction,
         composite::Either,
         core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, Func},
-        SumcheckFunction,
     },
-    MultiPoint, Var,
 };
 use sumcheck_derive::EvalsCore;
 

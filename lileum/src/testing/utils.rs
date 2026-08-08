@@ -1,5 +1,5 @@
 use ark_ff::Field;
-use ccs::{
+use lcs::{
     circuit::{Circuit, Var},
     constraint_system::{ConstraintSystem, Val},
     gates::StandardGates,

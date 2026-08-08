@@ -1,18 +1,18 @@
 use crate::reductions::matrix_product::matrix_sum::{MatrixSumNature, MatrixSumOracle};
 use ark_ff::Field;
-use ccs::matrix::Matrix;
 use commit::oracle::{CommittedNature, CommittedOracle};
+use lcs::matrix::Matrix;
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck::{
+    MultiPoint, Var,
     eq::eq,
     evals::{Evals, EvalsCore},
     oracles::{
+        SumcheckFunction,
         composite::{CompositeOracle, Either},
         core::{CoreNature, CoreOracle},
         partial::OracleEval,
-        SumcheckFunction,
     },
-    MultiPoint, Var,
 };
 use sumcheck_derive::EvalsCore;
 

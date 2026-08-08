@@ -17,7 +17,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    use ccs::circuit::Prove;
+    use lcs::circuit::Prove;
     let (mut witness, _output) = <HashChain<N> as Prove<F, 1, 1, 1, 5>>::witness(inputs, true);
     witness.pad_to_power();
     let witness_commit = pcs.commit_mle(&witness.0);

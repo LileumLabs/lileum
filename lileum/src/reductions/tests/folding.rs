@@ -5,8 +5,8 @@ use crate::{
     testing::utils::HashChain,
 };
 use ark_ff::PrimeField;
-use ccs::{circuit::BuildStructure, structure::CcsStructure};
 use commit::CommitmentScheme;
+use lcs::{circuit::BuildStructure, structure::CcsStructure};
 use reduction::{Prover, ProverOutput, Relation, Verifier};
 
 fn test<F, C, const N: usize>()

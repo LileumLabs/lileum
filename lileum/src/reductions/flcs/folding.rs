@@ -4,8 +4,8 @@ use crate::{
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
 use ark_ff::Field;
-use ccs::matrix::Matrix;
 use commit::CommitmentScheme;
+use lcs::matrix::Matrix;
 use reduction::{
     FoldingRelation, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,

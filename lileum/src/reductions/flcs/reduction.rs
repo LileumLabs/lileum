@@ -7,11 +7,11 @@ use crate::{
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
 use ark_ff::Field;
-use ccs::matrix::Matrix;
 use commit::{
     CommitmentScheme, OpenInstance, OpeningRelation,
     multipoint::{self, MultipointBatching},
 };
+use lcs::matrix::Matrix;
 use reduction::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };

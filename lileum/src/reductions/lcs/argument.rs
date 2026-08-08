@@ -10,8 +10,8 @@ use crate::{
     relations::{FlcsRelation, FlcsStructure, LcsInstance, LcsRelation, LcsStructure},
 };
 use ark_ff::Field;
-use ccs::structure::CcsStructure;
 use commit::{CommitmentScheme, oracle::CommittedOracle};
+use lcs::structure::CcsStructure;
 use reduction::{
     Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,

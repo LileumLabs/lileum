@@ -1,5 +1,4 @@
 use ark_ff::Field;
-use ccs::matrix::Matrix;
 use commit::{
     CommitmentScheme,
     oracle::{
@@ -7,6 +6,7 @@ use commit::{
         VerifierKey as CommittedVerifierKey,
     },
 };
+use lcs::matrix::Matrix;
 use reduction::{Message, NoError, Relation};
 use std::{marker::PhantomData, ops::Add, rc::Rc};
 use sumcheck::{

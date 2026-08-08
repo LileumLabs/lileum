@@ -1,5 +1,5 @@
 use ark_ff::{BigInteger, Field, PrimeField, Zero};
-use ccs::{
+use lcs::{
     circuit::Var,
     constraint_system::{ConstraintSystem, Val, WitnessReader},
     gates::{Binary, StandardGates},
@@ -33,11 +33,7 @@ impl<V: Val, const N: usize> Uint<V, N> {
                 }
 
                 let bit = first.into_bigint().get_bit(i);
-                if bit {
-                    F::one()
-                } else {
-                    F::zero()
-                }
+                if bit { F::one() } else { F::zero() }
             });
             let [] = cs.execute::<Binary, 1, 1, 0>([bit.clone()]);
             bit

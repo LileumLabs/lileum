@@ -6,12 +6,12 @@ use crate::{
     relations::{FlcsInstance, FlcsRelation, LcsInstance, LcsRelation, LcsStructure},
 };
 use ark_ff::Field;
-use ccs::{
+use commit::CommitmentScheme;
+use lcs::{
     circuit::{BuildStructure, Circuit, Prove},
     structure::CcsStructure,
     witness::Witness,
 };
-use commit::CommitmentScheme;
 use reduction::{FoldingRelation, Prover, ProverOutput, Verifier};
 use sponge::sponge::Duplex;
 use std::marker::PhantomData;

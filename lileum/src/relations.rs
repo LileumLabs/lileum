@@ -3,13 +3,13 @@ use crate::{
     reductions::flcs::{FlcsEvals, compute_sumcheck_witness},
 };
 use ark_ff::Field;
-use ccs::{
+use commit::CommitmentScheme;
+use lcs::{
     constraint_system::Constraints,
     matrix::Matrix,
     structure::{CcsStructure, Exp},
     witness::LinearCombinations,
 };
-use commit::CommitmentScheme;
 use reduction::{Message, NoError, Relation};
 use std::marker::PhantomData;
 use sumcheck::{

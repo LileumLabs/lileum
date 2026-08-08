@@ -6,7 +6,6 @@ use crate::{
     },
 };
 use ark_ff::Field;
-use ccs::matrix::Matrix;
 use commit::{
     self, CommitmentScheme, OpenInstance, OpeningRelation,
     oracle::{
@@ -14,6 +13,7 @@ use commit::{
         VerifierKey as CommittedVerifierKey,
     },
 };
+use lcs::matrix::Matrix;
 use reduction::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };

@@ -19,16 +19,16 @@ pub use crate::{
     relations::LcsInstance,
 };
 pub use ark_ff::{Field, PrimeField};
-use ccs::circuit::{BuildStructure, CircuitProfile};
-pub use ccs::{
+pub use circuit_key::FoldingProof;
+use circuit_key::Instance;
+pub use commit::CommitmentScheme;
+use lcs::circuit::{BuildStructure, CircuitProfile};
+pub use lcs::{
     circuit::{Circuit, Var},
     constraint_system::{ConstraintSystem, Val},
     gates::{self, StandardGates},
     witness::Witness,
 };
-pub use circuit_key::FoldingProof;
-use circuit_key::Instance;
-pub use commit::CommitmentScheme;
 
 const IO: usize = 5;
 const S: usize = 10;

@@ -1,7 +1,7 @@
 use crate::reductions::matrix_product::function::MatrixSumEvals;
 use ark_ff::Field;
-use ccs::matrix::Matrix;
 use commit::CommitmentScheme;
+use lcs::matrix::Matrix;
 use reduction::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
