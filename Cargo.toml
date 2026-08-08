@@ -2,7 +2,7 @@
 
 members = [
     "automata",
-    "ccs",
+    "lcs",
     "commit",
     "lileum", 
     "reduction",
@@ -17,7 +17,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-ccs             = { path = "ccs",             version = "0.1.0", package = "lileum-lcs" }
+ccs             = { path = "lcs",             version = "0.1.0", package = "lileum-lcs" }
 hash-to-curve   = { path = "hash-to-curve",   version = "0.1.0", package = "lileum-htc" }
 automata        = { path = "automata",        version = "0.1.0", package = "lileum-automata" }
 sponge          = { path = "sponge",          version = "0.1.0", package = "lileum-sponge" }
