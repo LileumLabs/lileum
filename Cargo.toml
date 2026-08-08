@@ -11,7 +11,8 @@ members = [
     "sumcheck",
     "sumcheck/derive",
     "hash-to-curve",
-    "shout"]
+    "shout",
+    "common"]
 
 resolver = "2"
 
@@ -25,3 +26,4 @@ sumcheck        = { path = "sumcheck",        version = "0.1.0", package = "lile
 sumcheck-derive = { path = "sumcheck/derive", version = "0.1.0", package = "lileum-sumcheck-derive" }
 commit          = { path = "commit",          version = "0.1.0", package = "lileum-commit" }
 spark           = { path = "spark",           version = "0.1.0", package = "lileum-spark" }
+common          = { path = "common",          version = "0.1.0", package = "lileum-common" }
