@@ -5,12 +5,12 @@ mod allocator;
 use allocator::{PeakMemory, PeakTrackingAllocator, bench_memory};
 use ark_ff::{Field, UniformRand};
 use ark_vesta::{Fr, Projective, VestaConfig};
-use ccs::circuit::BuildStructure;
 use commit::CommitmentScheme;
 use criterion::{
     BenchmarkGroup, BenchmarkId, Criterion, SamplingMode, criterion_group, criterion_main,
 };
 use hash_to_curve::svdw::SvdwMap;
+use lcs::circuit::BuildStructure;
 use lileum::{circuit_key::CircuitKey, testing::utils::HashChain};
 use rand::{Rng, SeedableRng, rngs::StdRng};
 use sponge::{self, sponge::Duplex};
