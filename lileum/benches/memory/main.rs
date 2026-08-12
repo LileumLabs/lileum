@@ -11,7 +11,7 @@ use criterion::{
 };
 use hash_to_curve::svdw::SvdwMap;
 use lcs::circuit::BuildStructure;
-use lileum::{circuit_key::CircuitKey, testing::utils::HashChain};
+use lileum::{CircuitKey, testing::utils::HashChain};
 use rand::{Rng, SeedableRng, rngs::StdRng};
 use sponge::{self, sponge::Duplex};
 use std::time::Duration;

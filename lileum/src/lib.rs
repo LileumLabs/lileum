@@ -1,10 +1,12 @@
-pub mod circuit_key;
+mod circuit_key;
 pub mod circuits;
 mod oracles;
 pub mod reductions;
 pub mod relations;
 pub mod simple_cs;
 pub mod testing;
+
+pub use circuit_key::{CircuitKey, FoldingProof, Instance, Proof};
 
 /*
 #[derive(Debug, Clone)]
