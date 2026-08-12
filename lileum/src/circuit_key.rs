@@ -165,6 +165,9 @@ where
         self.folding_verifier.verify(instances, proof.0).ok()
     }
 
+    /// From just the public inputs, it runs the circuit to compute the witness, and
+    /// commits to it to create an instance.
+    /// Returns the instance-witness pair and the private output if required.
     pub fn commit_witness<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
         &self,
         inputs: [F; IN],
@@ -189,6 +192,8 @@ where
         (instance, witness, output)
     }
 
+    /// Calls Self::commit_witness(..) with the inputs, and calls Self::prove(..) with
+    /// the returned instance-witness pair.
     pub fn prove_from_inputs<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
         &self,
         inputs: [F; IN],
