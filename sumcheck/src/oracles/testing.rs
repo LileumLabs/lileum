@@ -1,7 +1,7 @@
 use crate::{
-    evals::{EvalsExt, Mles},
-    oracles::{partial::Nature, EvalLocation, Oracle, SumcheckFunction},
     MultiPoint,
+    evals::{EvalsExt, Mles},
+    oracles::{EvalLocation, Oracle, SumcheckFunction, partial::Nature},
 };
 use ark_ff::Field;
 use std::rc::Rc;

@@ -218,23 +218,23 @@ impl Gate<1, 1, 0> for Binary {
 pub trait StandardGates<F, V> {
     /// Makes use of `Add2`
     fn add(&mut self, a: Var<V>, b: Var<V>) -> Var<V>;
-    /// Makes use of `AddN<IO,I>'
+    /// Makes use of `AddN<IO,I>``
     fn add_n<const IO: usize, const I: usize>(&mut self, operands: [Var<V>; I]) -> Var<V>;
     /// Makes use of `Sub2`
     fn sub(&mut self, a: Var<V>, b: Var<V>) -> Var<V>;
-    /// Makes use of `SubN<IO,I>'
+    /// Makes use of `SubN<IO,I>``
     fn sub_n<const IO: usize, const I: usize>(&mut self, operands: [Var<V>; I]) -> Var<V>;
     /// Makes use of `Mul2`
     fn mul(&mut self, a: Var<V>, b: Var<V>) -> Var<V>;
-    /// Makes use of `MulN<IO,I>'
+    /// Makes use of `MulN<IO,I>``
     fn mul_n<const IO: usize, const I: usize>(&mut self, operands: [Var<V>; I]) -> Var<V>;
-    /// Makes use of `Equality'
+    /// Makes use of `Equality``
     fn assert_equals(&mut self, a: Var<V>, b: Var<V>);
-    /// Makes use of `Double'
+    /// Makes use of `Double``
     fn double(&mut self, x: Var<V>) -> Var<V>;
-    /// Makes use of `Square'
+    /// Makes use of `Square``
     fn square(&mut self, x: Var<V>) -> Var<V>;
-    /// Makes use of `Pow<EXP>'
+    /// Makes use of `Pow<EXP>`
     fn pow<const EXP: u8>(&mut self, x: Var<V>) -> Var<V>;
 }
 

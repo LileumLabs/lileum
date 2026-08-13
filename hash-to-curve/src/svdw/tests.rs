@@ -1,4 +1,4 @@
-use crate::svdw::{find_z, SvdwMap};
+use crate::svdw::{SvdwMap, find_z};
 use ark_ff::UniformRand;
 use ark_vesta::VestaConfig;
 use rand::thread_rng;

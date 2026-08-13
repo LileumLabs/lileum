@@ -70,7 +70,7 @@ pub trait Reduction<F: Field, R1: Relation, R2: Relation> {
     /// deviate from it will result in panics in the prover and errors in the
     /// verifier.
     fn transcript_pattern(key: &Self::VerifierKey, builder: TranscriptBuilder)
-        -> TranscriptBuilder;
+    -> TranscriptBuilder;
 
     fn verifier_key(structure: &R1::Structure) -> Self::VerifierKey;
 

@@ -6,7 +6,7 @@
 //! While any domain could be supported, right now only the inplicit domain
 //! 0..d will be used
 
-use ark_ff::{fields::batch_inversion, Field};
+use ark_ff::{Field, fields::batch_inversion};
 
 /// Weights that can be used to evaluate polynomials defined by
 /// n evaluation points over the implicit 0..n domain
@@ -100,9 +100,9 @@ impl<F: Field> BarycentricWeights<F> {
 mod tests {
     use super::BarycentricWeights;
     use ark_ff::Field;
-    use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
+    use ark_poly::{DenseUVPolynomial, Polynomial, univariate::DensePolynomial};
     use ark_vesta::Fr;
-    use rand::{thread_rng, Rng};
+    use rand::{Rng, thread_rng};
 
     #[test]
     fn test_barycentric_eval() {

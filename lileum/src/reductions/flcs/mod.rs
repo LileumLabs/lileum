@@ -6,4 +6,4 @@ mod sumcheck;
 pub use argument::FlcsArgument;
 pub use folding::FlcsFoldingScheme;
 pub use reduction::FlcsReduction;
-pub use sumcheck::{compute_sumcheck_witness, FlcsData, FlcsEvals};
+pub use sumcheck::{FlcsData, FlcsEvals, compute_sumcheck_witness};

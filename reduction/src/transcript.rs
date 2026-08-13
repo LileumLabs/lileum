@@ -1,8 +1,8 @@
-use crate::{message::PointRound, transcript_builder::Round, Error, GuardedProof, Message};
+use crate::{Error, GuardedProof, Message, message::PointRound, transcript_builder::Round};
 use ark_ff::Field;
 use sponge::sponge::Duplex;
 use std::{
-    any::{type_name, Any, TypeId},
+    any::{Any, TypeId, type_name},
     marker::PhantomData,
     vec::IntoIter,
 };

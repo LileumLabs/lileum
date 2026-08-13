@@ -1,5 +1,5 @@
-use crate::barycentric_eval::BarycentricWeights;
 use crate::SumcheckMessage;
+use crate::barycentric_eval::BarycentricWeights;
 use ark_ff::Field;
 use std::ops::Mul;
 

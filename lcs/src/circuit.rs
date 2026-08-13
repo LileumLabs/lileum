@@ -1,7 +1,7 @@
 use crate::{
     constraint_system::{ConstraintSystem, Val},
     structure::{CcsStructure, StructureBuilder},
-    witness::{unwrap_output, Witness, WitnessGenerator},
+    witness::{Witness, WitnessGenerator, unwrap_output},
 };
 use ark_ff::Field;
 use std::fmt::Display;

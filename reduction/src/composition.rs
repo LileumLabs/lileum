@@ -1,5 +1,5 @@
 use super::{
-    transcript::VerifierTranscript, GuardedProof, ProverOutput, Reduction, Relation, Transcript,
+    GuardedProof, ProverOutput, Reduction, Relation, Transcript, transcript::VerifierTranscript,
 };
 use crate::{Message, TranscriptBuilder};
 use ark_ff::Field;

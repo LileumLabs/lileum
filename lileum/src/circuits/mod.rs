@@ -6,14 +6,14 @@ use lcs::{
 };
 
 /// `Var` constrained to be in 0..2^N.
-/// Currently the only use is constraining some [Var<V>] to be in
+/// Currently the only use is constraining some [`Var<V>`] to be in
 /// the interval, operations may be added in the future.
 pub struct Uint<V, const N: usize> {
     val: Var<V>,
 }
 
 impl<V: Val, const N: usize> Uint<V, N> {
-    /// Creates a new [Uint<V,N>] from an arbitrary [Var<V>].
+    /// Creates a new [Uint<V,N>] from an arbitrary [`Var<V>`].
     pub fn new<F: Field, CS: ConstraintSystem<F, V>>(cs: &mut CS, x: Var<V>) -> Self {
         if N == 0 {
             panic!("tried to create an uint with 0 bits");

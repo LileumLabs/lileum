@@ -1,7 +1,7 @@
 use crate::{
+    Var,
     evals::{Evals, Mles},
     oracles::{EvalLocation, Oracle},
-    Var,
 };
 use ark_ff::Field;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
