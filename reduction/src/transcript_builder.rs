@@ -1,7 +1,7 @@
-use crate::{message::PointRound, Message, Reduction, Relation, Transcript};
+use crate::{Message, Reduction, Relation, Transcript, message::PointRound};
 use ark_ff::Field;
 use sponge::sponge::{Duplex, SpongeBuilder};
-use std::any::{type_name, TypeId};
+use std::any::{TypeId, type_name};
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Round {

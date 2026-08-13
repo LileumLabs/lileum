@@ -40,14 +40,14 @@ pub struct PoseidonPermutation<
 }
 
 impl<
-        F: Default,
-        const S: usize,
-        E: Default,
-        I: Default,
-        const HER: usize,
-        const IR: usize,
-        const SBOX: u8,
-    > Default for PoseidonPermutation<F, S, E, I, HER, IR, SBOX>
+    F: Default,
+    const S: usize,
+    E: Default,
+    I: Default,
+    const HER: usize,
+    const IR: usize,
+    const SBOX: u8,
+> Default for PoseidonPermutation<F, S, E, I, HER, IR, SBOX>
 where
     F: Field,
     E: ExternalMatrix<F, S>,

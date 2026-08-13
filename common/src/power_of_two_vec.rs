@@ -1,5 +1,5 @@
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-/// A Vec<T> wrapper which only allows the length to be a power of
+/// A `Vec<T>` wrapper which only allows the length to be a power of
 /// two.
 pub struct Pow2Vec<T>(Vec<T>);
 

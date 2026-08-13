@@ -1,4 +1,4 @@
-use crate::{eq::eq, MultiPoint};
+use crate::{MultiPoint, eq::eq};
 use ark_ff::Field;
 use std::{fmt::Debug, vec::IntoIter};
 

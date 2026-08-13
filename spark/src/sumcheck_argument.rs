@@ -3,13 +3,13 @@ use ark_ff::Field;
 use commit::oracle::CommittedNature;
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck::{
+    MultiPoint, Var,
     evals::{Evals, EvalsCore},
     oracles::{
+        SumcheckFunction,
         composite::Either,
         core::{Coeffs, CoreNature, Func},
-        SumcheckFunction,
     },
-    MultiPoint, Var,
 };
 use sumcheck_derive::EvalsCore;
 

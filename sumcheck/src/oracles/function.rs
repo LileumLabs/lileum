@@ -1,4 +1,4 @@
-use crate::{evals::Evals, oracles::partial::Nature, Var};
+use crate::{Var, evals::Evals, oracles::partial::Nature};
 use ark_ff::Field;
 use std::fmt::Debug;
 

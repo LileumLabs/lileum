@@ -1,7 +1,7 @@
 use crate::{circuit::Var, gates::Constant, structure::Exp};
 use ark_ff::Field;
 use std::{
-    any::{type_name, Any, TypeId},
+    any::{Any, TypeId, type_name},
     collections::BTreeMap,
     ops,
 };
@@ -27,7 +27,7 @@ pub trait ConstraintSystem<F: Field, V> {
     /// particular value at all.
     /// The value is provided through a function which receives a [Self::Reader]
     /// and may use it to call [WitnessReader::read] to access the value
-    /// behind a [Var<F>].
+    /// behind a [`Var<F>`].
     fn free_variable<W>(&mut self, value: W) -> Var<V>
     where
         W: for<'a> Fn(Self::Reader<'a>) -> F;
@@ -116,8 +116,8 @@ pub trait Gate<const IO: usize, const I: usize, const O: usize>: Sized + 'static
     fn check<V: Val>(i: [V; I], o: [V; O]) -> Constraints<V>;
 }
 
-fn eval_gate_constraints<G, const IO: usize, const I: usize, const O: usize>(
-) -> Constraints<Exp<usize>>
+fn eval_gate_constraints<G, const IO: usize, const I: usize, const O: usize>()
+-> Constraints<Exp<usize>>
 where
     G: Gate<IO, I, O>,
 {

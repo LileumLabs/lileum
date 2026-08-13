@@ -127,7 +127,7 @@ pub fn eq_subset<F: Field>(point: &MultiPoint<F>, n_log: usize) -> Vec<F> {
 fn test_eq() {
     use crate::evals::eval_simple_mle;
     use ark_vesta::Fr;
-    use rand::{thread_rng, Rng};
+    use rand::{Rng, thread_rng};
 
     // let point = MultiPoint::r
     let mut rng = thread_rng();

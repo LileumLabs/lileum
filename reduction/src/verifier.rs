@@ -1,6 +1,6 @@
 use crate::{
-    transcript::VerifierTranscript, transcript_builder::TranscriptDescriptor, GuardedProof,
-    Message, Reduction, Relation, TranscriptBuilder,
+    GuardedProof, Message, Reduction, Relation, TranscriptBuilder, transcript::VerifierTranscript,
+    transcript_builder::TranscriptDescriptor,
 };
 
 use ark_ff::Field;
@@ -90,10 +90,10 @@ where
 
 /// There are reductions which are not intended to be used alone, from
 /// relations whose instance is only supposed to exist transitively
-/// during the protocol, and thus don't implement [Message<F>].
+/// during the protocol, and thus don't implement [`Message<F>`].
 /// But it may still be desired to test them in isolation. For that
 /// purpose, this verifier works similarly to [Verifier], but `R1::Instance`
-/// doesn't need to implement [Message<F>].
+/// doesn't need to implement [`Message<F>`].
 pub struct UnsafeVerifier<F, S, R1, R2, R>
 where
     F: Field,

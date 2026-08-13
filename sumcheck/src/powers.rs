@@ -128,7 +128,7 @@ fn test<F: Field>(chall: F) {
 fn compact_powers() {
     use ark_ff::UniformRand;
     use ark_vesta::Fr;
-    use rand::{rngs::StdRng, SeedableRng};
+    use rand::{SeedableRng, rngs::StdRng};
 
     let mut rng = StdRng::seed_from_u64(0);
     let chall = Fr::rand(&mut rng);
@@ -195,7 +195,7 @@ fn compact_powers_over_domain<F: Field>(challs: [F; 3]) {
 fn powers_over_domain() {
     use ark_ff::UniformRand;
     use ark_vesta::Fr;
-    use rand::{rngs::StdRng, SeedableRng};
+    use rand::{SeedableRng, rngs::StdRng};
 
     let mut rng = StdRng::seed_from_u64(0);
     let mut chall = || Fr::rand(&mut rng);
@@ -272,7 +272,7 @@ fn mle_equivalence_test<F: Field>(elems: Vec<F>) {
 fn mle_equivalence() {
     use crate::utils::Fm;
     use ark_ff::UniformRand;
-    use rand::{rngs::StdRng, SeedableRng};
+    use rand::{SeedableRng, rngs::StdRng};
     let mut rng = StdRng::seed_from_u64(0);
     let elems = [(); 10].map(|_| Fm::rand(&mut rng));
     mle_equivalence_test::<Fm>(elems.to_vec());
@@ -282,7 +282,7 @@ fn mle_equivalence() {
 fn factor_folding() {
     use crate::utils::Fm;
     use ark_ff::{One, UniformRand};
-    use rand::{rngs::StdRng, SeedableRng};
+    use rand::{SeedableRng, rngs::StdRng};
 
     let vars = 5;
     let mut rng = StdRng::seed_from_u64(0);
@@ -323,7 +323,7 @@ fn factor_folding() {
 fn compact_powers_hypercube_sum() {
     use ark_ff::{One, UniformRand};
     use ark_vesta::Fr;
-    use rand::{rngs::StdRng, SeedableRng};
+    use rand::{SeedableRng, rngs::StdRng};
 
     let mut rng = StdRng::seed_from_u64(0);
     let chall = Fr::rand(&mut rng);

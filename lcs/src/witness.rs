@@ -113,7 +113,7 @@ pub struct VarReader<const IO: usize>;
 
 impl<'a, F: Field, const IO: usize> WitnessReader<'a, F, Fi<F>> for VarReader<IO> {
     fn read(&self, var: &Var<Fi<F>>) -> F {
-        var.0 .0
+        var.0.0
     }
 }
 

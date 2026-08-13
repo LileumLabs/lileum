@@ -4,8 +4,8 @@ use std::fmt::Debug;
 
 use crate::CurveMap;
 use ark_ec::{
-    short_weierstrass::{self, Affine, SWCurveConfig},
     CurveConfig,
+    short_weierstrass::{self, Affine, SWCurveConfig},
 };
 use ark_ff::{BigInteger, Field, PrimeField, Zero};
 
