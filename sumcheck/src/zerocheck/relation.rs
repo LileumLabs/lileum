@@ -52,19 +52,20 @@ impl<F: Field, O: Oracle<F>> Message<F> for ZeroSumcheckInstance<F, O> {
     type Error = ZerocheckError<<O::Instance as Message<F>>::Error>;
 
     fn len(params: &Self::Params) -> usize {
-        2 * params.0.vars + O::Instance::len(&params.1)
+        1 + 2 * params.0.vars + O::Instance::len(&params.1)
     }
 
     fn to_field_elements(&self, params: &Self::Params) -> Result<Vec<F>, Self::Error> {
         if self.zerocheck_powers.factors().len() != params.0.vars {
             return Err(ZerocheckError::Zerocheck);
         }
-        let mut elems: Vec<F> = self
-            .zerocheck_powers
-            .factors()
-            .iter()
-            .flat_map(|x| [x.0, x.1])
-            .collect();
+        let mut elems: Vec<F> = vec![self.sum];
+        elems.extend(
+            self.zerocheck_powers
+                .factors()
+                .iter()
+                .flat_map(|x| [x.0, x.1]),
+        );
         elems.append(&mut self.oracle_instance.to_field_elements(&params.1)?);
         Ok(elems)
     }
