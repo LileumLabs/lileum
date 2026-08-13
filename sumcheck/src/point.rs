@@ -26,6 +26,9 @@ impl<F: Field> MultiPoint<F> {
     pub fn new(vars: Vec<F>) -> Self {
         MultiPoint(vars)
     }
+
+    /// For N variables, each variable will take 1 bits from the binary
+    /// decomposition of the index and be either 0 or 1.
     pub fn new_from_index(mut index: usize, vars: usize) -> Self {
         let vars = (0..vars)
             .map(|_| {
@@ -36,16 +39,20 @@ impl<F: Field> MultiPoint<F> {
             .collect();
         MultiPoint::new(vars)
     }
+
     pub fn vars(&self) -> usize {
         self.0.len()
     }
+
     pub fn inner(self) -> Vec<F> {
         self.0
     }
+
     pub fn inner_ref(&self) -> &[F] {
         &self.0
     }
-    /// eval self as eq poly with point
+
+    /// eval self as eq(x,y) polynomial with point.
     pub fn eval_as_eq(&self, point: &Self) -> F {
         assert_eq!(self.0.len(), point.0.len());
         self.0

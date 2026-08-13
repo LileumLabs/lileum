@@ -2,6 +2,11 @@ use crate::{MultiPoint, eq::eq};
 use ark_ff::Field;
 use std::{fmt::Debug, vec::IntoIter};
 
+/// A trait that defines an abstract set of multilinear extensions.
+/// The convention is to have an struct generic over V, which implements
+/// EvalsCore for any V, and then implement Evals for Type<()>.
+/// The derive macro will implement Evals and EvalsCore automatically,
+/// instanciating V with () as mentioned.
 pub trait Evals: Debug + Clone + 'static {
     type Mles<V: Clone + Debug>: EvalsCore<V>;
 

@@ -131,22 +131,34 @@ impl<F: Field, O: Oracle<F>> Reduction<F, SumcheckRelation<F, O>, QueryRelation<
         let mut sum = instance.sum;
 
         let mut vars = vec![];
+        // The standard sumcheck protocol.
         for i in 0..key.vars {
+            // Receive message from prover, message being an univariate polynomial.
+            // Verifier responds with challenge r.
             let (message, [r]) = transcript
                 .receive_message(|proof| proof[i].clone(), &proof, &key.degree)
                 .map_err(SumcheckError::Degree)?;
 
+            // Eval message at 0 and 1.
             let e0 = message.eval_at_0();
             let e1 = message.eval_at_1();
+
+            // Assert that they add up to the sum, return error if not.
             if e0 + e1 != sum {
                 return Err(SumcheckError::RoundSum);
             }
             vars.push(r);
+            // Set the sum to message(r).
+            // This reduces a v-variate sumcheck over p(x..) into a new
+            // (v-1)-variate sumcheck over p(r,x..).
             sum = message.eval_at_x(r, &key.weights);
+            // Repeat until we have a sumcheck over a constant polynomial.
         }
         vars.reverse();
         let eval = sum;
         let point = MultiPoint::new(vars);
+        // Sumcheck over p(r1,r2,r3,..) is the same as just checking if p(x..)
+        // evaluates to the sum.
         let instance = OracleQueryInstance {
             oracle_instance: instance.oracle_instance,
             point,
