@@ -1,4 +1,4 @@
-# Lilium
+# Lileum
 
 A customizable proof system.
 
@@ -14,12 +14,12 @@ A customizable proof system.
 
 ## Introduction
 
-Lilium is an argument of knowledge for arithmetic circuits.
+Lileum is an argument of knowledge for arithmetic circuits.
 If a digital circuit has bits for values and OR and AND for gates.
 An arithmetic circuit has field (like natural module some prime) elements for
 values and addition and multiplication for gates.
 An arithmetic circuit is a set of variables and gates/constraints connecting them.
-Lilium allows you to prove that you know a value assignment for each variable such
+Lileum allows you to prove that you know a value assignment for each variable such
 that all constraints are satisfied, and most importantly, without revealing
 the values.
 
@@ -80,11 +80,11 @@ The overall approach is the same:
 
 - Create a circuit representing our statement, or a family of statement
 of which ours is a particular instance.
-- Create a circuit key for the circuit using lilium.
+- Create a circuit key for the circuit using lileum.
 - Make a proof of our statement using the key.
 - Verify the proof using the key.
 
-The full examples can be found in [lilium/examples/](./lilium/examples/).
+The full examples can be found in [lileum/examples/](./lileum/examples/).
 
 #### Creating a circuit
 
@@ -187,7 +187,7 @@ fn circuit<V: Val, C: ConstraintSystem<F, V>>(
 }
 ```
 
-This one is closer to the exact code, as you will see in [example2.rs](./lilium/examples/example2.rs).
+This one is closer to the exact code, as you will see in [example2.rs](./lileum/examples/example2.rs).
 
 #### Example 3 implementation
 
@@ -335,7 +335,7 @@ For example $a + b = c$ would be the constraint for an addition gate.
 For most N -> 1 gates a single constraint is enough, but for N -> M gates you are
 likely to need several of them.
 
-Lilium currently implements circuit-level custom gates of arbitrary degree and
+Lileum currently implements circuit-level custom gates of arbitrary degree and
 arity. Gates may have any number of constraints, but if you want to use folding,
 it currently accepts only circuit with single-constraint gates.
 The performance with respect to degree is linear, meaning a degree 3 gate takes
@@ -440,7 +440,7 @@ of full proving.
 number of smaller steps, then you only need to prove as many steps as you need in
 each particular instance. Without it, you would have to define a big circuit for
 the worst case scenario.
-- Smaller verification time: Verifying Lilium proofs is O(log n) + pcs.open.
+- Smaller verification time: Verifying Lileum proofs is O(log n) + pcs.open.
 Which means that if the commitment scheme you are using has O(n) verification
 time, verification can take several seconds, and is definitively not succinct.
 Folding on the other hand, has always O(1) verification time regardless of
@@ -448,7 +448,7 @@ the commitment scheme used.
 
 ## Benchmarks
 
-The benchmarks are found in `lilium/benches` and come in two suites: execution-time
+The benchmarks are found in `lileum/benches` and come in two suites: execution-time
 benchmarks (`exectime`) and peak-memory benchmarks (`memory`). Both are built with
 Criterion, so the usual Criterion CLI options and HTML reports work.
 
@@ -508,7 +508,7 @@ cargo bench -- --baseline foo
 
 ### Single-threaded
 
-All the benchmarks are based on the [HashChain](https://github.com/fabrizio-m/lilium/blob/master/lilium/src/testing/utils.rs#L87)
+All the benchmarks are based on the [HashChain](https://github.com/LileumLabs/lileum/blob/master/lileum/src/testing/utils.rs#L87)
 circuit.
 A circuit which computes aposeidon2 chain of desired length.
 The lengths are chosen so that the number of constraints is just
@@ -520,11 +520,11 @@ The benchmarks were run in an Azure Standard FX2mds VM.
 
 #### Proving time
 
-![Proving time benchmark](https://github.com/fabrizio-m/lilium/blob/master/data/benchmarks/single_threaded/Proving%20Time/report/lines.svg)
+![Proving time benchmark](https://github.com/LileumLabs/lileum/blob/master/data/benchmarks/single_threaded/Proving%20Time/report/lines.svg)
 
 #### Folding time
 
-![Folding time benchmark](https://github.com/fabrizio-m/lilium/blob/master/data/benchmarks/single_threaded/Folding%20Time/report/lines.svg)
+![Folding time benchmark](https://github.com/LileumLabs/lileum/blob/master/data/benchmarks/single_threaded/Folding%20Time/report/lines.svg)
 
 #### Commit and fold
 
@@ -533,7 +533,7 @@ instance and create a new instance to fold with it.
 This benchmark measures the time of committing to an instance in addition to that
 of folding, providing a more realistic point of comparison with proving.
 
-![Commmit and fold benchmark](https://github.com/fabrizio-m/lilium/blob/master/data/benchmarks/single_threaded/Commit%20and%20fold/report/lines.svg)
+![Commmit and fold benchmark](https://github.com/LileumLabs/lileum/blob/master/data/benchmarks/single_threaded/Commit%20and%20fold/report/lines.svg)
 
 ## Design considerations
 

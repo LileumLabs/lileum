@@ -2,8 +2,8 @@
 name = "lileum-automata"
 version = "0.1.0"
 edition = "2024"
-description = "Abstract machine utilities used in Lilium"
-repository = "https://github.com/fabrizio-m/lilium"
+description = "Abstract machine utilities used in Lileum"
+repository = "https://github.com/LileumLabs/lileum"
 license = "MIT OR Apache-2.0"
 
 [dependencies]

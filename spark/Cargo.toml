@@ -2,24 +2,24 @@
 name = "lileum-spark"
 version = "0.1.0"
 edition = "2024"
-description = "Liliums' Spark implementation"
-repository = "https://github.com/fabrizio-m/lilium"
+description = "Lileums' Spark implementation"
+repository = "https://github.com/LileumLabs/lileum"
 license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 ark-ff = "0.4"
-sumcheck = { workspace = true } 
-sumcheck-derive = { workspace = true } 
-reduction = { workspace = true } 
-sponge = { workspace = true } 
-commit = { workspace = true } 
+sumcheck = { workspace = true }
+sumcheck-derive = { workspace = true }
+reduction = { workspace = true }
+sponge = { workspace = true }
+commit = { workspace = true }
 
 [dev-dependencies]
 rand = "0.8"
 ark-vesta = "0.4"
-commit = { workspace = true, features = ["ipa"] } 
+commit = { workspace = true, features = ["ipa"] }
 hash-to-curve = { workspace = true }
 
 [lib]

@@ -2,17 +2,17 @@
 name = "lileum-sumcheck"
 version = "0.1.0"
 edition = "2024"
-description = "generic Sumcheck implementation for Lilium"
-repository = "https://github.com/fabrizio-m/lilium"
+description = "generic Sumcheck implementation for Lileum"
+repository = "https://github.com/LileumLabs/lileum"
 license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 ark-ff = "0.4"
-reduction = { workspace = true } 
-sponge = { workspace = true } 
-automata = { workspace = true } 
+reduction = { workspace = true }
+sponge = { workspace = true }
+automata = { workspace = true }
 sumcheck-derive = { workspace = true }
 
 [dev-dependencies]
