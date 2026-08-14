@@ -2,19 +2,19 @@
 name = "lileum-commit"
 version = "0.1.0"
 edition = "2024"
-description = "Commitment scheme traits and implementations for Lilium"
-repository = "https://github.com/fabrizio-m/lilium"
+description = "Commitment scheme traits and implementations for Lileum"
+repository = "https://github.com/LileumLabs/lileum"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
 ark-ff = "0.4"
 ark-ec = { version = "0.4", optional = true }
 rand = "0.8"
-sumcheck = { workspace = true } 
-sumcheck-derive = { workspace = true } 
-reduction = { workspace = true } 
-sponge = { workspace = true } 
-hash-to-curve = { workspace = true, optional = true } 
+sumcheck = { workspace = true }
+sumcheck-derive = { workspace = true }
+reduction = { workspace = true }
+sponge = { workspace = true }
+hash-to-curve = { workspace = true, optional = true }
 
 [dev-dependencies]
 ark-vesta = "0.4"

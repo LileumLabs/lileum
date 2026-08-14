@@ -2,8 +2,8 @@
 name = "lileum"
 version = "0.1.0"
 edition = "2024"
-description = "The Lilium proof-system"
-repository = "https://github.com/fabrizio-m/lilium"
+description = "The Lileum proof-system"
+repository = "https://github.com/LileumLabs/lileum"
 license = "MIT OR Apache-2.0"
 autobenches = false
 
@@ -11,7 +11,7 @@ autobenches = false
 ark-ff = { version = "0.4", default-features = false }
 lcs = { workspace = true }
 sumcheck = { workspace = true }
-sumcheck-derive = { workspace = true } 
+sumcheck-derive = { workspace = true }
 commit = { workspace = true }
 spark = { workspace = true}
 sponge = { workspace = true }

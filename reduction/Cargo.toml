@@ -2,8 +2,8 @@
 name = "lileum-reduction"
 version = "0.1.0"
 edition = "2024"
-description = "Transcript implementation for Lilium"
-repository = "https://github.com/fabrizio-m/lilium"
+description = "Transcript implementation for Lileum"
+repository = "https://github.com/LileumLabs/lileum"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
