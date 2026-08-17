@@ -137,6 +137,11 @@ pub struct FlcsData {
 
 impl FlcsData {
     pub fn new(gates: Vec<Vec<Exp<usize>>>, multi_constraint: bool) -> Self {
+        if !multi_constraint {
+            for gate in &gates {
+                assert_eq!(gate.len(), 1);
+            }
+        }
         Self {
             gates,
             multi_constraint,
