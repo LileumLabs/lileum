@@ -158,8 +158,10 @@ fn structure<F: Field, const IO: usize, const S: usize, const I: usize>(
     ccs_structure: CcsStructure<F, IO, S>,
 ) -> Vec<FlcsEvals<F, IO, S, I>> {
     let mut mles = Vec::with_capacity(1 << ccs_structure.vars());
-    //TODO: use next_power_of_two(max(trace,constraints))
-    for i in 0..ccs_structure.trace_len {
+    let len = ccs_structure
+        .trace_len
+        .max(ccs_structure.gate_selectors.len());
+    for i in 0..len {
         let is_input = i < ccs_structure.input_len;
 
         let active_selector = ccs_structure.gate_selectors.get(i);
