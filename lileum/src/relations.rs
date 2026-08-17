@@ -7,7 +7,7 @@ use commit::CommitmentScheme;
 use lcs::{
     constraint_system::Constraints,
     matrix::Matrix,
-    structure::{CcsStructure, Exp},
+    structure::{Exp, LcsStructure},
     witness::LinearCombinations,
 };
 use reduction::{Message, NoError, Relation};
@@ -49,7 +49,7 @@ impl<F: Field, C: CommitmentScheme<F>, const I: usize> Message<F> for ClcsInstan
 }
 
 pub struct ClcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, const S: usize> {
-    pub(crate) ccs_structure: CcsStructure<F, IO, S>,
+    pub(crate) ccs_structure: LcsStructure<F, IO, S>,
     pub(crate) pcs: C,
 }
 
@@ -70,7 +70,7 @@ where
         instance: &Self::Instance,
         witness: &Self::Witness,
     ) -> bool {
-        let CcsStructure {
+        let LcsStructure {
             io_matrices,
             gate_selectors,
             input_len,
@@ -150,7 +150,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    pub ccs_structure: CcsStructure<F, IO, S>,
+    pub ccs_structure: LcsStructure<F, IO, S>,
     pub pcs: C,
     pub oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
 }

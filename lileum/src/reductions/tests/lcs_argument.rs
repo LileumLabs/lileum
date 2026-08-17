@@ -6,7 +6,7 @@ use crate::{
 };
 use ark_ff::PrimeField;
 use commit::CommitmentScheme;
-use lcs::{circuit::BuildStructure, structure::CcsStructure};
+use lcs::{circuit::BuildStructure, structure::LcsStructure};
 use reduction::{Prover, ProverOutput, Relation, Verifier};
 
 fn test<F, C, const N: usize>()
@@ -14,7 +14,7 @@ where
     F: PrimeField,
     C: CommitmentScheme<F>,
 {
-    let ccs_structure: CcsStructure<F, 4, 5> =
+    let ccs_structure: LcsStructure<F, 4, 5> =
         <HashChain<N> as BuildStructure<F, 1, 1, 1, 4>>::structure();
 
     let pcs = C::new(ccs_structure.vars());

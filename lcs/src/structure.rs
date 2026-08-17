@@ -53,7 +53,7 @@ impl Ord for MatrixIndex {
 }
 
 #[derive(Clone, Debug)]
-pub struct CcsStructure<F, const IO: usize, const S: usize> {
+pub struct LcsStructure<F, const IO: usize, const S: usize> {
     pub io_matrices: [Matrix; IO],
     /// Where each entry is in 0..S reprensenting the gate to active.
     pub gate_selectors: Vec<usize>,
@@ -66,7 +66,7 @@ pub struct CcsStructure<F, const IO: usize, const S: usize> {
     pub constants: BTreeMap<usize, F>,
 }
 
-impl<F, const IO: usize, const S: usize> CcsStructure<F, IO, S> {
+impl<F, const IO: usize, const S: usize> LcsStructure<F, IO, S> {
     /// vars needed to fir the trace
     pub fn vars(&self) -> usize {
         let len_padded = self.trace_len.next_power_of_two();
@@ -187,7 +187,7 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
         }
     }
 
-    pub fn build<const S: usize>(self, public_io_len: usize) -> CcsStructure<F, MAX_IO, S> {
+    pub fn build<const S: usize>(self, public_io_len: usize) -> LcsStructure<F, MAX_IO, S> {
         let Self {
             registry,
             constraints,
@@ -244,7 +244,7 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
 
         let trace_len = self.vars.len();
         assert_eq!(trace_len, self.next);
-        CcsStructure {
+        LcsStructure {
             input_len: public_io_len,
             io_matrices,
             gate_selectors,

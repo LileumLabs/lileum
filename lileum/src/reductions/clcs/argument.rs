@@ -11,7 +11,7 @@ use crate::{
 };
 use ark_ff::Field;
 use commit::{CommitmentScheme, oracle::CommittedOracle};
-use lcs::structure::CcsStructure;
+use lcs::structure::LcsStructure;
 use reduction::{
     Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,
@@ -155,7 +155,7 @@ where
 }
 
 fn structure<F: Field, const IO: usize, const S: usize, const I: usize>(
-    ccs_structure: CcsStructure<F, IO, S>,
+    ccs_structure: LcsStructure<F, IO, S>,
 ) -> Vec<FlcsEvals<F, IO, S, I>> {
     let mut mles = Vec::with_capacity(1 << ccs_structure.vars());
     let len = ccs_structure

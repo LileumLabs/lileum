@@ -9,7 +9,7 @@ use ark_ff::Field;
 use commit::CommitmentScheme;
 use lcs::{
     circuit::{BuildStructure, Circuit, Prove},
-    structure::CcsStructure,
+    structure::LcsStructure,
     witness::Witness,
 };
 use reduction::{FoldingRelation, Prover, ProverOutput, Verifier};
@@ -56,7 +56,7 @@ where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
         CS: 'static,
     {
-        let ccs_structure: CcsStructure<F, IO, S> = C::structure();
+        let ccs_structure: LcsStructure<F, IO, S> = C::structure();
         let vars = ccs_structure.vars();
 
         let pcs = CS::new(vars);

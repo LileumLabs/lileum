@@ -1,6 +1,6 @@
 use crate::{
     constraint_system::{ConstraintSystem, Val},
-    structure::{CcsStructure, StructureBuilder},
+    structure::{LcsStructure, StructureBuilder},
     witness::{Witness, WitnessGenerator, unwrap_output},
 };
 use ark_ff::Field;
@@ -41,7 +41,7 @@ pub trait BuildStructure<
     const IO: usize,
 >: Circuit<F, IN, OUT, PRIV_OUT>
 {
-    fn structure<const S: usize>() -> CcsStructure<F, IO, S> {
+    fn structure<const S: usize>() -> LcsStructure<F, IO, S> {
         let (mut cs, public_input) = StructureBuilder::<F, IO>::with_inputs::<IN>();
         cs.reserve_outputs::<OUT>();
         let (public_out, private_out) = Self::circuit(&mut cs, public_input.map(Var));
