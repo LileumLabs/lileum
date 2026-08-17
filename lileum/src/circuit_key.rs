@@ -8,8 +8,8 @@ use crate::{
 use ark_ff::Field;
 use commit::CommitmentScheme;
 use lcs::{
-    circuit::{BuildStructure, Circuit, Prove},
-    structure::CcsStructure,
+    circuit::{BuildLcs, Circuit, Prove},
+    structure::LcsCircuit,
     witness::Witness,
 };
 use reduction::{FoldingRelation, Prover, ProverOutput, Verifier};
@@ -56,11 +56,11 @@ where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
         CS: 'static,
     {
-        let ccs_structure: CcsStructure<F, IO, S> = C::structure();
-        let vars = ccs_structure.vars();
+        let circuit: LcsCircuit<F, IO, S> = C::lcs();
+        let vars = circuit.vars();
 
         let pcs = CS::new(vars);
-        let structure = LcsStructure { ccs_structure, pcs };
+        let structure = LcsStructure { circuit, pcs };
         let flcs_structure = structure.to_flcs();
 
         let to_flcs = Verifier::new(&structure);

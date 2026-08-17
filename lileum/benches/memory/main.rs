@@ -10,7 +10,7 @@ use criterion::{
     BenchmarkGroup, BenchmarkId, Criterion, SamplingMode, criterion_group, criterion_main,
 };
 use hash_to_curve::svdw::SvdwMap;
-use lcs::circuit::BuildStructure;
+use lcs::circuit::BuildLcs;
 use lileum::{CircuitKey, testing::utils::HashChain};
 use rand::{Rng, SeedableRng, rngs::StdRng};
 use sponge::{self, sponge::Duplex};
@@ -39,7 +39,7 @@ where
     Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
 
     group.bench_with_input(
         BenchmarkId::new("Proving", profile.witness_length),
@@ -61,7 +61,7 @@ where
     Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
 
     group.bench_with_input(
         BenchmarkId::new("Verifying", profile.witness_length),
@@ -94,7 +94,7 @@ where
     Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
 
     group.bench_with_input(
         BenchmarkId::new("Folding", profile.witness_length),
@@ -129,7 +129,7 @@ where
     Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
 
     group.bench_with_input(
         BenchmarkId::new("CommitFolding", profile.witness_length),
@@ -165,8 +165,8 @@ fn srs<CS, const N: usize>(group: &mut BenchmarkGroup<'_, PeakMemory>, name: &st
 where
     CS: CommitmentScheme<Fr>,
 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
-    let vars = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::structure::<5>().vars();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
+    let vars = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::lcs::<5>().vars();
 
     group.bench_with_input(
         BenchmarkId::new(name, profile.witness_length),
@@ -195,7 +195,7 @@ where
     Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
 
     group.bench_with_input(
         BenchmarkId::new("Setup", profile.witness_length),

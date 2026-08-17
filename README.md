@@ -228,7 +228,7 @@ that the prover gets after making a proof, and which the verifier will never see
 
 ### Custom gates
 
-A gate is an implementation of the [Gate](./ccs/src/gates.rs) trait:
+A gate is an implementation of the [Gate](./lcs/src/gates.rs) trait:
 
 ```rust
 pub trait Gate<const IO: usize, const I: usize, const O: usize> {
@@ -252,7 +252,7 @@ The circuit builder API allows to use any number and type of gates,
 and a `CircuitKey` can be created for any circuit as long as the proper
 configuration is set.
 
-A couple examples below, see [ccs/src/gates.rs](./ccs/src/gates.rs) for
+A couple examples below, see [lcs/src/gates.rs](./lcs/src/gates.rs) for
 more.
 
 ```rust
@@ -567,7 +567,7 @@ I have very few external dependencies, ark-ff, and ark-ec if you use the
 IPA based polynomial commitment scheme available by default.
 As for internal dependencies, I have the next crates:
 
-#### Ccs
+#### Lcs
 
 Implements all regarding circuits:
 
@@ -576,8 +576,6 @@ Implements all regarding circuits:
 - Witness generation.
 - Structure representing circuits
 - Implementation of common gates.
-
-As you may notice, I have things still to rename into lcs.
 
 #### Commit
 

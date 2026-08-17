@@ -53,7 +53,7 @@ impl Ord for MatrixIndex {
 }
 
 #[derive(Clone, Debug)]
-pub struct CcsStructure<F, const IO: usize, const S: usize> {
+pub struct LcsCircuit<F, const IO: usize, const S: usize> {
     pub io_matrices: [Matrix; IO],
     /// Where each entry is in 0..S reprensenting the gate to active.
     pub gate_selectors: Vec<usize>,
@@ -66,7 +66,7 @@ pub struct CcsStructure<F, const IO: usize, const S: usize> {
     pub constants: BTreeMap<usize, F>,
 }
 
-impl<F, const IO: usize, const S: usize> CcsStructure<F, IO, S> {
+impl<F, const IO: usize, const S: usize> LcsCircuit<F, IO, S> {
     /// vars needed to fir the trace
     pub fn vars(&self) -> usize {
         let len_padded = self.trace_len.next_power_of_two();
@@ -84,9 +84,9 @@ struct Constraint<T, const IO: usize> {
     selector: usize,
 }
 
-/// Builder creates the structure for a circuit through symbolic variables.
+/// Builder creates a [`LcsCircuit`] from a circuit through symbolic variables.
 #[derive(Debug, Default)]
-pub struct StructureBuilder<F: Field, const IO: usize> {
+pub struct LcsBuilder<F: Field, const IO: usize> {
     next: usize,
     vars: Vec<usize>,
     registry: GateRegistry,
@@ -133,7 +133,7 @@ impl Mul for WitnessIndex {
 
 impl Val for WitnessIndex {}
 
-impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
+impl<F: Field, const MAX_IO: usize> LcsBuilder<F, MAX_IO> {
     pub(crate) fn vars(&self) -> &[usize] {
         &self.vars
     }
@@ -187,7 +187,7 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
         }
     }
 
-    pub fn build<const S: usize>(self, public_io_len: usize) -> CcsStructure<F, MAX_IO, S> {
+    pub fn build<const S: usize>(self, public_io_len: usize) -> LcsCircuit<F, MAX_IO, S> {
         let Self {
             registry,
             constraints,
@@ -244,7 +244,7 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
 
         let trace_len = self.vars.len();
         assert_eq!(trace_len, self.next);
-        CcsStructure {
+        LcsCircuit {
             input_len: public_io_len,
             io_matrices,
             gate_selectors,
@@ -255,9 +255,7 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
     }
 }
 
-impl<F: Field, const MAX_IO: usize> ConstraintSystem<F, WitnessIndex>
-    for StructureBuilder<F, MAX_IO>
-{
+impl<F: Field, const MAX_IO: usize> ConstraintSystem<F, WitnessIndex> for LcsBuilder<F, MAX_IO> {
     fn execute<G, const IO: usize, const I: usize, const O: usize>(
         &mut self,
         inputs: [Var<WitnessIndex>; I],

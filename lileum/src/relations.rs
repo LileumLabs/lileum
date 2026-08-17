@@ -7,7 +7,7 @@ use commit::CommitmentScheme;
 use lcs::{
     constraint_system::Constraints,
     matrix::Matrix,
-    structure::{CcsStructure, Exp},
+    structure::{Exp, LcsCircuit},
     witness::LinearCombinations,
 };
 use reduction::{Message, NoError, Relation};
@@ -49,7 +49,7 @@ impl<F: Field, C: CommitmentScheme<F>, const I: usize> Message<F> for LcsInstanc
 }
 
 pub struct LcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, const S: usize> {
-    pub(crate) ccs_structure: CcsStructure<F, IO, S>,
+    pub(crate) circuit: LcsCircuit<F, IO, S>,
     pub(crate) pcs: C,
 }
 
@@ -69,14 +69,14 @@ where
         instance: &Self::Instance,
         witness: &Self::Witness,
     ) -> bool {
-        let CcsStructure {
+        let LcsCircuit {
             io_matrices,
             gate_selectors,
             input_len,
             gates,
             trace_len: _,
             constants,
-        } = &structure.ccs_structure;
+        } = &structure.circuit;
 
         let LcsInstance {
             witness_commit,
@@ -89,7 +89,7 @@ where
             return false;
         }
 
-        if witness.len() != (1 << structure.ccs_structure.vars()) {
+        if witness.len() != (1 << structure.circuit.vars()) {
             return false;
         }
 
@@ -149,7 +149,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    pub ccs_structure: CcsStructure<F, IO, S>,
+    pub circuit: LcsCircuit<F, IO, S>,
     pub pcs: C,
     pub oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
 }

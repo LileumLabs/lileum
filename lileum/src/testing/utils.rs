@@ -53,9 +53,9 @@ impl<F: Field> Circuit<F, 3, 3, 3> for TestingHash {
 #[test]
 fn profile_hash() {
     use ark_vesta::Fr;
-    use ccs::circuit::BuildStructure;
+    use lcs::circuit::LcsCircuit;
 
-    let profile = <TestingHash as BuildStructure<Fr, 3, 3, 3, 5>>::profile();
+    let profile = <TestingHash as BuildLcs<Fr, 3, 3, 3, 5>>::profile();
     println!("{profile}");
 }
 */
@@ -116,9 +116,9 @@ impl<F: Field, const N: usize> Circuit<F, 1, 1, 1> for HashChain<N> {
 #[test]
 fn profile_chain() {
     use ark_vesta::Fr;
-    use ccs::circuit::BuildStructure;
+    use lcs::circuit::BuildLcs;
 
-    let profile = <HashChain<100> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<100> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
     println!("{profile}");
 }
 */

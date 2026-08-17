@@ -47,8 +47,8 @@ where
     }
 
     fn verifier_key(structure: &LcsStructure<F, C, IO, S>) -> Self::VerifierKey {
-        let LcsStructure { ccs_structure, .. } = structure;
-        ccs_structure.vars()
+        let LcsStructure { circuit, .. } = structure;
+        circuit.vars()
     }
 
     fn key_pair(structure: &LcsStructure<F, C, IO, S>) -> (Self::VerifierKey, Self::ProverKey) {

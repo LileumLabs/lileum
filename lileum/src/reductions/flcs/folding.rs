@@ -71,7 +71,7 @@ where
         let oracle = &structure.oracle;
         let verifier_key = ZeroFold::verifier_key(oracle);
 
-        let matrices = structure.ccs_structure.io_matrices.clone().map(Rc::new);
+        let matrices = structure.circuit.io_matrices.clone().map(Rc::new);
         let structure = oracle.structure();
         let prover_key = ProverKey {
             structure,

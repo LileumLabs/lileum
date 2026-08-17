@@ -1,10 +1,10 @@
 //! This module has a simplified version of the proof system and most
 //! things that could be needed to write circuits and work with them.
 //! Circuits are fixed to use up to 10 gates, each with up to 5 inputs/outputs,
-//! which should be enough in most cases.  
+//! which should be enough in most cases.
 //!
 //! The sponge's permutation is fixed to poseidon2 with a configuration which
-//! should work for 256 bits or bigger fields.  
+//! should work for 256 bits or bigger fields.
 //!
 //! For more customization, [circuit_key::CircuitKey] should be used.
 
@@ -22,7 +22,7 @@ pub use ark_ff::{Field, PrimeField};
 pub use circuit_key::FoldingProof;
 use circuit_key::Instance;
 pub use commit::CommitmentScheme;
-use lcs::circuit::{BuildStructure, CircuitProfile};
+use lcs::circuit::{BuildLcs, CircuitProfile};
 pub use lcs::{
     circuit::{Circuit, Var},
     constraint_system::{ConstraintSystem, Val},
@@ -128,7 +128,7 @@ where
     where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
     {
-        <C as BuildStructure<F, IN, OUT, PRIV_OUT, IO>>::profile()
+        <C as BuildLcs<F, IN, OUT, PRIV_OUT, IO>>::profile()
     }
 }
 

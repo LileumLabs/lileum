@@ -6,7 +6,7 @@ use criterion::{
     criterion_main, measurement::WallTime,
 };
 use hash_to_curve::svdw::SvdwMap;
-use lcs::circuit::BuildStructure;
+use lcs::circuit::BuildLcs;
 use lileum::{CircuitKey, testing::utils::HashChain};
 use rand::{Rng, SeedableRng, rngs::StdRng};
 use sponge::{self, sponge::Duplex};
@@ -16,7 +16,7 @@ type Permutation = sponge::poseidon2::PoseidonDefault<Fr>;
 type Sponge = sponge::sponge::Sponge<Fr, Permutation, 1, 2, 3>;
 
 fn size<const N: usize>() -> u32 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
     let witness_size = profile.witness_length.next_power_of_two().ilog2();
     println!("N: {}, len: 2^{}", N, witness_size);
     witness_size
@@ -62,7 +62,7 @@ where
     Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
 
     group.bench_with_input(
         BenchmarkId::new("Proving", profile.witness_length),
@@ -84,7 +84,7 @@ where
     Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
 
     group.bench_with_input(
         BenchmarkId::new("Folding", profile.witness_length),
@@ -129,7 +129,7 @@ where
     Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
 
     group.bench_with_input(
         BenchmarkId::new("CommitFolding", profile.witness_length),
@@ -174,7 +174,7 @@ where
     Scheme: CommitmentScheme<Fr>,
     Sponge: Duplex<Fr>,
 {
-    let profile = <HashChain<N> as BuildStructure<Fr, 1, 1, 1, 5>>::profile();
+    let profile = <HashChain<N> as BuildLcs<Fr, 1, 1, 1, 5>>::profile();
 
     group.bench_with_input(
         BenchmarkId::new("Verifying", profile.witness_length),

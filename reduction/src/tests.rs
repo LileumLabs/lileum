@@ -1,7 +1,7 @@
 //! Transcript tests
 //!
 //! Each test exercises a single invariant of the transcript abstraction with
-//! no dependency on ccs/sumcheck/spark/commit. A failure here localizes the
+//! no dependency on lcs/sumcheck/spark/commit. A failure here localizes the
 //! regression to the transcript layer.
 
 use ark_vesta::Fr;

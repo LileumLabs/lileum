@@ -11,7 +11,7 @@ use crate::{
 };
 use ark_ff::Field;
 use commit::{CommitmentScheme, oracle::CommittedOracle};
-use lcs::structure::CcsStructure;
+use lcs::structure::LcsCircuit;
 use reduction::{
     Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,
@@ -60,14 +60,14 @@ where
     fn verifier_key(structure: &LcsStructure<F, C, IO, S>) -> Self::VerifierKey {
         let flcs_structure = structure.to_flcs::<I>();
         let verifier_key = FlcsArgument::verifier_key(&flcs_structure);
-        let vars = structure.ccs_structure.vars();
+        let vars = structure.circuit.vars();
         (verifier_key, vars)
     }
 
     fn key_pair(structure: &LcsStructure<F, C, IO, S>) -> (Self::VerifierKey, Self::ProverKey) {
         let flcs_structure = structure.to_flcs::<I>();
         let (verifier_key, prover_key) = FlcsArgument::key_pair(&flcs_structure);
-        let vars = structure.ccs_structure.vars();
+        let vars = structure.circuit.vars();
         ((verifier_key, vars), (prover_key, vars))
     }
 
@@ -113,10 +113,10 @@ where
 {
     pub fn to_flcs<const I: usize>(&self) -> FlcsStructure<F, C, IO, S, I> {
         use sumcheck::oracles::partial::PartialOracle;
-        let LcsStructure { ccs_structure, pcs } = self;
-        let (ccs_structure, pcs) = (ccs_structure.clone(), pcs.clone());
+        let LcsStructure { circuit, pcs } = self;
+        let (circuit, pcs) = (circuit.clone(), pcs.clone());
 
-        let gates = ccs_structure
+        let gates = circuit
             .gates
             .iter()
             .map(|gate| Vec::from(gate.clone()))
@@ -126,8 +126,8 @@ where
         let multi_constraint = false;
         let data = FlcsData::new(gates, multi_constraint);
 
-        let matrices = ccs_structure.io_matrices.clone().map(Rc::new);
-        let mles = Rc::new(structure(ccs_structure.clone()));
+        let matrices = circuit.io_matrices.clone().map(Rc::new);
+        let mles = Rc::new(structure(circuit.clone()));
 
         let functions = FlcsEvals::functions();
 
@@ -142,12 +142,12 @@ where
             FlcsEvals::vector(),
             committed_oracle,
             pcs.clone(),
-            ccs_structure.vars(),
+            circuit.vars(),
         );
         let oracle = CompositeOracle::new(data, mles, builder1, builder2);
 
         FlcsStructure {
-            ccs_structure,
+            circuit,
             pcs,
             oracle,
         }
@@ -155,28 +155,24 @@ where
 }
 
 fn structure<F: Field, const IO: usize, const S: usize, const I: usize>(
-    ccs_structure: CcsStructure<F, IO, S>,
+    circuit: LcsCircuit<F, IO, S>,
 ) -> Vec<FlcsEvals<F, IO, S, I>> {
-    let mut mles = Vec::with_capacity(1 << ccs_structure.vars());
+    let mut mles = Vec::with_capacity(1 << circuit.vars());
     //TODO: use next_power_of_two(max(trace,constraints))
-    for i in 0..ccs_structure.trace_len {
-        let is_input = i < ccs_structure.input_len;
+    for i in 0..circuit.trace_len {
+        let is_input = i < circuit.input_len;
 
-        let active_selector = ccs_structure.gate_selectors.get(i);
+        let active_selector = circuit.gate_selectors.get(i);
         // Selecting any value outside of the 0..S range will result
         // in FlcsEvals::structure(..) setting all zeros.
         let selector = active_selector.cloned().unwrap_or(S);
 
-        let constant = ccs_structure
-            .constants
-            .get(&i)
-            .cloned()
-            .unwrap_or(F::zero());
+        let constant = circuit.constants.get(&i).cloned().unwrap_or(F::zero());
 
         let row = FlcsEvals::structure(is_input, selector, constant);
         mles.push(row)
     }
     let padding_row = FlcsEvals::structure(false, S, F::ZERO);
-    mles.resize(1 << ccs_structure.vars(), padding_row);
+    mles.resize(1 << circuit.vars(), padding_row);
     mles
 }

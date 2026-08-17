@@ -1,6 +1,6 @@
 use crate::{
     constraint_system::{ConstraintSystem, Val},
-    structure::{CcsStructure, StructureBuilder},
+    structure::{LcsBuilder, LcsCircuit},
     witness::{Witness, WitnessGenerator, unwrap_output},
 };
 use ark_ff::Field;
@@ -33,7 +33,7 @@ pub trait Circuit<F: Field, const IN: usize = 0, const OUT: usize = 0, const PRI
     fn handle_output(out: [F; PRIV_OUT]) -> Self::PrivateOutput;
 }
 
-pub trait BuildStructure<
+pub trait BuildLcs<
     F: Field,
     const IN: usize,
     const OUT: usize,
@@ -41,8 +41,8 @@ pub trait BuildStructure<
     const IO: usize,
 >: Circuit<F, IN, OUT, PRIV_OUT>
 {
-    fn structure<const S: usize>() -> CcsStructure<F, IO, S> {
-        let (mut cs, public_input) = StructureBuilder::<F, IO>::with_inputs::<IN>();
+    fn lcs<const S: usize>() -> LcsCircuit<F, IO, S> {
+        let (mut cs, public_input) = LcsBuilder::<F, IO>::with_inputs::<IN>();
         cs.reserve_outputs::<OUT>();
         let (public_out, private_out) = Self::circuit(&mut cs, public_input.map(Var));
         //unnecessary for this
@@ -53,7 +53,7 @@ pub trait BuildStructure<
     }
 
     fn profile() -> CircuitProfile {
-        let (mut cs, public_input) = StructureBuilder::<F, IO>::with_inputs::<IN>();
+        let (mut cs, public_input) = LcsBuilder::<F, IO>::with_inputs::<IN>();
         cs.reserve_outputs::<OUT>();
         let (public_out, _) = Self::circuit(&mut cs, public_input.map(Var));
         cs.link_outputs::<IN, OUT>(public_out.map(Var::unwrap));
@@ -85,7 +85,7 @@ impl Display for CircuitProfile {
 }
 
 impl<T, F: Field, const IN: usize, const OUT: usize, const PRIV_OUT: usize, const IO: usize>
-    BuildStructure<F, IN, OUT, PRIV_OUT, IO> for T
+    BuildLcs<F, IN, OUT, PRIV_OUT, IO> for T
 where
     T: Circuit<F, IN, OUT, PRIV_OUT>,
 {
