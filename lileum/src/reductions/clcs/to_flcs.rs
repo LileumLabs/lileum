@@ -16,7 +16,7 @@ use sumcheck::{
 };
 
 #[derive(Clone, Debug)]
-/// LCS -> FLCS
+/// CLCS -> FLCS
 pub struct ToFlcs;
 
 impl<F, C, const I: usize, const IO: usize, const S: usize>
@@ -47,8 +47,8 @@ where
     }
 
     fn verifier_key(structure: &ClcsStructure<F, C, IO, S>) -> Self::VerifierKey {
-        let ClcsStructure { ccs_structure, .. } = structure;
-        ccs_structure.vars()
+        let ClcsStructure { lcs_structure, .. } = structure;
+        lcs_structure.vars()
     }
 
     fn key_pair(structure: &ClcsStructure<F, C, IO, S>) -> (Self::VerifierKey, Self::ProverKey) {

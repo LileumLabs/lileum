@@ -21,7 +21,7 @@ use std::rc::Rc;
 use sumcheck::oracles::{composite::CompositeOracle, core::CoreOracle};
 
 #[derive(Clone, Debug)]
-/// LCS -> ()
+/// CLCS -> ()
 pub struct ClcsArgument;
 
 impl<F, C, const I: usize, const IO: usize, const S: usize>
@@ -60,14 +60,14 @@ where
     fn verifier_key(structure: &ClcsStructure<F, C, IO, S>) -> Self::VerifierKey {
         let flcs_structure = structure.to_flcs::<I>();
         let verifier_key = FlcsArgument::verifier_key(&flcs_structure);
-        let vars = structure.ccs_structure.vars();
+        let vars = structure.lcs_structure.vars();
         (verifier_key, vars)
     }
 
     fn key_pair(structure: &ClcsStructure<F, C, IO, S>) -> (Self::VerifierKey, Self::ProverKey) {
         let flcs_structure = structure.to_flcs::<I>();
         let (verifier_key, prover_key) = FlcsArgument::key_pair(&flcs_structure);
-        let vars = structure.ccs_structure.vars();
+        let vars = structure.lcs_structure.vars();
         ((verifier_key, vars), (prover_key, vars))
     }
 
@@ -113,10 +113,10 @@ where
 {
     pub fn to_flcs<const I: usize>(&self) -> FlcsStructure<F, C, IO, S, I> {
         use sumcheck::oracles::partial::PartialOracle;
-        let ClcsStructure { ccs_structure, pcs } = self;
-        let (ccs_structure, pcs) = (ccs_structure.clone(), pcs.clone());
+        let ClcsStructure { lcs_structure, pcs } = self;
+        let (lcs_structure, pcs) = (lcs_structure.clone(), pcs.clone());
 
-        let gates = ccs_structure
+        let gates = lcs_structure
             .gates
             .iter()
             .map(|gate| Vec::from(gate.clone()))
@@ -126,8 +126,8 @@ where
         let multi_constraint = false;
         let data = FlcsData::new(gates, multi_constraint);
 
-        let matrices = ccs_structure.io_matrices.clone().map(Rc::new);
-        let mles = Rc::new(structure(ccs_structure.clone()));
+        let matrices = lcs_structure.io_matrices.clone().map(Rc::new);
+        let mles = Rc::new(structure(lcs_structure.clone()));
 
         let functions = FlcsEvals::functions();
 
@@ -142,12 +142,12 @@ where
             FlcsEvals::vector(),
             committed_oracle,
             pcs.clone(),
-            ccs_structure.vars(),
+            lcs_structure.vars(),
         );
         let oracle = CompositeOracle::new(data, mles, builder1, builder2);
 
         FlcsStructure {
-            ccs_structure,
+            lcs_structure,
             pcs,
             oracle,
         }
@@ -155,21 +155,21 @@ where
 }
 
 fn structure<F: Field, const IO: usize, const S: usize, const I: usize>(
-    ccs_structure: LcsStructure<F, IO, S>,
+    lcs_structure: LcsStructure<F, IO, S>,
 ) -> Vec<FlcsEvals<F, IO, S, I>> {
-    let mut mles = Vec::with_capacity(1 << ccs_structure.vars());
-    let len = ccs_structure
+    let mut mles = Vec::with_capacity(1 << lcs_structure.vars());
+    let len = lcs_structure
         .trace_len
-        .max(ccs_structure.gate_selectors.len());
+        .max(lcs_structure.gate_selectors.len());
     for i in 0..len {
-        let is_input = i < ccs_structure.input_len;
+        let is_input = i < lcs_structure.input_len;
 
-        let active_selector = ccs_structure.gate_selectors.get(i);
+        let active_selector = lcs_structure.gate_selectors.get(i);
         // Selecting any value outside of the 0..S range will result
         // in FlcsEvals::structure(..) setting all zeros.
         let selector = active_selector.cloned().unwrap_or(S);
 
-        let constant = ccs_structure
+        let constant = lcs_structure
             .constants
             .get(&i)
             .cloned()
@@ -179,6 +179,6 @@ fn structure<F: Field, const IO: usize, const S: usize, const I: usize>(
         mles.push(row)
     }
     let padding_row = FlcsEvals::structure(false, S, F::ZERO);
-    mles.resize(1 << ccs_structure.vars(), padding_row);
+    mles.resize(1 << lcs_structure.vars(), padding_row);
     mles
 }

@@ -56,11 +56,11 @@ where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
         CS: 'static,
     {
-        let ccs_structure: LcsStructure<F, IO, S> = C::structure();
-        let vars = ccs_structure.vars();
+        let lcs_structure: LcsStructure<F, IO, S> = C::structure();
+        let vars = lcs_structure.vars();
 
         let pcs = CS::new(vars);
-        let structure = ClcsStructure { ccs_structure, pcs };
+        let structure = ClcsStructure { lcs_structure, pcs };
         let flcs_structure = structure.to_flcs();
 
         let to_flcs = Verifier::new(&structure);

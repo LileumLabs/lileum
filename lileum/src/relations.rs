@@ -49,7 +49,7 @@ impl<F: Field, C: CommitmentScheme<F>, const I: usize> Message<F> for ClcsInstan
 }
 
 pub struct ClcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, const S: usize> {
-    pub(crate) ccs_structure: LcsStructure<F, IO, S>,
+    pub(crate) lcs_structure: LcsStructure<F, IO, S>,
     pub(crate) pcs: C,
 }
 
@@ -77,7 +77,7 @@ where
             gates,
             trace_len: _,
             constants,
-        } = &structure.ccs_structure;
+        } = &structure.lcs_structure;
 
         let ClcsInstance {
             witness_commit,
@@ -90,7 +90,7 @@ where
             return false;
         }
 
-        if witness.len() != (1 << structure.ccs_structure.vars()) {
+        if witness.len() != (1 << structure.lcs_structure.vars()) {
             return false;
         }
 
@@ -150,7 +150,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    pub ccs_structure: LcsStructure<F, IO, S>,
+    pub lcs_structure: LcsStructure<F, IO, S>,
     pub pcs: C,
     pub oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
 }

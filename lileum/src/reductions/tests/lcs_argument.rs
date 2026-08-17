@@ -14,11 +14,11 @@ where
     F: PrimeField,
     C: CommitmentScheme<F>,
 {
-    let ccs_structure: LcsStructure<F, 4, 5> =
+    let lcs_structure: LcsStructure<F, 4, 5> =
         <HashChain<N> as BuildStructure<F, 1, 1, 1, 4>>::structure();
 
-    let pcs = C::new(ccs_structure.vars());
-    let structure = ClcsStructure { ccs_structure, pcs };
+    let pcs = C::new(lcs_structure.vars());
+    let structure = ClcsStructure { lcs_structure, pcs };
 
     let prover: Prover<F, Poseidon<F>, ClcsRelation<F, C, 2, 4, 5>, (), ClcsArgument> =
         Prover::new(&structure);

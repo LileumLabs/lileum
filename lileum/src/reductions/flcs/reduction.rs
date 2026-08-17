@@ -121,7 +121,7 @@ where
 
     fn verifier_key(structure: &FlcsStructure<F, C, IO, S, I>) -> Self::VerifierKey {
         let FlcsStructure {
-            ccs_structure,
+            lcs_structure,
             pcs,
             oracle,
         } = structure;
@@ -135,7 +135,7 @@ where
 
         let composite_key = CompositeOracle::verifier_key(oracle);
 
-        let spark_structure = spark_structure(&ccs_structure.io_matrices, pcs, vars);
+        let spark_structure = spark_structure(&lcs_structure.io_matrices, pcs, vars);
         let matrix_structure = ([pcs.clone(), pcs.clone()], spark_structure);
         let matrix_oracle_key = MatrixProductReduction::verifier_key(&oracle.inner_oracles().1);
         let (_, spark_structure) = matrix_structure;
@@ -164,7 +164,7 @@ where
         >>::verifier_key(structure);
 
         let FlcsStructure {
-            ccs_structure,
+            lcs_structure,
             pcs,
             oracle,
         } = structure;
@@ -182,12 +182,12 @@ where
         let composite_key = CompositeOracle::verifier_key(oracle);
 
         let matrices = structure
-            .ccs_structure
+            .lcs_structure
             .io_matrices
             .each_ref()
             .map(|matrix| Rc::new(matrix.clone()));
 
-        let spark_structure = spark_structure(&ccs_structure.io_matrices, pcs, vars);
+        let spark_structure = spark_structure(&lcs_structure.io_matrices, pcs, vars);
         let matrix_structure = ([pcs.clone(), pcs.clone()], spark_structure);
         let (_, matrix_oracle_key) = MatrixProductReduction::key_pair(&oracle.inner_oracles().1);
         let (_, spark_structure) = matrix_structure;
