@@ -5,7 +5,7 @@ pub(crate) mod matrix_product;
 mod tests;
 
 pub use flcs::{FlcsArgument, FlcsFoldingScheme, FlcsReduction};
-pub use lcs::{LcsArgument, ToFlcs};
+pub use lcs::{ClcsArgument, ToFlcs};
 
 // NOTE: Papers:
 // Hypernova:   https://eprint.iacr.org/2023/573.pdf

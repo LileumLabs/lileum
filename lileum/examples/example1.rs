@@ -76,7 +76,7 @@ fn main() {
     // The witness is a trace of the computation described in the circuit. It is
     // basically a vector of the values of all variables.
     let (instance, witness, _output) = circuit_key.commit_witness(inputs);
-    let instance: LcsInstance<Fr, FrScheme, 0> = instance;
+    let instance: ClcsInstance<Fr, FrScheme, 0> = instance;
     let witness: Witness<Fr> = witness;
 
     // Now, we want to prove that the (instance,witness) pair satisfies the constraints
@@ -99,7 +99,7 @@ fn main() {
     // Here is a simpler way of doing the same in these cases were you want
     // to go directly from inputs to proof.
     let (instance, proof, _output) = circuit_key.prove_from_inputs(inputs);
-    let instance: LcsInstance<Fr, FrScheme, 0> = instance;
+    let instance: ClcsInstance<Fr, FrScheme, 0> = instance;
     let proof: Proof<Fr, FrScheme> = proof;
 
     assert!(circuit_key.verify(instance, proof));

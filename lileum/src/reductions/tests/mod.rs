@@ -1,4 +1,4 @@
-use crate::{relations::LcsInstance, testing::utils::HashChain};
+use crate::{relations::ClcsInstance, testing::utils::HashChain};
 use ark_ff::Field;
 use commit::CommitmentScheme;
 use sponge::{poseidon2::PoseidonDefault, sponge::Sponge};
@@ -12,7 +12,7 @@ type Poseidon<F> = Sponge<F, PoseidonDefault<F>, 2, 1, 3>;
 pub fn commit_witness<F, C, const N: usize>(
     pcs: &C,
     inputs: [F; 1],
-) -> (LcsInstance<F, C, 2>, Vec<F>)
+) -> (ClcsInstance<F, C, 2>, Vec<F>)
 where
     F: Field,
     C: CommitmentScheme<F>,
@@ -27,7 +27,7 @@ where
 
     let public_inputs = inputs;
 
-    let instance: LcsInstance<F, C, 2> = LcsInstance {
+    let instance: ClcsInstance<F, C, 2> = ClcsInstance {
         witness_commit,
         public_inputs,
     };

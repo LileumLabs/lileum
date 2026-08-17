@@ -63,7 +63,7 @@ where
     let inputs = [Fr::zero(), Fr::one()];
 
     let (instance, proof, _output) = circuit_key.prove_from_inputs(inputs);
-    let instance: LcsInstance<Fr, FrScheme, 3> = instance;
+    let instance: ClcsInstance<Fr, FrScheme, 3> = instance;
     let proof: Proof<Fr, FrScheme> = proof;
 
     // Now there is an extra check to do. We want a a valid proof

@@ -12,11 +12,11 @@
 use crate::circuit_key;
 pub use crate::{
     circuits,
+    relations::ClcsInstance,
     // flcs::FoldableLcsInstance,
     // folding::InstancePair,
     // instances::lcs::{verifying::LcsProof, LcsInstance},
     relations::FlcsInstance,
-    relations::LcsInstance,
 };
 pub use ark_ff::{Field, PrimeField};
 pub use circuit_key::FoldingProof;
@@ -93,7 +93,7 @@ where
     pub fn prove_from_inputs<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
         &self,
         inputs: [F; IN],
-    ) -> (LcsInstance<F, CS, I>, Proof<F, CS>, C::PrivateOutput)
+    ) -> (ClcsInstance<F, CS, I>, Proof<F, CS>, C::PrivateOutput)
     where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
     {
@@ -106,7 +106,7 @@ where
     pub fn commit_witness<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
         &self,
         inputs: [F; IN],
-    ) -> (LcsInstance<F, CS, I>, Witness<F>, C::PrivateOutput)
+    ) -> (ClcsInstance<F, CS, I>, Witness<F>, C::PrivateOutput)
     where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
     {
@@ -114,11 +114,11 @@ where
     }
 
     /// Proves (instance, witness) pair.
-    pub fn prove(&self, instance: LcsInstance<F, CS, I>, witness: Witness<F>) -> Proof<F, CS> {
+    pub fn prove(&self, instance: ClcsInstance<F, CS, I>, witness: Witness<F>) -> Proof<F, CS> {
         self.inner.prove(instance, witness)
     }
 
-    pub fn verify(&self, instance: LcsInstance<F, CS, I>, proof: Proof<F, CS>) -> bool {
+    pub fn verify(&self, instance: ClcsInstance<F, CS, I>, proof: Proof<F, CS>) -> bool {
         self.inner.verify(instance, proof)
     }
 

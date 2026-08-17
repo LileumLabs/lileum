@@ -18,21 +18,21 @@ use sumcheck::{
 };
 
 #[derive(Clone, Copy, Debug)]
-pub struct LcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
+pub struct ClcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
 
 #[derive(Clone, Debug)]
-pub struct LcsInstance<F: Field, C: CommitmentScheme<F>, const I: usize> {
+pub struct ClcsInstance<F: Field, C: CommitmentScheme<F>, const I: usize> {
     pub(crate) witness_commit: C::Commitment,
     pub(crate) public_inputs: [F; I],
 }
 
-impl<F: Field, C: CommitmentScheme<F>, const I: usize> LcsInstance<F, C, I> {
+impl<F: Field, C: CommitmentScheme<F>, const I: usize> ClcsInstance<F, C, I> {
     pub fn public_inputs(&self) -> &[F; I] {
         &self.public_inputs
     }
 }
 
-impl<F: Field, C: CommitmentScheme<F>, const I: usize> Message<F> for LcsInstance<F, C, I> {
+impl<F: Field, C: CommitmentScheme<F>, const I: usize> Message<F> for ClcsInstance<F, C, I> {
     type Params = ();
 
     type Error = NoError;
@@ -48,19 +48,20 @@ impl<F: Field, C: CommitmentScheme<F>, const I: usize> Message<F> for LcsInstanc
     }
 }
 
-pub struct LcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, const S: usize> {
+pub struct ClcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, const S: usize> {
     pub(crate) ccs_structure: CcsStructure<F, IO, S>,
     pub(crate) pcs: C,
 }
 
-impl<F, C, const I: usize, const IO: usize, const S: usize> Relation for LcsRelation<F, C, I, IO, S>
+impl<F, C, const I: usize, const IO: usize, const S: usize> Relation
+    for ClcsRelation<F, C, I, IO, S>
 where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    type Structure = LcsStructure<F, C, IO, S>;
+    type Structure = ClcsStructure<F, C, IO, S>;
 
-    type Instance = LcsInstance<F, C, I>;
+    type Instance = ClcsInstance<F, C, I>;
 
     type Witness = Vec<F>;
 
@@ -78,7 +79,7 @@ where
             constants,
         } = &structure.ccs_structure;
 
-        let LcsInstance {
+        let ClcsInstance {
             witness_commit,
             public_inputs,
         } = instance;

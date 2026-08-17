@@ -1,7 +1,7 @@
 use super::{Poseidon, commit_witness};
 use crate::{
-    reductions::LcsArgument,
-    relations::{LcsRelation, LcsStructure},
+    reductions::ClcsArgument,
+    relations::{ClcsRelation, ClcsStructure},
     testing::utils::HashChain,
 };
 use ark_ff::PrimeField;
@@ -18,18 +18,18 @@ where
         <HashChain<N> as BuildStructure<F, 1, 1, 1, 4>>::structure();
 
     let pcs = C::new(ccs_structure.vars());
-    let structure = LcsStructure { ccs_structure, pcs };
+    let structure = ClcsStructure { ccs_structure, pcs };
 
-    let prover: Prover<F, Poseidon<F>, LcsRelation<F, C, 2, 4, 5>, (), LcsArgument> =
+    let prover: Prover<F, Poseidon<F>, ClcsRelation<F, C, 2, 4, 5>, (), ClcsArgument> =
         Prover::new(&structure);
 
-    let verifier: Verifier<F, Poseidon<F>, LcsRelation<F, C, 2, 4, 5>, (), LcsArgument> =
+    let verifier: Verifier<F, Poseidon<F>, ClcsRelation<F, C, 2, 4, 5>, (), ClcsArgument> =
         Verifier::new(&structure);
 
     let input = F::from(8u8);
     let (instance, witness) = commit_witness::<F, C, N>(&structure.pcs, [input]);
 
-    assert!(LcsRelation::<F, C, 2, 4, 5>::check(
+    assert!(ClcsRelation::<F, C, 2, 4, 5>::check(
         &structure, &instance, &witness
     ));
     let ProverOutput {

@@ -3,7 +3,7 @@ use crate::{
         FlcsArgument, FlcsFoldingScheme, ToFlcs,
         flcs::{self, folding},
     },
-    relations::{FlcsInstance, FlcsRelation, LcsInstance, LcsRelation, LcsStructure},
+    relations::{ClcsInstance, ClcsRelation, ClcsStructure, FlcsInstance, FlcsRelation},
 };
 use ark_ff::Field;
 use commit::CommitmentScheme;
@@ -30,7 +30,7 @@ pub struct CircuitKey<
     const S: usize = 0,
 > {
     _circuit: PhantomData<C>,
-    to_flcs: Verifier<F, D, LcsRelation<F, CS, I, IO, S>, FlcsRelation<F, CS, I, IO, S>, ToFlcs>,
+    to_flcs: Verifier<F, D, ClcsRelation<F, CS, I, IO, S>, FlcsRelation<F, CS, I, IO, S>, ToFlcs>,
     flcs_prover: Prover<F, D, FlcsRelation<F, CS, I, IO, S>, (), FlcsArgument>,
     flcs_verifier: Verifier<F, D, FlcsRelation<F, CS, I, IO, S>, (), FlcsArgument>,
     folding_prover: FoldingProver<F, D, FlcsRelation<F, CS, I, IO, S>>,
@@ -60,7 +60,7 @@ where
         let vars = ccs_structure.vars();
 
         let pcs = CS::new(vars);
-        let structure = LcsStructure { ccs_structure, pcs };
+        let structure = ClcsStructure { ccs_structure, pcs };
         let flcs_structure = structure.to_flcs();
 
         let to_flcs = Verifier::new(&structure);
@@ -171,7 +171,7 @@ where
     pub fn commit_witness<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
         &self,
         inputs: [F; IN],
-    ) -> (LcsInstance<F, CS, I>, Witness<F>, C::PrivateOutput)
+    ) -> (ClcsInstance<F, CS, I>, Witness<F>, C::PrivateOutput)
     where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
     {
@@ -184,7 +184,7 @@ where
         assert!(witness.0.len() >= I);
         public_inputs.copy_from_slice(&witness.0[0..I]);
 
-        let instance: LcsInstance<F, CS, I> = LcsInstance {
+        let instance: ClcsInstance<F, CS, I> = ClcsInstance {
             witness_commit,
             public_inputs,
         };
@@ -197,7 +197,7 @@ where
     pub fn prove_from_inputs<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
         &self,
         inputs: [F; IN],
-    ) -> (LcsInstance<F, CS, I>, Proof<F, CS, IO>, C::PrivateOutput)
+    ) -> (ClcsInstance<F, CS, I>, Proof<F, CS, IO>, C::PrivateOutput)
     where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
     {
@@ -214,17 +214,17 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    Lcs(LcsInstance<F, C, I>),
+    Lcs(ClcsInstance<F, C, I>),
     Flcs(FlcsInstance<F, C, IO, S, I>),
 }
 
-impl<F, C, const IO: usize, const S: usize, const I: usize> From<LcsInstance<F, C, I>>
+impl<F, C, const IO: usize, const S: usize, const I: usize> From<ClcsInstance<F, C, I>>
     for Instance<F, C, IO, S, I>
 where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    fn from(value: LcsInstance<F, C, I>) -> Self {
+    fn from(value: ClcsInstance<F, C, I>) -> Self {
         Self::Lcs(value)
     }
 }

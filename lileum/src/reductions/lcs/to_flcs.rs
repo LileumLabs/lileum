@@ -1,7 +1,7 @@
 use crate::{
     oracles::{FlcsOracle, MatrixProductInstance},
     reductions::flcs::FlcsEvals,
-    relations::{FlcsInstance, FlcsRelation, LcsInstance, LcsRelation, LcsStructure},
+    relations::{ClcsInstance, ClcsRelation, ClcsStructure, FlcsInstance, FlcsRelation},
 };
 use ark_ff::Field;
 use commit::CommitmentScheme;
@@ -20,7 +20,7 @@ use sumcheck::{
 pub struct ToFlcs;
 
 impl<F, C, const I: usize, const IO: usize, const S: usize>
-    Reduction<F, LcsRelation<F, C, I, IO, S>, FlcsRelation<F, C, I, IO, S>> for ToFlcs
+    Reduction<F, ClcsRelation<F, C, I, IO, S>, FlcsRelation<F, C, I, IO, S>> for ToFlcs
 where
     F: Field,
     C: CommitmentScheme<F>,
@@ -46,13 +46,13 @@ where
             .subprotocol::<ZerocheckReduction<F, Oracle<F, C, IO, S, I>>, _, _, _>(key)
     }
 
-    fn verifier_key(structure: &LcsStructure<F, C, IO, S>) -> Self::VerifierKey {
-        let LcsStructure { ccs_structure, .. } = structure;
+    fn verifier_key(structure: &ClcsStructure<F, C, IO, S>) -> Self::VerifierKey {
+        let ClcsStructure { ccs_structure, .. } = structure;
         ccs_structure.vars()
     }
 
-    fn key_pair(structure: &LcsStructure<F, C, IO, S>) -> (Self::VerifierKey, Self::ProverKey) {
-        let vars = <Self as Reduction<F, LcsRelation<F, C, I, IO, S>, _>>::verifier_key(structure);
+    fn key_pair(structure: &ClcsStructure<F, C, IO, S>) -> (Self::VerifierKey, Self::ProverKey) {
+        let vars = <Self as Reduction<F, ClcsRelation<F, C, I, IO, S>, _>>::verifier_key(structure);
         (vars, vars)
     }
 
@@ -60,14 +60,14 @@ where
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
-        instance: LcsInstance<F, C, I>,
+        instance: ClcsInstance<F, C, I>,
         witness: Vec<F>,
         transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<FlcsRelation<F, C, I, IO, S>, Self::Proof> {
         let vars = key;
         let [challenge] = transcript.send_message(&(), &());
 
-        let LcsInstance {
+        let ClcsInstance {
             witness_commit,
             public_inputs,
         } = instance;
@@ -100,13 +100,13 @@ where
 
     fn verify<D: Duplex<F>>(
         key: &Self::VerifierKey,
-        instance: LcsInstance<F, C, I>,
+        instance: ClcsInstance<F, C, I>,
         proof: GuardedProof<Self::Proof>,
         transcript: &mut VerifierTranscript<F, D>,
     ) -> Result<FlcsInstance<F, C, IO, S, I>, Self::Error> {
         let vars = key;
         let Ok(((), [challenge])) = transcript.receive_message(|_| (), &proof, &());
-        let LcsInstance {
+        let ClcsInstance {
             witness_commit,
             public_inputs,
         } = instance;

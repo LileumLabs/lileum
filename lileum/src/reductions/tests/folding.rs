@@ -1,7 +1,7 @@
 use super::{Poseidon, commit_witness};
 use crate::{
     reductions::{FlcsArgument, FlcsFoldingScheme, ToFlcs},
-    relations::{FlcsRelation, LcsRelation, LcsStructure},
+    relations::{ClcsRelation, ClcsStructure, FlcsRelation},
     testing::utils::HashChain,
 };
 use ark_ff::PrimeField;
@@ -18,7 +18,7 @@ where
         <HashChain<N> as BuildStructure<F, 1, 1, 1, 4>>::structure();
 
     let pcs = C::new(ccs_structure.vars());
-    let structure = LcsStructure { ccs_structure, pcs };
+    let structure = ClcsStructure { ccs_structure, pcs };
     let flcs_structure = structure.to_flcs::<2>();
 
     let input = F::from(8u8);
@@ -26,7 +26,7 @@ where
     let input = F::from(9u8);
     let (instance2, witness2) = commit_witness::<F, C, N>(&structure.pcs, [input]);
 
-    let verifier: Verifier<F, Poseidon<F>, LcsRelation<F, C, 2, 4, 5>, _, ToFlcs> =
+    let verifier: Verifier<F, Poseidon<F>, ClcsRelation<F, C, 2, 4, 5>, _, ToFlcs> =
         Verifier::new(&structure);
 
     let instances = [instance1, instance2].map(|instance| verifier.verify(instance, ()).unwrap());
