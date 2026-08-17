@@ -1,11 +1,11 @@
+pub(crate) mod clcs;
 pub(crate) mod flcs;
-pub(crate) mod lcs;
 pub(crate) mod matrix_product;
 #[cfg(test)]
 mod tests;
 
+pub use clcs::{ClcsArgument, ToFlcs};
 pub use flcs::{FlcsArgument, FlcsFoldingScheme, FlcsReduction};
-pub use lcs::{ClcsArgument, ToFlcs};
 
 // NOTE: Papers:
 // Hypernova:   https://eprint.iacr.org/2023/573.pdf
