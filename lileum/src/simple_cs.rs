@@ -8,16 +8,8 @@
 //!
 //! For more customization, [circuit_key::CircuitKey] should be used.
 
-// use crate::circuit_key;
 use crate::circuit_key;
-pub use crate::{
-    circuits,
-    relations::ClcsInstance,
-    // flcs::FoldableLcsInstance,
-    // folding::InstancePair,
-    // instances::lcs::{verifying::LcsProof, LcsInstance},
-    relations::FlcsInstance,
-};
+pub use crate::{circuits, relations::ClcsInstance, relations::FlcsInstance};
 pub use ark_ff::{Field, PrimeField};
 pub use circuit_key::FoldingProof;
 use circuit_key::Instance;
