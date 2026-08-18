@@ -1,7 +1,7 @@
 //! Transcript tests
 //!
 //! Each test exercises a single invariant of the transcript abstraction with
-//! no dependency on ccs/sumcheck/spark/commit. A failure here localizes the
+//! no dependency on lcs/sumcheck/spark/commit. A failure here localizes the
 //! regression to the transcript layer.
 
 use ark_vesta::Fr;
@@ -9,7 +9,7 @@ use sponge::poseidon2::PoseidonDefault;
 use sponge::sponge::Sponge;
 
 use crate::{
-    messages::SingleElement, params::ParamResolver, Error, TranscriptBuilder, TranscriptDescriptor,
+    Error, TranscriptBuilder, TranscriptDescriptor, messages::SingleElement, params::ParamResolver,
 };
 
 type F = Fr;
