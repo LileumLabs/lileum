@@ -55,7 +55,7 @@ impl Ord for MatrixIndex {
 #[derive(Clone, Debug)]
 pub struct LcsStructure<F, const IO: usize, const S: usize> {
     pub io_matrices: [Matrix; IO],
-    /// Where each entry is in 0..S reprensenting the gate to active.
+    /// Where each entry is in 0..S representing the gate to active.
     pub gate_selectors: Vec<usize>,
     pub input_len: usize,
     //with each multiset representing a term, and with corresponding constant coefficient
@@ -67,7 +67,7 @@ pub struct LcsStructure<F, const IO: usize, const S: usize> {
 }
 
 impl<F, const IO: usize, const S: usize> LcsStructure<F, IO, S> {
-    /// vars needed to fir the trace
+    /// vars needed to fit the trace
     pub fn vars(&self) -> usize {
         let len_padded = self.trace_len.next_power_of_two();
         len_padded.ilog2() as usize
