@@ -116,16 +116,11 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    let builder1: CoreOracle<F, SparkEvals<(), N>> = {
-        let functions = SparkEvals::small_functions();
-        CoreOracle::new(functions)
-    };
-
     let builder2 = { pcs };
 
     let mles = Rc::new(SparkEvals::structure(mles));
 
-    CompositeOracle::new((), mles, builder1, builder2)
+    CompositeOracle::new((), mles, (), builder2)
 }
 
 impl<F: Field, C: CommitmentScheme<F>, const N: usize> CommittedSparkStructure<F, C, N> {

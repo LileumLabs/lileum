@@ -10,7 +10,7 @@ use sumcheck::{
     oracles::{
         SumcheckFunction,
         composite::Either,
-        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, Func},
+        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, Func, SmallFunctions},
     },
 };
 use sumcheck_derive::EvalsCore;
@@ -233,6 +233,26 @@ where
     }
 }
 
+impl<F: Field, const IO: usize, const S: usize, const I: usize> SmallFunctions<F, Self>
+    for FlcsEvals<(), IO, S, I>
+{
+    fn functions() -> FlcsEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, IO, S, I> {
+        let default = FlcsEvals::map_evals(&FlcsEvals::vector(), |_| None);
+
+        let inputs: Func<F> = eval_inputs;
+        let inputs = Some(inputs);
+
+        let input_selector: Func<F> = |_, point| eval_input_selector(point, I);
+        let input_selector = Some(input_selector);
+
+        FlcsEvals {
+            inputs,
+            input_selector,
+            ..default
+        }
+    }
+}
+
 #[test]
 fn print_natures() {
     use ark_vesta::Fr;
@@ -265,7 +285,7 @@ where
         inputs: true,
         ..Default::default()
     };
-    CoreOracle::set_witness(
+    CoreOracle::<F, FlcsEvals<(), _, _, _>>::set_witness(
         core_instance,
         &mut sumcheck_witness,
         filter,

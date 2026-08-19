@@ -8,7 +8,7 @@ use sumcheck::{
     oracles::{
         SumcheckFunction,
         composite::Either,
-        core::{Coeffs, CoreNature, Func},
+        core::{Coeffs, CoreNature, Func, SmallFunctions},
     },
 };
 use sumcheck_derive::EvalsCore;
@@ -46,27 +46,6 @@ impl<V: Clone + Debug + Default, const N: usize> Default for SparkEvals<V, N> {
             value: Default::default(),
             zerocheck: Default::default(),
             challenges: Default::default(),
-        }
-    }
-}
-
-impl<F: Field, const N: usize> SparkEvals<Option<Func<F>>, N> {
-    pub fn small_functions() -> Self {
-        let dimensions = [DimensionEvals::<Option<Func<F>>>::new(None, None, None); N];
-        let value = None;
-        let zerocheck: Func<F> = |chall: &[F], point: &MultiPoint<F>| {
-            assert_eq!(chall.len(), point.vars());
-            let chall = MultiPoint::new(chall.to_vec());
-            chall.eval_as_eq(point)
-        };
-        let zerocheck = Some(zerocheck);
-        let challenges = SparkChallenges::default();
-
-        Self {
-            dimensions,
-            value,
-            zerocheck,
-            challenges,
         }
     }
 }
@@ -227,4 +206,25 @@ where
     let product = (indexed_lookup + &challenges.lookup) * &dim.inverse;
 
     product - F::one()
+}
+
+impl<F: Field, const N: usize> SmallFunctions<F, Self> for SparkEvals<(), N> {
+    fn functions() -> SparkEvals<Option<Func<F>>, N> {
+        let dimensions = [DimensionEvals::<Option<Func<F>>>::new(None, None, None); N];
+        let value = None;
+        let zerocheck: Func<F> = |chall: &[F], point: &MultiPoint<F>| {
+            assert_eq!(chall.len(), point.vars());
+            let chall = MultiPoint::new(chall.to_vec());
+            chall.eval_as_eq(point)
+        };
+        let zerocheck = Some(zerocheck);
+        let challenges = SparkChallenges::default();
+
+        SparkEvals {
+            dimensions,
+            value,
+            zerocheck,
+            challenges,
+        }
+    }
 }

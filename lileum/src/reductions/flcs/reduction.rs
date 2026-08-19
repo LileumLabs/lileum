@@ -240,7 +240,7 @@ where
             proof: oracle_evals1,
         } = CompositeOracle::prove(&key.composite_key, instance, witness, transcript);
 
-        CoreOracle::prove(
+        CoreOracle::<F, FlcsEvals<(), _, _, _>>::prove(
             key.composite_key.p1_key(),
             core,
             witness.clone(),
@@ -335,7 +335,7 @@ where
         )
         .map_err(|()| FlcsError::Composite)?;
 
-        CoreOracle::verify(
+        CoreOracle::<F, FlcsEvals<(), _, _, _>>::verify(
             key.composite_key.p1_key(),
             core_instance,
             GuardedProof::empty(),

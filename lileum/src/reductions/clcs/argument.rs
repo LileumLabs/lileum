@@ -18,7 +18,7 @@ use reduction::{
 };
 use sponge::sponge::Duplex;
 use std::rc::Rc;
-use sumcheck::oracles::{composite::CompositeOracle, core::CoreOracle};
+use sumcheck::oracles::composite::CompositeOracle;
 
 #[derive(Clone, Debug)]
 /// CLCS -> ()
@@ -129,9 +129,7 @@ where
         let matrices = lcs_structure.io_matrices.clone().map(Rc::new);
         let mles = Rc::new(structure(lcs_structure.clone()));
 
-        let functions = FlcsEvals::functions();
-
-        let builder1: CoreOracle<F, _> = CoreOracle::new(functions);
+        let builder1 = ();
         let committed_oracle = CommittedOracle::<F, C, FlcsEvals<(), IO, S, I>>::build(
             pcs.clone(),
             &data,

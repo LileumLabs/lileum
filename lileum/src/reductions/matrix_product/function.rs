@@ -10,7 +10,7 @@ use sumcheck::{
     oracles::{
         SumcheckFunction,
         composite::{CompositeOracle, Either},
-        core::{CoreNature, CoreOracle},
+        core::{CoreNature, CoreOracle, SmallFunctions},
         partial::OracleEval,
     },
 };
@@ -90,16 +90,6 @@ impl<F: Field, const N: usize> MatrixSumEvals<Vec<F>, N> {
     }
 }
 
-impl<T: Clone + Debug, const N: usize> MatrixSumEvals<Option<T>, N> {
-    pub fn core_oracle_functions() -> Self {
-        Self {
-            matrices: [(); N].map(|_| None),
-            z: None,
-            challenge: None,
-        }
-    }
-}
-
 pub type Oracle<F, SF, C, const N: usize> = CompositeOracle<
     F,
     SF,
@@ -135,5 +125,15 @@ impl<F: Field, const N: usize> SumcheckFunction<F> for MatrixSumEvals<(), N> {
             acc += &m_eq;
         }
         acc
+    }
+}
+
+impl<F: Field, const N: usize> SmallFunctions<F, Self> for MatrixSumEvals<(), N> {
+    fn functions() -> MatrixSumEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, N> {
+        MatrixSumEvals {
+            matrices: [(); N].map(|_| None),
+            z: None,
+            challenge: None,
+        }
     }
 }

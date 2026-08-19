@@ -20,7 +20,7 @@ use sumcheck::{
     oracles::{
         SumcheckFunction,
         composite::{CompositeOracle, CompositeOracleInstance, CompositeReductionKey, ProverEvals},
-        core::{CoreOracle, CoreOracleInstance},
+        core::{CoreOracle, CoreOracleInstance, SmallFunctions},
         partial::{Nature, PartialOracle, PartialQueryInstance},
     },
 };
@@ -56,7 +56,7 @@ pub struct Key<F, C, SF, const N: usize>
 where
     F: Field,
     C: CommitmentScheme<F>,
-    SF: SumcheckFunction<F>,
+    SF: SumcheckFunction<F> + SmallFunctions<F, SF>,
     SF::Natures: Nature,
     CommittedOracle<F, C, SF>: PartialOracle<F, SF>,
 {
@@ -70,7 +70,7 @@ impl<F, C, SF, const N: usize> Key<F, C, SF, N>
 where
     F: Field,
     C: CommitmentScheme<F>,
-    SF: SumcheckFunction<F>,
+    SF: SumcheckFunction<F> + SmallFunctions<F, SF>,
     SF::Natures: Nature,
     CommittedOracle<F, C, SF>: PartialOracle<F, SF>,
 {
@@ -259,8 +259,13 @@ where
         let core_query: PartialQueryInstance<F, _, CoreOracleInstance<F, _>> = core_query;
 
         let core_proof = GuardedProof::empty();
-        CoreOracle::verify(key.oracle_key.p1_key(), core_query, core_proof, transcript)
-            .map_err(|_| SparkError::CoreOracle)?;
+        CoreOracle::<F, SparkEvals<(), N>>::verify(
+            key.oracle_key.p1_key(),
+            core_query,
+            core_proof,
+            transcript,
+        )
+        .map_err(|_| SparkError::CoreOracle)?;
 
         let committed_query: PartialQueryInstance<F, _, CommittedOracleInstance<F, C, _>> =
             committed_query;

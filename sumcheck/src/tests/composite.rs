@@ -5,7 +5,9 @@ use crate::{
     oracles::{
         QueryRelation, SumcheckFunction,
         composite::{CompositeOracle, CompositeOracleInstance, Either},
-        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, CoreQueryRelation},
+        core::{
+            Coeffs, CoreNature, CoreOracle, CoreOracleInstance, CoreQueryRelation, SmallFunctions,
+        },
         empty::{EmptyInstance, EmptyRelation, NoNature},
         partial::PartialQueryRelation,
     },
@@ -31,12 +33,7 @@ fn composite_sumcheck_test<F: PrimeField>() {
         .collect();
     let structure: Rc<Vec<SmallEvals<F>>> = Rc::new(structure);
 
-    let core_oracle = CoreOracle::new(SmallEvals {
-        challenge: None,
-        powers: Some(eval_powers as fn(&[F], &MultiPoint<F>) -> F),
-        range: Some(eval_range),
-    });
-    let oracle: Oracle<F> = Oracle::new((), structure.clone(), core_oracle, ());
+    let oracle: Oracle<F> = Oracle::new((), structure.clone(), (), ());
 
     // Create a prover for the SumcheckReduction, both relations have the same structure.
     let prover = Prover::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle);
@@ -185,6 +182,16 @@ impl<F: Field> SumcheckFunction<F> for SmallEvals<()> {
             range,
         } = evals;
         challenge.clone() * powers * range
+    }
+}
+
+impl<F: Field> SmallFunctions<F> for SmallEvals<()> {
+    fn functions() -> SmallEvals<Option<fn(&[F], &MultiPoint<F>) -> F>> {
+        SmallEvals {
+            challenge: None,
+            powers: Some(eval_powers as fn(&[F], &MultiPoint<F>) -> F),
+            range: Some(eval_range),
+        }
     }
 }
 

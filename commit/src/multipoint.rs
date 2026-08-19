@@ -19,7 +19,7 @@ use sumcheck::{
         composite::{
             CompositeOracle, CompositeOracleInstance, CompositeReductionKey, Either, ProverEvals,
         },
-        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
+        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, SmallFunctions},
     },
 };
 use sumcheck_derive::EvalsCore;
@@ -64,6 +64,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
     SF: SumcheckFunction<F, Natures = Either<CoreNature, CommittedNature>>,
+    SF: SmallFunctions<F, SF>,
 {
     sumcheck: SumcheckVerifierKey<F, Oracle<F, C, SF>>,
     vars: usize,
@@ -75,6 +76,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
     SF: SumcheckFunction<F, Natures = Either<CoreNature, CommittedNature>>,
+    SF: SmallFunctions<F, SF>,
 {
     vars: usize,
     sumcheck: SumcheckProverKey<F, Oracle<F, C, SF>>,
@@ -127,7 +129,7 @@ where
                 sumcheck,
             )
             .subprotocol::<CompositeOracle<F, _, _, _>, _, _, _>(composite)
-            .subprotocol::<CoreOracle<F, _>, _, _, _>(composite.p1_key())
+            .subprotocol::<CoreOracle<F, MultipointEvals<(), N>>, _, _, _>(composite.p1_key())
             .subprotocol::<CommittedOracle<F, C, MultipointEvals<(), N>>, _, _, _>(
                 composite.p2_key(),
             )
@@ -138,18 +140,7 @@ where
 
         let mles = vec![MultipointEvals::<F, N>::zero(); 1 << vars];
         let mles = Rc::new(mles);
-        let eq_func: fn(&[F], &MultiPoint<F>) -> F = |eq, p| {
-            let eq = MultiPoint::new(eq.to_vec());
-            eq.eval_as_eq(p)
-        };
-        let functions = MultipointEvals {
-            committments: [None; N],
-            eqs: [Some(eq_func); N],
-            challenge: None,
-        };
-        let builder1 = CoreOracle::new(functions);
-
-        let oracle = Oracle::new((), mles, builder1, pcs.clone());
+        let oracle = Oracle::new((), mles, (), pcs.clone());
 
         let composite = CompositeOracle::verifier_key(&oracle);
 
@@ -168,18 +159,7 @@ where
 
         let mles = vec![MultipointEvals::<F, N>::zero(); 1 << vars];
         let mles = Rc::new(mles);
-        let eq_func: fn(&[F], &MultiPoint<F>) -> F = |eq, p| {
-            let eq = MultiPoint::new(eq.to_vec());
-            eq.eval_as_eq(p)
-        };
-        let functions = MultipointEvals {
-            committments: [None; N],
-            eqs: [Some(eq_func); N],
-            challenge: None,
-        };
-        let builder1 = CoreOracle::new(functions);
-
-        let oracle = Oracle::new((), mles, builder1, pcs.clone());
+        let oracle = Oracle::new((), mles, (), pcs.clone());
 
         let (_, sumcheck) = SumcheckReduction::key_pair(&oracle);
 
@@ -245,7 +225,12 @@ where
             proof: prover_evals,
         } = reduced;
 
-        CoreOracle::prove(key.composite.p1_key(), core, witness.clone(), transcript);
+        CoreOracle::<F, MultipointEvals<(), N>>::prove(
+            key.composite.p1_key(),
+            core,
+            witness.clone(),
+            transcript,
+        );
 
         let reduced = CommittedOracle::prove(&key.committed_oracle, committed, witness, transcript);
         let ProverOutput {
@@ -314,7 +299,7 @@ where
         )
         .map_err(|()| Error::Composite)?;
 
-        CoreOracle::verify(
+        CoreOracle::<F, MultipointEvals<(), N>>::verify(
             key.composite.p1_key(),
             core,
             GuardedProof::empty(),
@@ -393,6 +378,20 @@ impl<F: Field, const N: usize> SumcheckFunction<F> for MultipointEvals<(), N> {
                 let (eq, commit) = e;
                 acc * challenge + eq.clone() * commit
             })
+    }
+}
+
+impl<F: Field, const N: usize> SmallFunctions<F, Self> for MultipointEvals<(), N> {
+    fn functions() -> MultipointEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, N> {
+        let eq_func: fn(&[F], &MultiPoint<F>) -> F = |eq, p| {
+            let eq = MultiPoint::new(eq.to_vec());
+            eq.eval_as_eq(p)
+        };
+        MultipointEvals {
+            committments: [None; N],
+            eqs: [Some(eq_func); N],
+            challenge: None,
+        }
     }
 }
 
