@@ -8,6 +8,7 @@ use crate::{
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use reduction::{
     FoldingRelation, FoldingScheme, GuardedProof, Message, ProverOutput, Reduction, Relation,
     Transcript, TranscriptBuilder, VerifierTranscript,
@@ -19,7 +20,7 @@ use std::marker::PhantomData;
 #[derive(Clone, Copy, Debug)]
 pub struct ZeroFold<F, O>(PhantomData<(F, O)>);
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, CanonicalSerialize)]
 pub struct ZeroFoldKey<F: Field, O: Oracle<F>> {
     degree: usize,
     vars: usize,

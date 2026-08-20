@@ -1,6 +1,7 @@
 use crate::ipa::vector_utils::{fold_basis, fold_vec};
 use ark_ec::{AffineRepr, CurveGroup, Group, VariableBaseMSM};
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use hash_to_curve::CurveMap;
 use rand::{SeedableRng, rngs::StdRng};
 use reduction::{
@@ -46,7 +47,7 @@ where
     [commit_l, commit_r]
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize)]
 struct IpaScheme<F, G, M>
 where
     F: Field,

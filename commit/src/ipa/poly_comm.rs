@@ -30,6 +30,28 @@ where
     vars: usize,
 }
 
+impl<F, G, M> CanonicalSerialize for IpaCommitmentScheme<F, G, M>
+where
+    F: PrimeField,
+    G: VariableBaseMSM<ScalarField = F> + CurveGroup,
+    M: CurveMap<G>,
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self { ipa, vars } = self;
+        ipa.serialize_with_mode(&mut writer, compress)?;
+        vars.serialize_with_mode(writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self { ipa, vars } = self;
+        ipa.serialized_size(compress) + vars.serialized_size(compress)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IpaCommitment<G>(pub(crate) G);
 

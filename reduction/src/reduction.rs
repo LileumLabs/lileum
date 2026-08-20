@@ -1,6 +1,7 @@
 use super::Relation;
 use crate::{FoldingRelation, GuardedProof, Transcript, TranscriptBuilder, VerifierTranscript};
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use sponge::sponge::Duplex;
 use std::fmt::Debug;
 
@@ -58,7 +59,7 @@ impl<R: Relation, P> ProverOutput<R, P> {
 /// A reduction from relation R1 to R2.
 pub trait Reduction<F: Field, R1: Relation, R2: Relation> {
     type ProverKey;
-    type VerifierKey;
+    type VerifierKey: CanonicalSerialize;
     type Proof: Clone;
     type Error: Clone + Debug;
     /// The type of params of the source relation, it should be

@@ -3,6 +3,7 @@ use crate::{
     oracles::{EvalLocation, Oracle, QueryRelation, SumcheckFunction},
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use reduction::{
     Argument, GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
@@ -18,6 +19,21 @@ pub struct SmallEvalOracle<F: Field, SF: SumcheckFunction<F>> {
     evals_over_domain: Rc<Vec<SF::Mles<F>>>,
     evals: SF::Mles<fn(&MultiPoint<F>) -> F>,
     vars: usize,
+}
+
+impl<F: Field, SF: SumcheckFunction<F>> CanonicalSerialize for SmallEvalOracle<F, SF> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        _writer: W,
+        _compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        // Left unimplemented for now as this protocol is just for testing.
+        todo!()
+    }
+
+    fn serialized_size(&self, _compress: ark_serialize::Compress) -> usize {
+        todo!()
+    }
 }
 
 impl<F: Field, SF: SumcheckFunction<F>> SmallEvalOracle<F, SF> {

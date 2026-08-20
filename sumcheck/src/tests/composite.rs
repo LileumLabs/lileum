@@ -13,6 +13,7 @@ use crate::{
     },
 };
 use ark_ff::{Field, PrimeField};
+use ark_serialize::CanonicalSerialize;
 use rand::{SeedableRng, rngs::StdRng};
 use reduction::{Prover, ProverOutput, Relation, UnsafeVerifier, Verifier};
 use std::{fmt::Debug, iter::successors, rc::Rc, vec::IntoIter};
@@ -159,6 +160,34 @@ struct SmallEvals<V: Clone + Debug> {
     challenge: V,
     powers: V,
     range: V,
+}
+
+impl<V: Clone + Debug + CanonicalSerialize> CanonicalSerialize for SmallEvals<V> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            challenge,
+            powers,
+            range,
+        } = self;
+        challenge.serialize_with_mode(&mut writer, compress)?;
+        powers.serialize_with_mode(&mut writer, compress)?;
+        range.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            challenge,
+            powers,
+            range,
+        } = self;
+        challenge.serialized_size(compress)
+            + powers.serialized_size(compress)
+            + range.serialized_size(compress)
+    }
 }
 
 impl<F: Field> SumcheckFunction<F> for SmallEvals<()> {

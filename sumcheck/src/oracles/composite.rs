@@ -442,6 +442,7 @@ where
     SF: SumcheckFunction<F, Natures = Either<P1::Nature, P2::Nature>>,
     P1: PartialOracle<F, SF>,
     P2: PartialOracle<F, SF>,
+    SF::Mles<Either<(), ()>>: CanonicalSerialize,
     <QueryRelation<F, Self> as Relation>::Instance: Message<F, Params = (OracleParams, usize)>,
 {
     type ProverKey = CompositeReductionKey<F, SF, P1, P2>;
