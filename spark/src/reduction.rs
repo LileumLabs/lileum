@@ -5,6 +5,7 @@ use crate::{
     sumcheck_argument::{SparkChallenges, SparkEvals},
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::{
     CommitmentScheme, OpenInstance, OpeningRelation,
     oracle::{CommittedOracle, CommittedOracleInstance},
@@ -19,7 +20,9 @@ use sumcheck::{
     SumcheckVerifierKey,
     oracles::{
         SumcheckFunction,
-        composite::{CompositeOracle, CompositeOracleInstance, CompositeReductionKey, ProverEvals},
+        composite::{
+            CompositeOracle, CompositeOracleInstance, CompositeReductionKey, Either, ProverEvals,
+        },
         core::{CoreOracle, CoreOracleInstance, SmallFunctions},
         partial::{Nature, PartialOracle, PartialQueryInstance},
     },
@@ -52,13 +55,14 @@ fn split_point<F: Field, const N: usize>(point: &MultiPoint<F>) -> [MultiPoint<F
         .unwrap()
 }
 
+#[derive(Clone, Debug, CanonicalSerialize)]
 pub struct Key<F, C, SF, const N: usize>
 where
     F: Field,
     C: CommitmentScheme<F>,
     SF: SumcheckFunction<F> + SmallFunctions<F, SF>,
     SF::Natures: Nature,
-    CommittedOracle<F, C, SF>: PartialOracle<F, SF>,
+    SF::Mles<Either<(), ()>>: CanonicalSerialize,
 {
     minor_structure: MinorStructure<N>,
     sumcheck_key: SumcheckVerifierKey<F, SparkOracle<F, C, N>>,
@@ -73,6 +77,7 @@ where
     SF: SumcheckFunction<F> + SmallFunctions<F, SF>,
     SF::Natures: Nature,
     CommittedOracle<F, C, SF>: PartialOracle<F, SF>,
+    SF::Mles<Either<(), ()>>: CanonicalSerialize,
 {
     pub(crate) fn new(
         minor_structure: MinorStructure<N>,

@@ -7,6 +7,7 @@ use crate::{
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::{
     CommitmentScheme, OpenInstance, OpeningRelation,
     multipoint::{self, MultipointBatching},
@@ -38,6 +39,7 @@ pub struct FlcsReduction;
 type CompositeKey<F, C, const IO: usize, SF> =
     CompositeReductionKey<F, SF, CoreOracle<F, SF>, MatrixProductOracle<F, C, SF, IO>>;
 
+#[derive(Clone, Debug, CanonicalSerialize)]
 pub struct VerifierKey<F, C, const IO: usize, const S: usize, const I: usize>
 where
     F: Field,

@@ -3,6 +3,7 @@ use crate::{
     oracle::{self, CommittedNature, CommittedOracle, CommittedOracleInstance},
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use reduction::{
     GuardedProof, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
@@ -59,6 +60,7 @@ where
 
 type Oracle<F, C, SF> = CompositeOracle<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;
 
+#[derive(Clone, Debug)]
 pub struct VerifierKey<F, C, const N: usize, SF = MultipointEvals<(), N>>
 where
     F: Field,
@@ -69,6 +71,41 @@ where
     sumcheck: SumcheckVerifierKey<F, Oracle<F, C, SF>>,
     vars: usize,
     composite: CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>,
+}
+
+impl<F, C, const N: usize, SF: CanonicalSerialize> CanonicalSerialize for VerifierKey<F, C, N, SF>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    SF: SumcheckFunction<F, Natures = Either<CoreNature, CommittedNature>>,
+    SF: SmallFunctions<F, SF>,
+    SF::Mles<Either<(), ()>>: CanonicalSerialize,
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            sumcheck,
+            vars,
+            composite,
+        } = self;
+        sumcheck.serialize_with_mode(&mut writer, compress)?;
+        vars.serialize_with_mode(&mut writer, compress)?;
+        composite.serialize_with_mode(writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            sumcheck,
+            vars,
+            composite,
+        } = self;
+        sumcheck.serialized_size(compress)
+            + vars.serialized_size(compress)
+            + composite.serialized_size(compress)
+    }
 }
 
 pub struct ProverKey<F, C, const N: usize, SF = MultipointEvals<(), N>>
@@ -336,6 +373,36 @@ pub struct MultipointEvals<V: Clone + Debug, const N: usize> {
     committments: [V; N],
     eqs: [V; N],
     challenge: V,
+}
+
+impl<V: Clone + Debug + CanonicalSerialize, const N: usize> CanonicalSerialize
+    for MultipointEvals<V, N>
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            committments,
+            eqs,
+            challenge,
+        } = self;
+        committments.serialize_with_mode(&mut writer, compress)?;
+        eqs.serialize_with_mode(&mut writer, compress)?;
+        challenge.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            committments,
+            eqs,
+            challenge,
+        } = self;
+        committments.serialized_size(compress)
+            + eqs.serialized_size(compress)
+            + challenge.serialized_size(compress)
+    }
 }
 
 impl<F: Field, const N: usize> MultipointEvals<F, N> {

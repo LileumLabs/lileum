@@ -6,6 +6,7 @@ use crate::{
     },
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::{
     self, CommitmentScheme, OpenInstance, OpeningRelation,
     oracle::{
@@ -47,6 +48,7 @@ type CompositeKey<F, C, const N: usize, SF> = CompositeReductionKey<
 
 type Func<const N: usize> = MatrixSumEvals<(), N>;
 
+#[derive(Clone, Debug, CanonicalSerialize)]
 pub struct VerifierKey<F: Field, C: CommitmentScheme<F>, SF, const N: usize> {
     sumcheck_key: SumcheckVerifierKey<F, Oracle<F, Func<N>, C, N>>,
     vars: usize,

@@ -1,5 +1,6 @@
 use crate::SparseMle;
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::oracle::CommittedNature;
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck::{
@@ -20,6 +21,34 @@ pub struct DimensionEvals<V: Clone + Debug = ()> {
     pub(crate) inverse: V,
 }
 
+impl<V: Clone + Debug + CanonicalSerialize> CanonicalSerialize for DimensionEvals<V> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            address,
+            eq_lookup,
+            inverse,
+        } = self;
+        address.serialize_with_mode(&mut writer, compress)?;
+        eq_lookup.serialize_with_mode(&mut writer, compress)?;
+        inverse.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            address,
+            eq_lookup,
+            inverse,
+        } = self;
+        address.serialized_size(compress)
+            + eq_lookup.serialized_size(compress)
+            + inverse.serialized_size(compress)
+    }
+}
+
 impl<V: Clone + Debug> DimensionEvals<V> {
     pub fn new(address: V, eq_lookup: V, inverse: V) -> Self {
         Self {
@@ -36,6 +65,40 @@ pub struct SparkEvals<V: Clone + Debug, const N: usize> {
     value: V,
     pub(crate) zerocheck: V,
     challenges: SparkChallenges<V>,
+}
+
+impl<V: Clone + Debug + CanonicalSerialize, const N: usize> CanonicalSerialize
+    for SparkEvals<V, N>
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            dimensions,
+            value,
+            zerocheck,
+            challenges,
+        } = self;
+        dimensions.serialize_with_mode(&mut writer, compress)?;
+        value.serialize_with_mode(&mut writer, compress)?;
+        zerocheck.serialize_with_mode(&mut writer, compress)?;
+        challenges.serialize_with_mode(writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            dimensions,
+            value,
+            zerocheck,
+            challenges,
+        } = self;
+        dimensions.serialized_size(compress)
+            + value.serialized_size(compress)
+            + zerocheck.serialized_size(compress)
+            + challenges.serialized_size(compress)
+    }
 }
 
 impl<V: Clone + Debug + Default, const N: usize> Default for SparkEvals<V, N> {
@@ -139,6 +202,34 @@ impl<V: Clone + Debug> SparkChallenges<V> {
             compression,
             lookup,
         }
+    }
+}
+
+impl<V: Clone + Debug + CanonicalSerialize> CanonicalSerialize for SparkChallenges<V> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            combination,
+            compression,
+            lookup,
+        } = self;
+        combination.serialize_with_mode(&mut writer, compress)?;
+        compression.serialize_with_mode(&mut writer, compress)?;
+        lookup.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            combination,
+            compression,
+            lookup,
+        } = self;
+        combination.serialized_size(compress)
+            + compression.serialized_size(compress)
+            + lookup.serialized_size(compress)
     }
 }
 
