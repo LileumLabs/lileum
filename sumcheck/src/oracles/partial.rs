@@ -6,6 +6,7 @@ use crate::{
     },
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use reduction::{Message, Relation};
 use std::{any::Any, fmt::Debug, marker::PhantomData, rc::Rc};
 
@@ -46,7 +47,7 @@ where
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, CanonicalSerialize)]
 pub struct OracleParams {
     pub vars: usize,
 }
@@ -104,9 +105,10 @@ where
     F: Field,
     SF: SumcheckFunction<F>,
     <Self::Instance as Message<F>>::Error: Clone,
+    <Self::Instance as Message<F>>::Params: CanonicalSerialize,
 {
     type Instance: Message<F, Params = OracleParams> + Clone;
-    type VerifierKey: From<Self> + Clone;
+    type VerifierKey: From<Self> + Clone + CanonicalSerialize;
     type Builder: Debug;
 
     type Nature: Into<EvalLocation> + Copy + Debug + Nature;

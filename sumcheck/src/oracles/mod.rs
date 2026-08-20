@@ -1,5 +1,6 @@
 use crate::{MultiPoint, Var, evals::Mles};
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use reduction::{Message, Relation};
 use std::{fmt::Debug, marker::PhantomData, rc::Rc};
 
@@ -121,6 +122,7 @@ pub enum EvalLocation {
 pub trait Oracle<F: Field>: 'static + Clone + Debug
 where
     <Self::Instance as Message<F>>::Error: Clone,
+    <Self::Instance as Message<F>>::Params: CanonicalSerialize,
 {
     type Function: SumcheckFunction<F>;
     type Instance: Message<F> + Clone;

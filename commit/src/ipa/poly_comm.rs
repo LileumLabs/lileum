@@ -7,6 +7,7 @@ use crate::{
 };
 use ark_ec::{AffineRepr, CurveGroup, VariableBaseMSM};
 use ark_ff::PrimeField;
+use ark_serialize::CanonicalSerialize;
 use hash_to_curve::CurveMap;
 use reduction::{
     Argument, GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
@@ -31,6 +32,20 @@ where
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IpaCommitment<G>(pub(crate) G);
+
+impl<G: CanonicalSerialize> CanonicalSerialize for IpaCommitment<G> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        self.0.serialize_with_mode(writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        self.0.serialized_size(compress)
+    }
+}
 
 impl<G: CurveGroup> Message<Scalar<G>> for IpaCommitment<G> {
     type Params = ();

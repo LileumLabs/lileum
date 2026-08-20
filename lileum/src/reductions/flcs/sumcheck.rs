@@ -1,5 +1,6 @@
 use crate::oracles::MatrixNature;
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::oracle::CommittedNature;
 use lcs::{matrix::Matrix, structure::Exp};
 use std::{fmt::Debug, rc::Rc, vec::IntoIter};
@@ -26,6 +27,52 @@ pub struct FlcsEvals<V: Debug + Clone, const IO: usize, const S: usize, const I:
     constants: V,
     /// Constraint combination challenge.
     challenge: V,
+}
+
+impl<V: Debug + Clone + CanonicalSerialize, const IO: usize, const S: usize, const I: usize>
+    CanonicalSerialize for FlcsEvals<V, IO, S, I>
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            products,
+            w,
+            inputs,
+            input_selector,
+            gate_selectors,
+            constants,
+            challenge,
+        } = self;
+        products.serialize_with_mode(&mut writer, compress)?;
+        w.serialize_with_mode(&mut writer, compress)?;
+        inputs.serialize_with_mode(&mut writer, compress)?;
+        input_selector.serialize_with_mode(&mut writer, compress)?;
+        gate_selectors.serialize_with_mode(&mut writer, compress)?;
+        constants.serialize_with_mode(&mut writer, compress)?;
+        challenge.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            products,
+            w,
+            inputs,
+            input_selector,
+            gate_selectors,
+            constants,
+            challenge,
+        } = self;
+        products.serialized_size(compress)
+            + w.serialized_size(compress)
+            + inputs.serialized_size(compress)
+            + input_selector.serialized_size(compress)
+            + gate_selectors.serialized_size(compress)
+            + constants.serialized_size(compress)
+            + challenge.serialized_size(compress)
+    }
 }
 
 impl<F: Field, const IO: usize, const S: usize, const I: usize> FlcsEvals<Vec<F>, IO, S, I> {
@@ -128,7 +175,7 @@ impl<V: Debug + Copy + Default, const IO: usize, const S: usize, const I: usize>
 
 type Natures = Either<CoreNature, Either<CommittedNature, MatrixNature>>;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, CanonicalSerialize)]
 pub struct FlcsData {
     gates: Vec<Vec<Exp<usize>>>,
     multi_constraint: bool,

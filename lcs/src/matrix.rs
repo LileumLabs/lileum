@@ -1,10 +1,10 @@
+use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use core::slice;
 use std::ops::{Index, Mul};
 
-use ark_ff::Field;
-
 /// Sparse matrix.
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, CanonicalSerialize)]
 pub struct Matrix {
     ///assumes each non zero value to be one, should be enough to represent plonk
     /// considering that most rows will likely have a single 1 the vector represation may be suboptimal

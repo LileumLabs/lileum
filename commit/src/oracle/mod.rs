@@ -1,5 +1,6 @@
 use crate::{CommitmentScheme, OpenInstance, OpeningRelation};
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use reduction::{
     GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
@@ -199,7 +200,7 @@ where
     })
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, CanonicalSerialize)]
 pub struct VerifierKey<F: Field, C: CommitmentScheme<F>> {
     structure_commits: Vec<C::Commitment>,
 }
