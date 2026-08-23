@@ -66,7 +66,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
     SF: SumcheckFunction<F, Natures = Either<CoreNature, CommittedNature>>,
-    SF: SmallFunctions<F, SF>,
+    SF: SmallFunctions<F>,
 {
     sumcheck: SumcheckVerifierKey<F, Oracle<F, C, SF>>,
     vars: usize,
@@ -78,7 +78,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
     SF: SumcheckFunction<F, Natures = Either<CoreNature, CommittedNature>>,
-    SF: SmallFunctions<F, SF>,
+    SF: SmallFunctions<F>,
     SF::Mles<Either<(), ()>>: CanonicalSerialize,
 {
     fn serialize_with_mode<W: ark_serialize::Write>(
@@ -113,7 +113,7 @@ where
     F: Field,
     C: CommitmentScheme<F>,
     SF: SumcheckFunction<F, Natures = Either<CoreNature, CommittedNature>>,
-    SF: SmallFunctions<F, SF>,
+    SF: SmallFunctions<F>,
 {
     vars: usize,
     sumcheck: SumcheckProverKey<F, Oracle<F, C, SF>>,
@@ -448,8 +448,8 @@ impl<F: Field, const N: usize> SumcheckFunction<F> for MultipointEvals<(), N> {
     }
 }
 
-impl<F: Field, const N: usize> SmallFunctions<F, Self> for MultipointEvals<(), N> {
-    fn functions() -> MultipointEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, N> {
+impl<F: Field, const N: usize> SmallFunctions<F> for MultipointEvals<(), N> {
+    fn small_functions() -> MultipointEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, N> {
         let eq_func: fn(&[F], &MultiPoint<F>) -> F = |eq, p| {
             let eq = MultiPoint::new(eq.to_vec());
             eq.eval_as_eq(p)

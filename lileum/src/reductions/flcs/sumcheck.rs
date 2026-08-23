@@ -280,10 +280,10 @@ where
     }
 }
 
-impl<F: Field, const IO: usize, const S: usize, const I: usize> SmallFunctions<F, Self>
+impl<F: Field, const IO: usize, const S: usize, const I: usize> SmallFunctions<F>
     for FlcsEvals<(), IO, S, I>
 {
-    fn functions() -> FlcsEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, IO, S, I> {
+    fn small_functions() -> FlcsEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, IO, S, I> {
         let default = FlcsEvals::map_evals(&FlcsEvals::vector(), |_| None);
 
         let inputs: Func<F> = eval_inputs;

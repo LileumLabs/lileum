@@ -159,8 +159,8 @@ impl<F: Field, const N: usize> SumcheckFunction<F> for MatrixSumEvals<(), N> {
     }
 }
 
-impl<F: Field, const N: usize> SmallFunctions<F, Self> for MatrixSumEvals<(), N> {
-    fn functions() -> MatrixSumEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, N> {
+impl<F: Field, const N: usize> SmallFunctions<F> for MatrixSumEvals<(), N> {
+    fn small_functions() -> MatrixSumEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, N> {
         MatrixSumEvals {
             matrices: [(); N].map(|_| None),
             z: None,

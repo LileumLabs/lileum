@@ -299,8 +299,8 @@ where
     product - F::one()
 }
 
-impl<F: Field, const N: usize> SmallFunctions<F, Self> for SparkEvals<(), N> {
-    fn functions() -> SparkEvals<Option<Func<F>>, N> {
+impl<F: Field, const N: usize> SmallFunctions<F> for SparkEvals<(), N> {
+    fn small_functions() -> SparkEvals<Option<Func<F>>, N> {
         let dimensions = [DimensionEvals::<Option<Func<F>>>::new(None, None, None); N];
         let value = None;
         let zerocheck: Func<F> = |chall: &[F], point: &MultiPoint<F>| {

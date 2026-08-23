@@ -60,7 +60,7 @@ pub struct Key<F, C, SF, const N: usize>
 where
     F: Field,
     C: CommitmentScheme<F>,
-    SF: SumcheckFunction<F> + SmallFunctions<F, SF>,
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
     SF::Natures: Nature,
     SF::Mles<Either<(), ()>>: CanonicalSerialize,
 {
@@ -74,7 +74,7 @@ impl<F, C, SF, const N: usize> Key<F, C, SF, N>
 where
     F: Field,
     C: CommitmentScheme<F>,
-    SF: SumcheckFunction<F> + SmallFunctions<F, SF>,
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
     SF::Natures: Nature,
     CommittedOracle<F, C, SF>: PartialOracle<F, SF>,
     SF::Mles<Either<(), ()>>: CanonicalSerialize,

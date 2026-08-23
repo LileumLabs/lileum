@@ -215,7 +215,7 @@ impl<F: Field> SumcheckFunction<F> for SmallEvals<()> {
 }
 
 impl<F: Field> SmallFunctions<F> for SmallEvals<()> {
-    fn functions() -> SmallEvals<Option<fn(&[F], &MultiPoint<F>) -> F>> {
+    fn small_functions() -> SmallEvals<Option<fn(&[F], &MultiPoint<F>) -> F>> {
         SmallEvals {
             challenge: None,
             powers: Some(eval_powers as fn(&[F], &MultiPoint<F>) -> F),
