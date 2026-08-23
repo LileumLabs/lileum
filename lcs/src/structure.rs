@@ -329,10 +329,10 @@ pub enum Exp<T> {
     Constant,
 }
 
-impl<T: CanonicalSerialize> CanonicalSerialize for Exp<T> {
-    fn serialize_with_mode<W: ark_serialize::Write>(
+impl<T: CanonicalSerialize + Clone> Exp<T> {
+    fn serialize_rec<W: ark_serialize::Write>(
         &self,
-        mut writer: W,
+        writer: &mut W,
         compress: ark_serialize::Compress,
     ) -> Result<(), ark_serialize::SerializationError> {
         let tag: u8 = match self {
@@ -342,18 +342,28 @@ impl<T: CanonicalSerialize> CanonicalSerialize for Exp<T> {
             Exp::Sub(_, _) => 3,
             Exp::Constant => 4,
         };
-        tag.serialize_with_mode(&mut writer, compress)?;
+        tag.serialize_with_mode(&mut *writer, compress)?;
         match self {
             Exp::Atom(x) => {
                 x.serialize_with_mode(writer, compress)?;
             }
             Exp::Add(e1, e2) | Exp::Mul(e1, e2) | Exp::Sub(e1, e2) => {
-                e1.serialize_with_mode(&mut writer, compress)?;
-                e2.serialize_with_mode(&mut writer, compress)?;
+                e1.serialize_rec(writer, compress)?;
+                e2.serialize_rec(writer, compress)?;
             }
             Exp::Constant => {}
         }
         Ok(())
+    }
+}
+
+impl<T: CanonicalSerialize + Clone> CanonicalSerialize for Exp<T> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        self.serialize_rec(writer.by_ref(), compress)
     }
 
     fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
