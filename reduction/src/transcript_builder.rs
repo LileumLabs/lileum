@@ -1,5 +1,6 @@
 use crate::{Message, Reduction, Relation, Transcript, message::PointRound};
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use sponge::sponge::{Duplex, SpongeBuilder};
 use std::any::{TypeId, type_name};
 
@@ -34,8 +35,8 @@ pub struct TranscriptBuilder {
 }
 
 impl TranscriptBuilder {
-    pub(crate) fn new() -> Self {
-        let sponge = SpongeBuilder::new();
+    pub(crate) fn new(domain_separation: [u8; 32]) -> Self {
+        let sponge = SpongeBuilder::new(domain_separation);
         let rounds = vec![];
         Self { rounds, sponge }
     }
@@ -111,7 +112,11 @@ impl<F: Field, S: Duplex<F>> TranscriptDescriptor<F, S> {
         R2: Relation,
         R: Reduction<F, R1, R2>,
     {
-        TranscriptBuilder::new()
+        let mut key_bytes: Vec<u8> = vec![];
+        key.serialize_uncompressed(&mut key_bytes).unwrap();
+        let domain_separation: [u8; 32] = blake3::hash(&key_bytes).into();
+
+        TranscriptBuilder::new(domain_separation)
             .round::<F, R1::Instance, 0>(instance_params)
             .subprotocol::<R, F, R1, R2>(key)
             .finish()

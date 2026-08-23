@@ -27,6 +27,7 @@ impl Display for Pattern {
 #[derive(Debug, Default)]
 pub struct SpongeBuilder {
     pattern: Vec<Pattern>,
+    domain_separation: [u8; 32],
 }
 
 // duplex sponge
@@ -55,20 +56,35 @@ pub struct SpongeInitializer<
 }
 
 impl SpongeBuilder {
-    pub fn new() -> Self {
-        Self { pattern: vec![] }
+    pub fn new(domain_separation: [u8; 32]) -> Self {
+        Self {
+            pattern: vec![],
+            domain_separation,
+        }
     }
     pub fn absorb(self, elements: u32) -> Self {
         assert!(elements <= (u32::MAX >> 1), "can absorb at most 2^31 - 1");
-        let Self { mut pattern } = self;
+        let Self {
+            mut pattern,
+            domain_separation,
+        } = self;
         pattern.push(Pattern::Absorb(elements));
-        Self { pattern }
+        Self {
+            pattern,
+            domain_separation,
+        }
     }
     pub fn squeeze(self, elements: u32) -> Self {
         assert!(elements <= (u32::MAX >> 1), "can squeeze at most 2^31 - 1");
-        let Self { mut pattern } = self;
+        let Self {
+            mut pattern,
+            domain_separation,
+        } = self;
         pattern.push(Pattern::Squeeze(elements));
-        Self { pattern }
+        Self {
+            pattern,
+            domain_separation,
+        }
     }
     fn pack_pattern(pattern: Vec<Pattern>) -> Vec<Pattern> {
         let mut packed_pattern = Vec::with_capacity(pattern.len());
@@ -103,10 +119,15 @@ impl SpongeBuilder {
         }
         packed_pattern
     }
-    fn encode_iv<F: Field>(pattern: &[Pattern]) -> Vec<F> {
+    fn encode_iv<F: Field>(pattern: &[Pattern], domain_separation: [u8; 32]) -> Vec<F> {
         let base_field_bits = <F::BasePrimeField as PrimeField>::MODULUS_BIT_SIZE;
         let bits = base_field_bits + F::extension_degree() as u32;
         let mut elems = vec![];
+
+        for byte in domain_separation {
+            elems.push(F::from(byte));
+        }
+
         for phase in pattern.iter() {
             let msb: u32 = 0x80_00_00_00;
             let int = match phase {
@@ -164,10 +185,13 @@ impl SpongeBuilder {
     >(
         self,
     ) -> SpongeInitializer<F, P, R, C, T> {
-        let Self { pattern } = self;
+        let Self {
+            pattern,
+            domain_separation,
+        } = self;
         let permutation = P::new();
         let pattern = Self::pack_pattern(pattern);
-        let elems = Self::encode_iv(&pattern);
+        let elems = Self::encode_iv(&pattern, domain_separation);
         let state = Self::iv::<F, P, R, C, T>(&elems, &permutation);
         SpongeInitializer {
             pattern,
