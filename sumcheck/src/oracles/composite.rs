@@ -26,7 +26,7 @@ pub enum Either<A, B> {
     Right(B),
 }
 
-//TODO: Ensure correctness
+// TODO: Ensure correctness
 impl<A, B> CanonicalSerialize for Either<A, B>
 where
     A: CanonicalSerialize,
