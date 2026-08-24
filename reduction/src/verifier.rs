@@ -1,10 +1,10 @@
 use crate::{
-    GuardedProof, Message, Reduction, Relation, TranscriptBuilder, transcript::VerifierTranscript,
-    transcript_builder::TranscriptDescriptor,
+    GuardedProof, Message, Reduction, Relation, TranscriptBuilder,
+    transcript::VerifierTranscript,
+    transcript_builder::{TranscriptDescriptor, hash},
 };
 
 use ark_ff::Field;
-use ark_serialize::CanonicalSerialize;
 use sponge::sponge::Duplex;
 
 /// A verifier for relation R.
@@ -119,9 +119,8 @@ where
     pub fn new(structure: &R1::Structure) -> Self {
         let key = R::verifier_key(structure);
 
-        let mut key_bytes: Vec<u8> = vec![];
-        key.serialize_uncompressed(&mut key_bytes).unwrap();
-        let domain_separation: [u8; 32] = blake3::hash(&key_bytes).into();
+        let key_hash = hash(&key);
+        let domain_separation = hash(&("lileum-reduction".to_string(), key_hash));
 
         let transcript_descriptor = TranscriptBuilder::new(domain_separation)
             .subprotocol::<R, F, R1, R2>(&key)

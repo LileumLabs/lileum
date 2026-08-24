@@ -112,13 +112,20 @@ impl<F: Field, S: Duplex<F>> TranscriptDescriptor<F, S> {
         R2: Relation,
         R: Reduction<F, R1, R2>,
     {
-        let mut key_bytes: Vec<u8> = vec![];
-        key.serialize_uncompressed(&mut key_bytes).unwrap();
-        let domain_separation: [u8; 32] = blake3::hash(&key_bytes).into();
+        let key_hash = hash(key);
+        // TODO: Maybe the protocol pattern could be absorbed here too now that
+        // we are using binary hash.
+        let domain_separation = hash(&("lileum-reduction".to_string(), key_hash));
 
         TranscriptBuilder::new(domain_separation)
             .round::<F, R1::Instance, 0>(instance_params)
             .subprotocol::<R, F, R1, R2>(key)
             .finish()
     }
+}
+
+pub(crate) fn hash<T: CanonicalSerialize>(x: &T) -> [u8; 32] {
+    let mut bytes: Vec<u8> = vec![];
+    x.serialize_uncompressed(&mut bytes).unwrap();
+    blake3::hash(&bytes).into()
 }
