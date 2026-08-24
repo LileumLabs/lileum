@@ -115,7 +115,8 @@ impl<F: Field, S: Duplex<F>> TranscriptDescriptor<F, S> {
         let key_hash = hash(key);
         // TODO: Maybe the protocol pattern could be absorbed here too now that
         // we are using binary hash.
-        let domain_separation = hash(&("lileum-reduction".to_string(), key_hash));
+        let reduction_name = R::name().to_string();
+        let domain_separation = hash(&("lileum-reduction".to_string(), reduction_name, key_hash));
 
         TranscriptBuilder::new(domain_separation)
             .round::<F, R1::Instance, 0>(instance_params)

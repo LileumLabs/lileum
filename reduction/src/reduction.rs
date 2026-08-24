@@ -3,7 +3,7 @@ use crate::{FoldingRelation, GuardedProof, Transcript, TranscriptBuilder, Verifi
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use sponge::sponge::Duplex;
-use std::fmt::Debug;
+use std::{any::type_name, fmt::Debug};
 
 pub struct ProverOutput<R: Relation, P> {
     pub instance: R::Instance,
@@ -66,6 +66,14 @@ pub trait Reduction<F: Field, R1: Relation, R2: Relation> {
     /// `<R1::Instance as Message<F>>::Params` or just `()` if
     /// R1::Instance doesn't implement `Message<F>`.
     type Params: Clone;
+
+    // A unique name representing the reduction to be used for domain
+    // separation. Defaults to type_name::<Self>().
+    // If the reduction is intanciated, it is recommended to give it an
+    // explicity name as type_name can cause stability issues.
+    fn name() -> &'static str {
+        type_name::<Self>()
+    }
 
     /// Defines the shape of the interactive protocol, any interactions which
     /// deviate from it will result in panics in the prover and errors in the

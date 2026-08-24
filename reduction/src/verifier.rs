@@ -120,7 +120,8 @@ where
         let key = R::verifier_key(structure);
 
         let key_hash = hash(&key);
-        let domain_separation = hash(&("lileum-reduction".to_string(), key_hash));
+        let reduction_name = R::name().to_string();
+        let domain_separation = hash(&("lileum-reduction".to_string(), reduction_name, key_hash));
 
         let transcript_descriptor = TranscriptBuilder::new(domain_separation)
             .subprotocol::<R, F, R1, R2>(&key)
