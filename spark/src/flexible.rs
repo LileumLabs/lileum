@@ -7,11 +7,11 @@ use crate::{
 use ::reduction::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
+use alloc::rc::Rc;
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::{CommitmentScheme, OpenInstance, OpeningRelation};
 use sponge::sponge::Duplex;
-use std::rc::Rc;
 
 /// Wrapper which dynamically chooses N as required, currently implemented up to
 /// 64 bits/8 segments.
@@ -182,7 +182,7 @@ where
         assert!(evals.len().is_power_of_two());
         let max: u64 = evals
             .iter()
-            .fold(0, |acc, (addr, _)| std::cmp::max(acc, *addr));
+            .fold(0, |acc, (addr, _)| core::cmp::max(acc, *addr));
         let bits = max.next_power_of_two().ilog2();
 
         use VerifierKey::*;
@@ -219,7 +219,7 @@ where
         assert!(evals.len().is_power_of_two());
         let max: u64 = evals
             .iter()
-            .fold(0, |acc, (addr, _)| std::cmp::max(acc, *addr));
+            .fold(0, |acc, (addr, _)| core::cmp::max(acc, *addr));
         let bits = max.next_power_of_two().ilog2();
 
         let bits = structure.vars.unwrap_or(bits as usize);

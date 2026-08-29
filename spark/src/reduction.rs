@@ -4,17 +4,18 @@ use crate::{
     prove::ProverKey,
     sumcheck_argument::{SparkChallenges, SparkEvals},
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::{
     CommitmentScheme, OpenInstance, OpeningRelation,
     oracle::{CommittedOracle, CommittedOracleInstance},
 };
+use core::marker::PhantomData;
 use reduction::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::marker::PhantomData;
 use sumcheck::{
     MultiPoint, SumcheckError, SumcheckInstance, SumcheckMessage, SumcheckReduction,
     SumcheckVerifierKey,

@@ -1,7 +1,11 @@
+#![no_std]
+extern crate alloc;
+
 use ::reduction::{Message, Relation};
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use commit::CommitmentScheme;
-use std::{marker::PhantomData, rc::Rc};
+use core::marker::PhantomData;
 use sumcheck::{MultiPoint, eq, oracles::UnexpectedVars};
 
 mod committed;

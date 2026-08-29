@@ -2,11 +2,12 @@ use crate::{
     BYTE, SparkInstance, SparseMle, StaticSparkRelation, StaticSparkStructure,
     sumcheck_argument::SparkEvals,
 };
+use alloc::{boxed::Box, rc::Rc};
 use ark_ff::{Field, batch_inversion};
 use ark_serialize::CanonicalSerialize;
 use commit::{CommitmentScheme, oracle::CommittedOracle};
+use core::marker::PhantomData;
 use reduction::Relation;
-use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
     MultiPoint, eq,
     oracles::{composite::CompositeOracle, core::CoreOracle},
@@ -43,8 +44,12 @@ impl<const N: usize> CanonicalSerialize for MinorStructure<N> {
 
 impl<const N: usize> MinorStructure<N> {
     pub(crate) fn new<F: Field>(mle: &SparseMle<F, N>) -> Self {
-        let mut counts: [Box<[usize; 256]>; N] =
-            [(); N].map(|_| (vec![0; BYTE]).into_boxed_slice().try_into().unwrap());
+        let mut counts: [Box<[usize; 256]>; N] = [(); N].map(|_| {
+            (alloc::vec![0; BYTE])
+                .into_boxed_slice()
+                .try_into()
+                .unwrap()
+        });
 
         for (i, counts) in counts.iter_mut().enumerate() {
             for addr in mle.addresses.iter() {
