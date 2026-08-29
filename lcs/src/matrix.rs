@@ -1,7 +1,8 @@
+use alloc::vec::Vec;
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
+use core::ops::{Index, Mul};
 use core::slice;
-use std::ops::{Index, Mul};
 
 /// Sparse matrix.
 #[derive(Default, Clone, Debug, CanonicalSerialize)]
@@ -28,11 +29,11 @@ impl Matrix {
     }
 
     pub fn push_row_single_value(&mut self, idx: usize) {
-        self.rows.push(vec![idx])
+        self.rows.push(alloc::vec![idx])
     }
 
     pub(crate) fn push_row_empty(&mut self) {
-        self.rows.push(vec![])
+        self.rows.push(Vec::new())
     }
 
     /// convert to sparse indexed evals as expected by spark

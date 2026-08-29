@@ -3,8 +3,9 @@ use crate::{
     structure::{LcsStructure, StructureBuilder},
     witness::{Witness, WitnessGenerator, unwrap_output},
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
-use std::fmt::Display;
+use core::fmt::Display;
 
 #[derive(Clone, Copy, Debug)]
 /// Symbolic circuit variable.
@@ -73,7 +74,7 @@ pub struct CircuitProfile {
 }
 
 impl Display for CircuitProfile {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "CircuitProfile\n")?;
         writeln!(f, "witness length: {}", self.witness_length)?;
         writeln!(f, "gates used:")?;
