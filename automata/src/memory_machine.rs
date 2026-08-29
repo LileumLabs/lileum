@@ -1,7 +1,9 @@
 //! Extension to `StackMachine` with a read-only memory.
 
+use alloc::vec::Vec;
+
 use crate::stack_machine::{PopableStack, StackMachine};
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 /// Extends inner intruction with a load instruction in a
 /// `A` addressable memory.
