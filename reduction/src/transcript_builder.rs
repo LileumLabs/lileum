@@ -1,7 +1,8 @@
 use crate::{Message, Reduction, Relation, Transcript, message::PointRound};
+use alloc::vec::Vec;
 use ark_ff::Field;
+use core::any::{TypeId, type_name};
 use sponge::sponge::{Duplex, SpongeBuilder};
-use std::any::{TypeId, type_name};
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Round {
@@ -36,7 +37,7 @@ pub struct TranscriptBuilder {
 impl TranscriptBuilder {
     pub(crate) fn new() -> Self {
         let sponge = SpongeBuilder::new();
-        let rounds = vec![];
+        let rounds = alloc::vec![];
         Self { rounds, sponge }
     }
 

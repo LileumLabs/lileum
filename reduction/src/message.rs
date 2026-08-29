@@ -1,6 +1,7 @@
 use crate::NoError;
+use alloc::vec::Vec;
 use ark_ff::{BigInteger, Field, PrimeField};
-use std::{any::Any, fmt::Debug, marker::PhantomData};
+use core::{any::Any, fmt::Debug, marker::PhantomData};
 
 /// Any message must consist of a constant number of field elements,
 /// or a number which is function of some paramenters.
@@ -38,7 +39,7 @@ impl<F> Message<F> for PointRound {
     }
 
     fn to_field_elements(&self, _params: &()) -> Result<Vec<F>, Self::Error> {
-        Ok(vec![])
+        Ok(alloc::vec![])
     }
 }
 
@@ -52,7 +53,7 @@ impl<F> Message<F> for () {
     }
 
     fn to_field_elements(&self, _params: &()) -> Result<Vec<F>, Self::Error> {
-        Ok(vec![])
+        Ok(alloc::vec![])
     }
 }
 
@@ -145,7 +146,7 @@ where
             .unzip::<_, _, Vec<_>, Vec<_>>();
         let low = F2::from_base_prime_field_elems(&low).unwrap();
         let high = F2::from_base_prime_field_elems(&high).unwrap();
-        Ok(vec![low, high])
+        Ok(alloc::vec![low, high])
     }
 }
 
@@ -162,6 +163,6 @@ impl<F: Field> Message<F> for SingleElement<F> {
     }
 
     fn to_field_elements(&self, _: &()) -> Result<Vec<F>, Self::Error> {
-        Ok(vec![self.0])
+        Ok(alloc::vec![self.0])
     }
 }

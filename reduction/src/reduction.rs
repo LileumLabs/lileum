@@ -2,8 +2,8 @@ use super::Relation;
 use crate::{FoldingRelation, GuardedProof, Transcript, TranscriptBuilder, VerifierTranscript};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
+use core::fmt::Debug;
 use sponge::sponge::Duplex;
-use std::fmt::Debug;
 
 pub struct ProverOutput<R: Relation, P> {
     pub instance: R::Instance,

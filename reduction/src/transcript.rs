@@ -1,11 +1,11 @@
 use crate::{Error, GuardedProof, Message, message::PointRound, transcript_builder::Round};
+use alloc::vec::{IntoIter, Vec};
 use ark_ff::Field;
-use sponge::sponge::Duplex;
-use std::{
+use core::{
     any::{Any, TypeId, type_name},
     marker::PhantomData,
-    vec::IntoIter,
 };
+use sponge::sponge::Duplex;
 
 /// Protects a potential protocol message, preventing any access
 /// which could bypass the transcript.

@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use ark_ff::{BigInteger, Field, PrimeField};
 
 /// casts element from one field into the other, assuming that bias
