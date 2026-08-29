@@ -6,6 +6,7 @@ use crate::{
     },
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::{
@@ -21,7 +22,6 @@ use spark::{
     flexible::{self, FlexibleSparkError},
 };
 use sponge::sponge::Duplex;
-use std::rc::Rc;
 use sumcheck::{
     ProverKey as SumcheckProverKey, SumcheckError, SumcheckMessage, SumcheckVerifierKey,
     oracles::{

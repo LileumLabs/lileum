@@ -1,7 +1,9 @@
 use crate::reductions::matrix_product::function::MatrixSumEvals;
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::CommitmentScheme;
+use core::marker::PhantomData;
 use lcs::matrix::Matrix;
 use reduction::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
@@ -9,7 +11,6 @@ use reduction::{
 };
 use spark::{FlexibleSparkRelation, SparkInstance};
 use sponge::sponge::Duplex;
-use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
     MultiPoint,
     eq::eq,

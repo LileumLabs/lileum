@@ -3,6 +3,7 @@ use crate::{
     reductions::flcs::FlcsEvals,
     relations::{ClcsInstance, ClcsRelation, ClcsStructure, FlcsInstance, FlcsRelation},
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
 use commit::CommitmentScheme;
 use reduction::{
@@ -89,7 +90,7 @@ where
             instance,
             witness: _,
             proof,
-        } = ZerocheckReduction::prove(key, oracle_instance, vec![], transcript);
+        } = ZerocheckReduction::prove(key, oracle_instance, Vec::new(), transcript);
 
         ProverOutput {
             instance: FlcsInstance(instance),

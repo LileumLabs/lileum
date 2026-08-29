@@ -1,3 +1,8 @@
+#![no_std]
+extern crate alloc;
+#[cfg(test)]
+extern crate std;
+
 mod circuit_key;
 pub mod circuits;
 mod oracles;

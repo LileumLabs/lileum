@@ -1,4 +1,5 @@
 use crate::{relations::ClcsInstance, testing::utils::HashChain};
+use alloc::vec::Vec;
 use ark_ff::Field;
 use commit::CommitmentScheme;
 use sponge::{poseidon2::PoseidonDefault, sponge::Sponge};

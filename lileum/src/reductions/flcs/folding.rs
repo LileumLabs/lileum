@@ -3,6 +3,7 @@ use crate::{
     reductions::flcs::{FlcsEvals, compute_sumcheck_witness},
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use commit::CommitmentScheme;
 use lcs::matrix::Matrix;
@@ -11,7 +12,6 @@ use reduction::{
     VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::rc::Rc;
 use sumcheck::{
     SumcheckError, SumcheckMessage,
     folding::{ZeroFold, ZeroFoldKey},

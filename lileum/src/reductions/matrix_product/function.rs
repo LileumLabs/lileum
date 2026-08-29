@@ -1,9 +1,10 @@
 use crate::reductions::matrix_product::matrix_sum::{MatrixSumNature, MatrixSumOracle};
+use alloc::vec::{IntoIter, Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::oracle::{CommittedNature, CommittedOracle};
+use core::fmt::Debug;
 use lcs::matrix::Matrix;
-use std::{fmt::Debug, vec::IntoIter};
 use sumcheck::{
     MultiPoint, Var,
     eq::eq,
@@ -74,7 +75,7 @@ impl<F: Field, const N: usize> MatrixSumEvals<F, N> {
     }
 
     pub fn matrix_partial_eval(matrix: &Matrix, rx: &[F]) -> Vec<F> {
-        let mut res = vec![F::zero(); rx.len()];
+        let mut res = alloc::vec![F::zero(); rx.len()];
         for (j, i) in matrix.iter() {
             res[i] += rx[j];
         }
@@ -115,7 +116,7 @@ impl<F: Field, const N: usize> MatrixSumEvals<OracleEval<F>, N> {
 impl<F: Field, const N: usize> MatrixSumEvals<Vec<F>, N> {
     pub fn coefficients(challenge: F) -> Self {
         Self {
-            challenge: vec![challenge],
+            challenge: alloc::vec![challenge],
             ..Default::default()
         }
     }

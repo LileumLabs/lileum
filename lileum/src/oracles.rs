@@ -1,3 +1,4 @@
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::{
@@ -7,9 +8,9 @@ use commit::{
         VerifierKey as CommittedVerifierKey,
     },
 };
+use core::{marker::PhantomData, ops::Add};
 use lcs::matrix::Matrix;
 use reduction::{Message, NoError, Relation};
-use std::{marker::PhantomData, ops::Add, rc::Rc};
 use sumcheck::{
     MultiPoint,
     evals::EvalsCore,
@@ -267,7 +268,7 @@ where
         }
 
         let vector = {
-            let mut vector = vec![];
+            let mut vector = Vec::new();
             let vector_filter = &structure.vector;
             //TODO: check the nature is CommittedNature::Witness
             for witness in witness {

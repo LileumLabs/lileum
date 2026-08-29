@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use ark_ff::{BigInteger, Field, PrimeField, Zero};
 use lcs::{
     circuit::Var,
