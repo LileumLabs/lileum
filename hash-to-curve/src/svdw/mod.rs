@@ -1,7 +1,5 @@
 //! Shallue-van de Woestijne map
 
-use std::fmt::Debug;
-
 use crate::CurveMap;
 use ark_ec::{
     CurveConfig,
@@ -9,6 +7,7 @@ use ark_ec::{
 };
 use ark_ff::{BigInteger, Field, PrimeField, Zero};
 use ark_serialize::CanonicalSerialize;
+use core::fmt::Debug;
 
 #[cfg(test)]
 mod tests;
@@ -67,7 +66,7 @@ pub struct SvdwMap<C: SWCurveConfig> {
 }
 
 impl<C: SWCurveConfig> Debug for SvdwMap<C> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("SvdwMap").field("z", &self.z).finish()
     }
 }
