@@ -1,12 +1,13 @@
 use crate::{CommitmentScheme, OpenInstance, OpeningRelation};
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
+use core::{convert::identity, marker::PhantomData};
 use reduction::{
     GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::{convert::identity, marker::PhantomData, rc::Rc};
 use sumcheck::{
     MultiPoint,
     evals::{EvalsCore, EvalsExt},
@@ -111,7 +112,7 @@ where
         let count: usize = count.sum();
         assert_eq!(count, 1);
         Self {
-            commitments: vec![commit],
+            commitments: alloc::vec![commit],
             _sf: PhantomData,
         }
     }
@@ -153,7 +154,7 @@ where
     }
 
     fn to_field_elements(&self, _params: &OracleParams) -> Result<Vec<F>, Self::Error> {
-        let mut elems: Vec<F> = vec![];
+        let mut elems: Vec<F> = Vec::new();
 
         let commits = witness_commits::<F, SF>();
         if commits != self.commitments.len() {
@@ -179,7 +180,7 @@ where
     SF: SumcheckFunction<F>,
     C: CommitmentScheme<F>,
 {
-    let mut evals_to_commit = SF::map_evals(&filter, |_| vec![]);
+    let mut evals_to_commit = SF::map_evals(&filter, |_| Vec::new());
     let condition = filter;
 
     for eval in evals {
@@ -477,7 +478,7 @@ where
             .collect();
 
         let locations = SF::map_evals(&SF::natures(), |nature| (*nature).into());
-        let mut space = vec![F::ZERO; filter.len()];
+        let mut space = alloc::vec![F::ZERO; filter.len()];
 
         let [chall] = transcript.send_message(&(), &());
 

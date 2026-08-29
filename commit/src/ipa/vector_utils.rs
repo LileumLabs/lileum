@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use ark_ec::ScalarMul;
 use ark_ff::{BigInteger, Field, PrimeField};
 
@@ -146,7 +147,7 @@ pub fn challenge_combinations<F: Field>(challs: &[F], challs_inv: &[F]) -> Vec<F
     assert_eq!(challs.len(), challs_inv.len());
     let zero: F = challs_inv.iter().cloned().product();
     let flips: Vec<F> = challs.iter().map(|x| x.square()).collect();
-    let mut combinations = vec![F::zero(); 1 << challs.len()];
+    let mut combinations = alloc::vec![F::zero(); 1 << challs.len()];
     combine_rec(&flips, zero, &mut combinations);
     combinations
 }

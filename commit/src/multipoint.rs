@@ -2,14 +2,18 @@ use crate::{
     CommitmentScheme, OpenInstance, OpeningRelation,
     oracle::{self, CommittedNature, CommittedOracle, CommittedOracleInstance},
 };
+use alloc::{
+    rc::Rc,
+    vec::{IntoIter, Vec},
+};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
+use core::{fmt::Debug, marker::PhantomData};
 use reduction::{
     GuardedProof, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::{fmt::Debug, marker::PhantomData, rc::Rc, vec::IntoIter};
 use sumcheck::{
     MultiPoint, ProverKey as SumcheckProverKey, SumcheckError, SumcheckInstance, SumcheckMessage,
     SumcheckReduction, SumcheckVerifierKey, Var,
@@ -175,7 +179,7 @@ where
     fn verifier_key(structure_1: &(C, usize)) -> Self::VerifierKey {
         let (pcs, vars) = structure_1;
 
-        let mles = vec![MultipointEvals::<F, N>::zero(); 1 << vars];
+        let mles = alloc::vec![MultipointEvals::<F, N>::zero(); 1 << vars];
         let mles = Rc::new(mles);
         let oracle = Oracle::new((), mles, (), pcs.clone());
 
@@ -194,7 +198,7 @@ where
         let verifier_key = Self::verifier_key(structure);
         let (pcs, vars) = structure;
 
-        let mles = vec![MultipointEvals::<F, N>::zero(); 1 << vars];
+        let mles = alloc::vec![MultipointEvals::<F, N>::zero(); 1 << vars];
         let mles = Rc::new(mles);
         let oracle = Oracle::new((), mles, (), pcs.clone());
 
@@ -361,9 +365,9 @@ fn core_instance<F: Field, const N: usize>(
     vars: usize,
 ) -> CoreOracleInstance<F, MultipointEvals<(), N>> {
     let coefficients = MultipointEvals {
-        commitments: [(); N].map(|_| vec![]),
+        commitments: [(); N].map(|_| Vec::new()),
         eqs: points.map(|point| point.inner()),
-        challenge: vec![challenge],
+        challenge: alloc::vec![challenge],
     };
     CoreOracleInstance::new(&coefficients, vars)
 }
@@ -470,7 +474,7 @@ fn sumcheck_witness<F: Field, const N: usize>(
     for witness in &witness {
         assert_eq!(witness.len(), len);
     }
-    let mut res = vec![MultipointEvals::zero(); len];
+    let mut res = alloc::vec![MultipointEvals::zero(); len];
 
     for (i, witness) in witness.into_iter().enumerate() {
         for (eval, w) in res.iter_mut().zip(witness) {
