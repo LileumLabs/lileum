@@ -4,7 +4,7 @@ use crate::{
     poseidon2::{internal_matrix::InternalMatrix3, small_pow},
 };
 use ark_ff::{Field, PrimeField};
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 pub trait ExternalMatrix<F: Field, const N: usize> {
     fn apply(state: &mut [F; N]);

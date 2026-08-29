@@ -1,5 +1,5 @@
 use crate::sponge::Pattern;
-use std::fmt::Write;
+use alloc::{boxed::Box, fmt::Write, string::String, vec::Vec};
 
 #[derive(Debug, Clone)]
 pub enum Error {
@@ -21,8 +21,8 @@ pub struct Mismatch {
     found: Vec<Pattern>,
 }
 
-impl std::fmt::Debug for Mismatch {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Mismatch {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let expected = Mismatch::debug_pattern(&self.expected)?;
         let found = Mismatch::debug_pattern(&self.found)?;
         f.debug_struct("Mismatch")
@@ -36,7 +36,7 @@ impl Mismatch {
     pub(crate) fn new(expected: Vec<Pattern>, found: Vec<Pattern>) -> Self {
         Self { expected, found }
     }
-    fn debug_pattern(pattern: &[Pattern]) -> Result<String, std::fmt::Error> {
+    fn debug_pattern(pattern: &[Pattern]) -> Result<String, core::fmt::Error> {
         let mut string = String::new();
         for p in pattern {
             match p {

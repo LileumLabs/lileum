@@ -1,7 +1,8 @@
 use crate::grain::Grain;
+use alloc::vec::Vec;
 use ark_ff::{BigInteger, PrimeField};
 use automata::FiniteAutomaton;
-use std::{cmp::Ordering, marker::PhantomData};
+use core::{cmp::Ordering, marker::PhantomData};
 
 pub enum Field {
     Prime,
@@ -185,7 +186,7 @@ pub fn parse_field(string: &str) -> Vec<bool> {
         .chars()
         .flat_map(|char| {
             let byte = char.to_digit(16).unwrap();
-            vec![
+            alloc::vec![
                 byte & 0b1000 != 0,
                 byte & 0b0100 != 0,
                 byte & 0b0010 != 0,
@@ -194,6 +195,8 @@ pub fn parse_field(string: &str) -> Vec<bool> {
         })
         .collect()
 }
+
+/*
 fn print_nibble(nibble: &[bool]) {
     let exponents = [8, 4, 2, 1];
     let mut byte = 0;
@@ -208,7 +211,7 @@ fn print_nibble(nibble: &[bool]) {
 #[allow(unused)]
 pub fn print_integer_big_endian(int: &[bool]) {
     let partial_bit_len = int.len() % 4;
-    let partial_bit: Vec<bool> = std::iter::repeat_n(false, 4 - partial_bit_len)
+    let partial_bit: Vec<bool> = core::iter::repeat_n(false, 4 - partial_bit_len)
         .chain(int[0..partial_bit_len].to_owned())
         .collect();
     if partial_bit_len != 0 {
@@ -219,6 +222,7 @@ pub fn print_integer_big_endian(int: &[bool]) {
     }
     println!();
 }
+*/
 
 // comparing against the last constant produced by
 // sage generate_params_poseidon.sage 1 0 252 3 3 128 0x800000000000011000000000000000000000000000000000000000000000001
