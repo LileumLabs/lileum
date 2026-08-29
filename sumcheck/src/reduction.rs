@@ -6,14 +6,15 @@ use crate::{
     oracles::{Oracle, QueryRelation},
     prove,
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
+use core::{fmt::Debug, marker::PhantomData};
 use reduction::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::{fmt::Debug, marker::PhantomData};
 
 /// A sumcheck message had an unexpected degree.
 #[derive(Clone, Copy, Debug)]
@@ -132,7 +133,7 @@ impl<F: Field, O: Oracle<F>> Reduction<F, SumcheckRelation<F, O>, QueryRelation<
     ) -> Result<<QueryRelation<F, O> as Relation>::Instance, Self::Error> {
         let mut sum = instance.sum;
 
-        let mut vars = vec![];
+        let mut vars = alloc::vec![];
         // The standard sumcheck protocol.
         for i in 0..key.vars {
             // Receive message from prover, message being an univariate polynomial.

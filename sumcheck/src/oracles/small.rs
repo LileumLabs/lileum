@@ -2,6 +2,7 @@ use crate::{
     MultiPoint, OracleQueryInstance,
     oracles::{EvalLocation, Oracle, QueryRelation, SumcheckFunction},
 };
+use alloc::{fmt::Debug, rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use reduction::{
@@ -9,7 +10,6 @@ use reduction::{
     TranscriptBuilder, VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::{fmt::Debug, rc::Rc};
 
 #[derive(Clone, Debug)]
 /// An oracle over MLEs which have a small representation and

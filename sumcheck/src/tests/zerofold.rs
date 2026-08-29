@@ -9,10 +9,13 @@ use crate::{
     },
     zerocheck::{ZeroSumcheck, Zerocheck, ZerocheckReduction},
 };
+use alloc::{
+    fmt::Debug,
+    vec::{IntoIter, Vec},
+};
 use ark_ff::{Field, PrimeField};
 use rand::{SeedableRng, rngs::StdRng};
 use reduction::{FoldingRelation, Prover, ProverOutput, Relation, Verifier};
-use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
 
 // As the folding scheme is [ZeroSumcheck;2] -> ZeroSumcheck, but we start

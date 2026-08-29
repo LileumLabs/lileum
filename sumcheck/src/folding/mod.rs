@@ -1,6 +1,6 @@
 use crate::powers::CompactPowers;
 use ark_ff::Field;
-use std::ops::{Add, Mul};
+use core::ops::{Add, Mul};
 
 mod degree;
 mod reduction;

@@ -7,10 +7,13 @@ use crate::{
         testing::{TestingNature, TestingOracle},
     },
 };
+use alloc::{
+    fmt::Debug,
+    vec::{IntoIter, Vec},
+};
 use ark_ff::{Field, PrimeField};
 use rand::{SeedableRng, rngs::StdRng};
 use reduction::{Prover, ProverOutput, Relation, Verifier};
-use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
 
 /// The concrete reduction to be used in this test, being the SumcheckReduction

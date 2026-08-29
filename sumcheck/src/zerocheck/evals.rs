@@ -3,8 +3,8 @@ use crate::{
     evals::{Evals, EvalsCore},
     oracles::{EvalLocation, SumcheckFunction, partial::Nature},
 };
+use alloc::{fmt::Debug, vec::Vec};
 use ark_ff::Field;
-use std::fmt::Debug;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[allow(dead_code)]
@@ -30,7 +30,7 @@ where
         inner.flatten(vec);
     }
 
-    fn unflatten(elems: &mut std::vec::IntoIter<V>) -> Self {
+    fn unflatten(elems: &mut alloc::vec::IntoIter<V>) -> Self {
         let zerocheck = elems.next().unwrap();
         let inner = I::unflatten(elems);
         Self { zerocheck, inner }

@@ -5,10 +5,11 @@ use crate::{
         composite::{CompositeOracleInstance, Either},
     },
 };
+use alloc::{boxed::Box, rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
+use core::{any::Any, fmt::Debug, marker::PhantomData};
 use reduction::{Message, Relation};
-use std::{any::Any, fmt::Debug, marker::PhantomData, rc::Rc};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PartialQueryInstance<F, SF, O>

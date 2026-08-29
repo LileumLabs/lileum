@@ -10,15 +10,15 @@ use crate::{
         },
     },
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
-use core::panic;
+use core::{fmt::Debug, marker::PhantomData, panic};
 use reduction::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::{fmt::Debug, marker::PhantomData, rc::Rc};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Either<A, B> {
@@ -253,7 +253,7 @@ where
         let evals_oracle2 = P2::instance_evals(&instance.oracle2_instance).flatten_vec();
         assert_eq!(natures.len(), evals_oracle2.len());
 
-        let mut evals = vec![];
+        let mut evals = Vec::new();
 
         for ((o1, o2), nature) in evals_oracle1.into_iter().zip(evals_oracle2).zip(natures) {
             let eval = match nature {

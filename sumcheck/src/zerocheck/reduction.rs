@@ -8,13 +8,14 @@ use crate::{
     reduction::SumcheckVerifierKey,
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance, Zerocheck},
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
+use core::marker::PhantomData;
 use reduction::{
     GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::marker::PhantomData;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ZerocheckReduction<F, O>(PhantomData<(F, O)>);
@@ -227,8 +228,8 @@ impl<F: Field, O: Oracle<F>> prove::ProverKey<F, O> {
         let mut powers_over_domain = powers.eval_over_domain();
         let mut shrinking_powers = ShrinkingPowers::new(powers);
 
-        let mut vars = vec![];
-        let mut messages = vec![];
+        let mut vars = Vec::new();
+        let mut messages = Vec::new();
 
         for _ in 0..self.vars() {
             let message = self.zerocheck_message(&witness, &powers_over_domain, sum);
@@ -274,7 +275,7 @@ impl<F: Field, O: Oracle<F>> prove::ProverKey<F, O> {
             left.iter().zip(right).map(|(left, right)| [*left, *right])
         };
 
-        let mut message = vec![F::zero(); degree + 1];
+        let mut message = alloc::vec![F::zero(); degree + 1];
         for ((left, right), powers) in left.iter().zip(right).zip(powers) {
             Self::zerocheck_eval_acc(data, &mut message, [left, right], powers, sum.is_zero());
         }

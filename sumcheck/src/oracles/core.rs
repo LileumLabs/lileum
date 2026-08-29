@@ -8,13 +8,14 @@ use crate::{
         partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
     },
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
+use core::{convert::identity, fmt::Debug, marker::PhantomData};
 use reduction::{
     Argument, GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::{convert::identity, fmt::Debug, marker::PhantomData, rc::Rc};
 
 pub type Func<F> = fn(&[F], &MultiPoint<F>) -> F;
 
@@ -153,7 +154,7 @@ where
                         1,
                         "other than 1 element provided for challenge"
                     );
-                    Some(vec![coeffs[0]])
+                    Some(alloc::vec![coeffs[0]])
                 }
                 Some(SmallStructure) | None => {
                     assert!(
@@ -190,7 +191,7 @@ where
         .map(|nature| {
             let nature: Option<CoreNature> = nature.into_dynamic().into();
             nature.map(|nature| match nature {
-                CoreNature::SmallStructure => vec![],
+                CoreNature::SmallStructure => Vec::new(),
                 CoreNature::SmallInstance(Coeffs::Fixed(n)) => {
                     let coeff = coefficients.next().unwrap();
                     assert_eq!(n, coeff.len());
@@ -509,7 +510,7 @@ where
         // TODO: It would be better to implement it here with better errors
         // instead of relying on check().
         // As check doesn't make use of it.
-        let witness = vec![];
+        let witness = Vec::new();
         if CoreQueryRelation::check(&CoreOracle::<F, SF>::default(), &instance, &witness) {
             Ok(())
         } else {

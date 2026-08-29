@@ -5,14 +5,15 @@ use crate::{
     folding::{FieldFolder, Foldable, folding_degree},
     oracles::{Oracle, OracleData},
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
+use core::marker::PhantomData;
 use reduction::{
     FoldingRelation, FoldingScheme, GuardedProof, ProverOutput, Reduction, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::marker::PhantomData;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SumFold<F, O>(PhantomData<(F, O)>);

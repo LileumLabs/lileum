@@ -5,9 +5,10 @@ use crate::{
         partial::{Nature, OracleEval, OracleParams, PartialOracle, PartialQueryInstance},
     },
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
+use core::marker::PhantomData;
 use reduction::{Message, NoError, Relation};
-use std::{marker::PhantomData, rc::Rc};
 
 // #[derive(Clone, Copy, Debug)]
 // pub struct EmptyOracle<F, SF>(PhantomData<(F, SF)>);
@@ -36,7 +37,7 @@ impl<F: Field> Message<F> for EmptyInstance {
     }
 
     fn to_field_elements(&self, _params: &Self::Params) -> Result<Vec<F>, Self::Error> {
-        Ok(vec![])
+        Ok(Vec::new())
     }
 }
 

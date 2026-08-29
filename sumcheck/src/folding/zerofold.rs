@@ -7,14 +7,15 @@ use crate::{
     powers::CompactPowers,
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
+use core::marker::PhantomData;
 use reduction::{
     FoldingRelation, FoldingScheme, GuardedProof, Message, ProverOutput, Reduction, Relation,
     Transcript, TranscriptBuilder, VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::marker::PhantomData;
 
 /// Folding scheme for zerocheck.
 #[derive(Clone, Copy, Debug)]
@@ -239,7 +240,7 @@ impl<F: Field, O: Oracle<F>> ZeroFoldKey<F, O> {
         );
         let powers_odd_last = base_weights.extend(powers_odd.inner());
 
-        let [mut res0, mut res1] = [(); 2].map(|_| vec![F::ZERO; self.degree + 1]);
+        let [mut res0, mut res1] = [(); 2].map(|_| alloc::vec![F::ZERO; self.degree + 1]);
         // Multiply the first variable and fold into Vec<F>.
         for i in 0..(w1.len() / 2) {
             let evals = [&w1[i * 2], &w2[i * 2]];
@@ -293,7 +294,7 @@ impl<F: Field, O: Oracle<F>> ZeroFoldKey<F, O> {
         assert_eq!(messages.len() % weights.domain_size(), 0);
         let n = messages.len() / weights.domain_size();
 
-        let mut res = vec![];
+        let mut res = Vec::new();
 
         for i in 0..(n / 2) {
             let size = weights.domain_size();

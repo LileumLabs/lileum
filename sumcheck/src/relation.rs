@@ -2,9 +2,10 @@ use crate::{
     evals::{Evals, Mles},
     oracles::{EvalLocation, Oracle},
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
+use core::{marker::PhantomData, ops::Add};
 use reduction::{Message, Relation};
-use std::{marker::PhantomData, ops::Add};
 
 fn merge<F: Field, O: Oracle<F>>(
     structure: &Mles<O::Function, F>,

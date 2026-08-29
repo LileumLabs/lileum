@@ -22,8 +22,9 @@
 //! And so on we continue until having all the evaluations.
 
 use crate::MultiPoint;
+use alloc::vec::Vec;
 use ark_ff::Field;
-use std::ops::Mul;
+use core::ops::Mul;
 
 // computing a gray code as example, ultimately not used as
 // there was a simpler and better way.
@@ -133,12 +134,12 @@ fn test_eq() {
     let mut rng = thread_rng();
     let mut r_point = || rng.r#gen::<Fr>();
     let vars = 4;
-    let point = vec![r_point(); vars];
+    let point = alloc::vec![r_point(); vars];
     let point = MultiPoint::new(point);
 
     let eq_evals = eq(&point);
 
-    let check_poly = vec![r_point(); eq_evals.len()];
+    let check_poly = alloc::vec![r_point(); eq_evals.len()];
 
     let eq_eval = eq_evals
         .iter()
