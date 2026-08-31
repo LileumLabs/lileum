@@ -67,10 +67,10 @@ pub trait Reduction<F: Field, R1: Relation, R2: Relation> {
     /// R1::Instance doesn't implement `Message<F>`.
     type Params: Clone;
 
-    // A unique name representing the reduction to be used for domain
-    // separation. Defaults to type_name::<Self>().
-    // If the reduction is intanciated, it is recommended to give it an
-    // explicity name as type_name can cause stability issues.
+    /// A unique name representing the reduction to be used for domain
+    /// separation. Defaults to type_name::<Self>().
+    /// If the reduction is instanciated, it is recommended to give it an
+    /// explicitly name as type_name can cause stability issues.
     fn name() -> &'static str {
         type_name::<Self>()
     }
