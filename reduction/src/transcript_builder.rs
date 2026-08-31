@@ -37,7 +37,7 @@ pub struct TranscriptBuilder {
 impl TranscriptBuilder {
     pub(crate) fn new() -> Self {
         let sponge = SpongeBuilder::new();
-        let rounds = alloc::vec![];
+        let rounds = Vec::new();
         Self { rounds, sponge }
     }
 

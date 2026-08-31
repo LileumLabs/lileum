@@ -3,8 +3,9 @@ use crate::{
     evals::{Evals, EvalsCore},
     oracles::{EvalLocation, SumcheckFunction, partial::Nature},
 };
-use alloc::{fmt::Debug, vec::Vec};
+use alloc::vec::Vec;
 use ark_ff::Field;
+use core::fmt::Debug;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[allow(dead_code)]

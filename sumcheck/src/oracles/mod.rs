@@ -1,6 +1,6 @@
 use crate::{MultiPoint, Var, evals::Mles};
-use ::core::marker::PhantomData;
-use alloc::{fmt::Debug, rc::Rc, vec::Vec};
+use ::core::{fmt::Debug, marker::PhantomData};
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use reduction::{Message, Relation};

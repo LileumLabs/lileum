@@ -1,5 +1,6 @@
 use crate::sponge::Pattern;
-use alloc::{boxed::Box, fmt::Write, string::String, vec::Vec};
+use alloc::{boxed::Box, string::String, vec::Vec};
+use core::fmt::Write;
 
 #[derive(Debug, Clone)]
 pub enum Error {

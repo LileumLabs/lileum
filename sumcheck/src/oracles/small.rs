@@ -2,9 +2,10 @@ use crate::{
     MultiPoint, OracleQueryInstance,
     oracles::{EvalLocation, Oracle, QueryRelation, SumcheckFunction},
 };
-use alloc::{fmt::Debug, rc::Rc, vec::Vec};
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
+use core::fmt::Debug;
 use reduction::{
     Argument, GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,

@@ -39,7 +39,7 @@ impl<F> Message<F> for PointRound {
     }
 
     fn to_field_elements(&self, _params: &()) -> Result<Vec<F>, Self::Error> {
-        Ok(alloc::vec![])
+        Ok(Vec::new())
     }
 }
 
@@ -53,7 +53,7 @@ impl<F> Message<F> for () {
     }
 
     fn to_field_elements(&self, _params: &()) -> Result<Vec<F>, Self::Error> {
-        Ok(alloc::vec![])
+        Ok(Vec::new())
     }
 }
 

@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 ark-ff = "0.4"
 ark-serialize = { version = "0.4", default-features = false, features = ["derive"] }
 ark-ec = { version = "0.4", optional = true }
-rand = {version = "0.8", default-features = false, optional = true}
+rand = {version = "0.8", default-features = false, features = ["std_rng"], optional = true}
 sumcheck = { workspace = true }
 sumcheck-derive = { workspace = true }
 reduction = { workspace = true }

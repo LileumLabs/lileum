@@ -83,8 +83,8 @@ impl<F: Field, O: Oracle<F>> ProverKey<F, O> {
         mut witness: Vec<Mles<O::Function, F>>,
         transcript: &mut Transcript<F, S>,
     ) -> (Vec<SumcheckMessage<F>>, MultiPoint<F>, F) {
-        let mut vars = alloc::vec![];
-        let mut messages = alloc::vec![];
+        let mut vars = Vec::new();
+        let mut messages = Vec::new();
 
         for _ in 0..self.vars {
             let message = self.message(&witness);

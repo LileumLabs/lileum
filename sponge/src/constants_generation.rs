@@ -196,34 +196,6 @@ pub fn parse_field(string: &str) -> Vec<bool> {
         .collect()
 }
 
-/*
-fn print_nibble(nibble: &[bool]) {
-    let exponents = [8, 4, 2, 1];
-    let mut byte = 0;
-    for i in 0..4 {
-        if nibble[i] {
-            byte += exponents[i];
-        }
-    }
-    print!("{:x}", byte)
-}
-
-#[allow(unused)]
-pub fn print_integer_big_endian(int: &[bool]) {
-    let partial_bit_len = int.len() % 4;
-    let partial_bit: Vec<bool> = core::iter::repeat_n(false, 4 - partial_bit_len)
-        .chain(int[0..partial_bit_len].to_owned())
-        .collect();
-    if partial_bit_len != 0 {
-        print_nibble(&partial_bit);
-    }
-    for chunk in int[partial_bit_len..].chunks(4) {
-        print_nibble(chunk);
-    }
-    println!();
-}
-*/
-
 // comparing against the last constant produced by
 // sage generate_params_poseidon.sage 1 0 252 3 3 128 0x800000000000011000000000000000000000000000000000000000000000001
 #[test]

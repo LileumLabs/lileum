@@ -133,7 +133,7 @@ impl<F: Field, O: Oracle<F>> Reduction<F, SumcheckRelation<F, O>, QueryRelation<
     ) -> Result<<QueryRelation<F, O> as Relation>::Instance, Self::Error> {
         let mut sum = instance.sum;
 
-        let mut vars = alloc::vec![];
+        let mut vars = Vec::new();
         // The standard sumcheck protocol.
         for i in 0..key.vars {
             // Receive message from prover, message being an univariate polynomial.
