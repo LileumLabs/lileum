@@ -105,7 +105,6 @@ where
     F: Field,
     SF: SumcheckFunction<F>,
     <Self::Instance as Message<F>>::Error: Clone,
-    <Self::Instance as Message<F>>::Params: CanonicalSerialize,
 {
     type Instance: Message<F, Params = OracleParams> + Clone;
     type VerifierKey: From<Self> + Clone + CanonicalSerialize;

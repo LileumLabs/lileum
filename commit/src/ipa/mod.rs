@@ -67,7 +67,7 @@ struct Round<F, G: VariableBaseMSM<ScalarField = F>> {
 }
 
 impl<F, G: VariableBaseMSM<ScalarField = F>> Round<F, G> {
-    // wheter it has been reduced to the minimal instance, with vectors of size 1
+    // whether it has been reduced to the minimal instance, with vectors of size 1
     fn reduced(&self) -> bool {
         debug_assert_eq!(self.a.len(), self.b.len());
         debug_assert_eq!(self.basis.len(), self.b.len());

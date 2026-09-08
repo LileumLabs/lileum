@@ -234,7 +234,7 @@ where
 
         let commits = instance.each_ref().map(|instance| instance.commit.clone());
         let commits = MultipointEvals {
-            committments: commits.map(Some),
+            commitments: commits.map(Some),
             eqs: [(); N].map(|_| None),
             challenge: None,
         };
@@ -307,7 +307,7 @@ where
 
         let commits = instance.each_ref().map(|instance| instance.commit.clone());
         let commits = MultipointEvals {
-            committments: commits.map(Some),
+            commitments: commits.map(Some),
             eqs: [(); N].map(|_| None),
             challenge: None,
         };
@@ -361,7 +361,7 @@ fn core_instance<F: Field, const N: usize>(
     vars: usize,
 ) -> CoreOracleInstance<F, MultipointEvals<(), N>> {
     let coefficients = MultipointEvals {
-        committments: [(); N].map(|_| vec![]),
+        commitments: [(); N].map(|_| vec![]),
         eqs: points.map(|point| point.inner()),
         challenge: vec![challenge],
     };
@@ -370,7 +370,7 @@ fn core_instance<F: Field, const N: usize>(
 
 #[derive(Clone, Copy, Debug, EvalsCore)]
 pub struct MultipointEvals<V: Clone + Debug, const N: usize> {
-    committments: [V; N],
+    commitments: [V; N],
     eqs: [V; N],
     challenge: V,
 }
@@ -384,22 +384,22 @@ impl<V: Clone + Debug + CanonicalSerialize, const N: usize> CanonicalSerialize
         compress: ark_serialize::Compress,
     ) -> Result<(), ark_serialize::SerializationError> {
         let Self {
-            committments,
+            commitments,
             eqs,
             challenge,
         } = self;
-        committments.serialize_with_mode(&mut writer, compress)?;
+        commitments.serialize_with_mode(&mut writer, compress)?;
         eqs.serialize_with_mode(&mut writer, compress)?;
         challenge.serialize_with_mode(&mut writer, compress)
     }
 
     fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
         let Self {
-            committments,
+            commitments,
             eqs,
             challenge,
         } = self;
-        committments.serialized_size(compress)
+        commitments.serialized_size(compress)
             + eqs.serialized_size(compress)
             + challenge.serialized_size(compress)
     }
@@ -408,7 +408,7 @@ impl<V: Clone + Debug + CanonicalSerialize, const N: usize> CanonicalSerialize
 impl<F: Field, const N: usize> MultipointEvals<F, N> {
     pub fn zero() -> Self {
         Self {
-            committments: [F::ZERO; N],
+            commitments: [F::ZERO; N],
             eqs: [F::ZERO; N],
             challenge: F::ZERO,
         }
@@ -423,7 +423,7 @@ impl<F: Field, const N: usize> SumcheckFunction<F> for MultipointEvals<(), N> {
     fn natures() -> Self::Mles<Self::Natures> {
         use Either::*;
         MultipointEvals {
-            committments: [Right(CommittedNature::Witness); N],
+            commitments: [Right(CommittedNature::Witness); N],
             eqs: [Left(CoreNature::SmallInstance(Coeffs::PerVariable)); N],
             challenge: Left(CoreNature::Challenge),
         }
@@ -431,16 +431,16 @@ impl<F: Field, const N: usize> SumcheckFunction<F> for MultipointEvals<(), N> {
 
     fn function<V: Var<F> + Debug>(_: &Self::Data, evals: &Self::Mles<V>) -> V {
         let MultipointEvals {
-            committments,
+            commitments,
             eqs,
             challenge,
         } = evals;
 
-        let first = eqs[0].clone() * &committments[0];
+        let first = eqs[0].clone() * &commitments[0];
 
         eqs[1..]
             .iter()
-            .zip(&committments[1..])
+            .zip(&commitments[1..])
             .fold(first, |acc, e| {
                 let (eq, commit) = e;
                 acc * challenge + eq.clone() * commit
@@ -455,7 +455,7 @@ impl<F: Field, const N: usize> SmallFunctions<F> for MultipointEvals<(), N> {
             eq.eval_as_eq(p)
         };
         MultipointEvals {
-            committments: [None; N],
+            commitments: [None; N],
             eqs: [Some(eq_func); N],
             challenge: None,
         }
@@ -474,7 +474,7 @@ fn sumcheck_witness<F: Field, const N: usize>(
 
     for (i, witness) in witness.into_iter().enumerate() {
         for (eval, w) in res.iter_mut().zip(witness) {
-            eval.committments[i] = w;
+            eval.commitments[i] = w;
         }
     }
 

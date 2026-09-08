@@ -13,7 +13,7 @@ use std::{fmt::Debug, rc::Rc};
 
 #[derive(Clone, Debug)]
 /// An oracle over MLEs which have a small representation and
-/// can be cheaply evluated over a point by the verifier.
+/// can be cheaply evaluated over a point by the verifier.
 pub struct SmallEvalOracle<F: Field, SF: SumcheckFunction<F>> {
     data: SF::Data,
     evals_over_domain: Rc<Vec<SF::Mles<F>>>,

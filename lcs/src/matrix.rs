@@ -6,8 +6,8 @@ use std::ops::{Index, Mul};
 /// Sparse matrix.
 #[derive(Default, Clone, Debug, CanonicalSerialize)]
 pub struct Matrix {
-    ///assumes each non zero value to be one, should be enough to represent plonk
-    /// considering that most rows will likely have a single 1 the vector represation may be suboptimal
+    /// Assumes each non zero value to be one, should be enough to represent plonk
+    /// considering that most rows will likely have a single 1 the vector representation may be suboptimal
     rows: Vec<Vec<usize>>,
 }
 

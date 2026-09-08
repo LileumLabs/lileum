@@ -329,7 +329,7 @@ pub enum Exp<T> {
     Constant,
 }
 
-impl<T: CanonicalSerialize + Clone> Exp<T> {
+impl<T: CanonicalSerialize> Exp<T> {
     fn serialize_rec<W: ark_serialize::Write>(
         &self,
         writer: &mut W,
