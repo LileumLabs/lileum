@@ -350,6 +350,8 @@ where
     type QueryRelation = CoreQueryRelation<F, SF>;
 
     fn build(_: (), _: &SF::Data, _structure: Rc<Vec<SF::Mles<F>>>) -> Self {
+        // So that any issue causes an early panic here.
+        let _ = Self::functions();
         // TODO: check that the structure is correct.
         Self::default()
     }
