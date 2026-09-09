@@ -24,7 +24,7 @@ impl Display for Pattern {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct SpongeBuilder {
     pattern: Vec<Pattern>,
     domain_separation: [u8; 32],
