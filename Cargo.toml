@@ -12,7 +12,8 @@ members = [
     "sumcheck/derive",
     "hash-to-curve",
     "shout",
-    "common"]
+    "common",
+    "spreadsheet"]
 
 resolver = "2"
 
