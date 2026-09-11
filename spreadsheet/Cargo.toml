@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+ark-ff = "0.4"
+reduction = { workspace = true }
+sumcheck = { workspace = true }
+sumcheck-derive = { workspace = true }
+commit = { workspace = true }
