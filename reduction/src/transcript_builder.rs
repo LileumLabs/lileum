@@ -1,5 +1,6 @@
 use crate::{Message, Reduction, Relation, Transcript, message::PointRound};
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use sponge::sponge::{Duplex, SpongeBuilder};
 use std::any::{TypeId, type_name};
 
@@ -34,8 +35,8 @@ pub struct TranscriptBuilder {
 }
 
 impl TranscriptBuilder {
-    pub(crate) fn new() -> Self {
-        let sponge = SpongeBuilder::new();
+    pub(crate) fn new(domain_separation: [u8; 32]) -> Self {
+        let sponge = SpongeBuilder::new(domain_separation);
         let rounds = vec![];
         Self { rounds, sponge }
     }
@@ -111,9 +112,21 @@ impl<F: Field, S: Duplex<F>> TranscriptDescriptor<F, S> {
         R2: Relation,
         R: Reduction<F, R1, R2>,
     {
-        TranscriptBuilder::new()
+        let key_hash = hash(key);
+        // TODO: Maybe the protocol pattern could be absorbed here too now that
+        // we are using binary hash.
+        let reduction_name = R::name().to_string();
+        let domain_separation = hash(&("lileum-reduction".to_string(), reduction_name, key_hash));
+
+        TranscriptBuilder::new(domain_separation)
             .round::<F, R1::Instance, 0>(instance_params)
             .subprotocol::<R, F, R1, R2>(key)
             .finish()
     }
+}
+
+pub(crate) fn hash<T: CanonicalSerialize>(x: &T) -> [u8; 32] {
+    let mut bytes: Vec<u8> = vec![];
+    x.serialize_uncompressed(&mut bytes).unwrap();
+    blake3::hash(&bytes).into()
 }

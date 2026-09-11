@@ -1,6 +1,7 @@
 use crate::{
-    GuardedProof, Message, Reduction, Relation, TranscriptBuilder, transcript::VerifierTranscript,
-    transcript_builder::TranscriptDescriptor,
+    GuardedProof, Message, Reduction, Relation, TranscriptBuilder,
+    transcript::VerifierTranscript,
+    transcript_builder::{TranscriptDescriptor, hash},
 };
 
 use ark_ff::Field;
@@ -118,7 +119,11 @@ where
     pub fn new(structure: &R1::Structure) -> Self {
         let key = R::verifier_key(structure);
 
-        let transcript_descriptor = TranscriptBuilder::new()
+        let key_hash = hash(&key);
+        let reduction_name = R::name().to_string();
+        let domain_separation = hash(&("lileum-reduction".to_string(), reduction_name, key_hash));
+
+        let transcript_descriptor = TranscriptBuilder::new(domain_separation)
             .subprotocol::<R, F, R1, R2>(&key)
             .finish();
 
