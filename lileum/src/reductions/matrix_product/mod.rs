@@ -6,6 +6,7 @@ use crate::{
     },
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::{
     self, CommitmentScheme, OpenInstance, OpeningRelation,
     oracle::{
@@ -47,6 +48,7 @@ type CompositeKey<F, C, const N: usize, SF> = CompositeReductionKey<
 
 type Func<const N: usize> = MatrixSumEvals<(), N>;
 
+#[derive(Clone, Debug, CanonicalSerialize)]
 pub struct VerifierKey<F: Field, C: CommitmentScheme<F>, SF, const N: usize> {
     sumcheck_key: SumcheckVerifierKey<F, Oracle<F, Func<N>, C, N>>,
     vars: usize,
@@ -133,7 +135,7 @@ where
 
         let builder1 = MatrixSumOracle::new(structure.matrices().clone());
 
-        let core_oracle = CoreOracle::new(MatrixSumEvals::core_oracle_functions());
+        let core_oracle = ();
         let builder2 = (core_oracle, structure.pcs().clone());
 
         let oracle = Oracle::new((), mles, builder1, builder2);
@@ -175,7 +177,7 @@ where
 
             let builder1 = MatrixSumOracle::new(structure.matrices().clone());
 
-            let core_oracle = CoreOracle::new(MatrixSumEvals::core_oracle_functions());
+            let core_oracle = ();
             let builder2 = (core_oracle, pcs.clone());
 
             let oracle = Oracle::new((), mles, builder1, builder2);
@@ -298,7 +300,7 @@ where
 
         let (core, committed) = key.composite_key.p2_key().split(composite);
 
-        let _ = CoreOracle::prove(
+        let _ = CoreOracle::<F, MatrixSumEvals<(), N>>::prove(
             key.composite_key.p2_key().p1_key(),
             core,
             witness.clone(),
@@ -391,7 +393,7 @@ where
 
         let (core, committed) = key.composite_key.p2_key().split(composite);
 
-        let _ = CoreOracle::verify(
+        let _ = CoreOracle::<F, MatrixSumEvals<(), N>>::verify(
             key.composite_key.p2_key().p1_key(),
             core,
             GuardedProof::empty(),

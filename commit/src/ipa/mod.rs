@@ -1,6 +1,7 @@
 use crate::ipa::vector_utils::{fold_basis, fold_vec};
 use ark_ec::{AffineRepr, CurveGroup, Group, VariableBaseMSM};
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use hash_to_curve::CurveMap;
 use rand::{SeedableRng, rngs::StdRng};
 use reduction::{
@@ -46,7 +47,7 @@ where
     [commit_l, commit_r]
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize)]
 struct IpaScheme<F, G, M>
 where
     F: Field,
@@ -66,7 +67,7 @@ struct Round<F, G: VariableBaseMSM<ScalarField = F>> {
 }
 
 impl<F, G: VariableBaseMSM<ScalarField = F>> Round<F, G> {
-    // wheter it has been reduced to the minimal instance, with vectors of size 1
+    // whether it has been reduced to the minimal instance, with vectors of size 1
     fn reduced(&self) -> bool {
         debug_assert_eq!(self.a.len(), self.b.len());
         debug_assert_eq!(self.basis.len(), self.b.len());

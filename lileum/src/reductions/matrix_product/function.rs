@@ -1,5 +1,6 @@
 use crate::reductions::matrix_product::matrix_sum::{MatrixSumNature, MatrixSumOracle};
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::oracle::{CommittedNature, CommittedOracle};
 use lcs::matrix::Matrix;
 use std::{fmt::Debug, vec::IntoIter};
@@ -10,7 +11,7 @@ use sumcheck::{
     oracles::{
         SumcheckFunction,
         composite::{CompositeOracle, Either},
-        core::{CoreNature, CoreOracle},
+        core::{CoreNature, CoreOracle, SmallFunctions},
         partial::OracleEval,
     },
 };
@@ -21,6 +22,36 @@ pub struct MatrixSumEvals<V: Clone + Debug, const N: usize> {
     pub matrices: [V; N],
     pub z: V,
     pub challenge: V,
+}
+
+impl<V: Clone + Debug + CanonicalSerialize, const N: usize> CanonicalSerialize
+    for MatrixSumEvals<V, N>
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            matrices,
+            z,
+            challenge,
+        } = self;
+        matrices.serialize_with_mode(&mut writer, compress)?;
+        z.serialize_with_mode(&mut writer, compress)?;
+        challenge.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            matrices,
+            z,
+            challenge,
+        } = self;
+        matrices.serialized_size(compress)
+            + z.serialized_size(compress)
+            + challenge.serialized_size(compress)
+    }
 }
 
 impl<V: Clone + Debug + Default, const N: usize> Default for MatrixSumEvals<V, N> {
@@ -90,16 +121,6 @@ impl<F: Field, const N: usize> MatrixSumEvals<Vec<F>, N> {
     }
 }
 
-impl<T: Clone + Debug, const N: usize> MatrixSumEvals<Option<T>, N> {
-    pub fn core_oracle_functions() -> Self {
-        Self {
-            matrices: [(); N].map(|_| None),
-            z: None,
-            challenge: None,
-        }
-    }
-}
-
 pub type Oracle<F, SF, C, const N: usize> = CompositeOracle<
     F,
     SF,
@@ -135,5 +156,15 @@ impl<F: Field, const N: usize> SumcheckFunction<F> for MatrixSumEvals<(), N> {
             acc += &m_eq;
         }
         acc
+    }
+}
+
+impl<F: Field, const N: usize> SmallFunctions<F> for MatrixSumEvals<(), N> {
+    fn small_functions() -> MatrixSumEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, N> {
+        MatrixSumEvals {
+            matrices: [(); N].map(|_| None),
+            z: None,
+            challenge: None,
+        }
     }
 }

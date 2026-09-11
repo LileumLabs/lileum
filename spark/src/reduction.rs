@@ -5,6 +5,7 @@ use crate::{
     sumcheck_argument::{SparkChallenges, SparkEvals},
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::{
     CommitmentScheme, OpenInstance, OpeningRelation,
     oracle::{CommittedOracle, CommittedOracleInstance},
@@ -19,8 +20,10 @@ use sumcheck::{
     SumcheckVerifierKey,
     oracles::{
         SumcheckFunction,
-        composite::{CompositeOracle, CompositeOracleInstance, CompositeReductionKey, ProverEvals},
-        core::{CoreOracle, CoreOracleInstance},
+        composite::{
+            CompositeOracle, CompositeOracleInstance, CompositeReductionKey, Either, ProverEvals,
+        },
+        core::{CoreOracle, CoreOracleInstance, SmallFunctions},
         partial::{Nature, PartialOracle, PartialQueryInstance},
     },
 };
@@ -52,13 +55,14 @@ fn split_point<F: Field, const N: usize>(point: &MultiPoint<F>) -> [MultiPoint<F
         .unwrap()
 }
 
+#[derive(Clone, Debug, CanonicalSerialize)]
 pub struct Key<F, C, SF, const N: usize>
 where
     F: Field,
     C: CommitmentScheme<F>,
-    SF: SumcheckFunction<F>,
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
     SF::Natures: Nature,
-    CommittedOracle<F, C, SF>: PartialOracle<F, SF>,
+    SF::Mles<Either<(), ()>>: CanonicalSerialize,
 {
     minor_structure: MinorStructure<N>,
     sumcheck_key: SumcheckVerifierKey<F, SparkOracle<F, C, N>>,
@@ -70,9 +74,10 @@ impl<F, C, SF, const N: usize> Key<F, C, SF, N>
 where
     F: Field,
     C: CommitmentScheme<F>,
-    SF: SumcheckFunction<F>,
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
     SF::Natures: Nature,
     CommittedOracle<F, C, SF>: PartialOracle<F, SF>,
+    SF::Mles<Either<(), ()>>: CanonicalSerialize,
 {
     pub(crate) fn new(
         minor_structure: MinorStructure<N>,
@@ -259,8 +264,13 @@ where
         let core_query: PartialQueryInstance<F, _, CoreOracleInstance<F, _>> = core_query;
 
         let core_proof = GuardedProof::empty();
-        CoreOracle::verify(key.oracle_key.p1_key(), core_query, core_proof, transcript)
-            .map_err(|_| SparkError::CoreOracle)?;
+        CoreOracle::<F, SparkEvals<(), N>>::verify(
+            key.oracle_key.p1_key(),
+            core_query,
+            core_proof,
+            transcript,
+        )
+        .map_err(|_| SparkError::CoreOracle)?;
 
         let committed_query: PartialQueryInstance<F, _, CommittedOracleInstance<F, C, _>> =
             committed_query;

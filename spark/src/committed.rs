@@ -3,6 +3,7 @@ use crate::{
     sumcheck_argument::SparkEvals,
 };
 use ark_ff::{Field, batch_inversion};
+use ark_serialize::CanonicalSerialize;
 use commit::{CommitmentScheme, oracle::CommittedOracle};
 use reduction::Relation;
 use std::{marker::PhantomData, rc::Rc};
@@ -16,6 +17,28 @@ pub struct CommittedSparkRelation<F, C, const N: usize>(PhantomData<(F, C)>);
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MinorStructure<const N: usize> {
     pub counts: [Box<[usize; BYTE]>; N],
+}
+
+impl<const N: usize> CanonicalSerialize for MinorStructure<N> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self { counts } = self;
+        for count in counts {
+            let x = count.as_ref();
+            x.serialize_with_mode(&mut writer, compress)?;
+        }
+        Ok(())
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self { counts } = self;
+        counts
+            .iter()
+            .fold(0, |acc, count| acc + count.serialized_size(compress))
+    }
 }
 
 impl<const N: usize> MinorStructure<N> {
@@ -116,16 +139,11 @@ where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    let builder1: CoreOracle<F, SparkEvals<(), N>> = {
-        let functions = SparkEvals::small_functions();
-        CoreOracle::new(functions)
-    };
-
     let builder2 = { pcs };
 
     let mles = Rc::new(SparkEvals::structure(mles));
 
-    CompositeOracle::new((), mles, builder1, builder2)
+    CompositeOracle::new((), mles, (), builder2)
 }
 
 impl<F: Field, C: CommitmentScheme<F>, const N: usize> CommittedSparkStructure<F, C, N> {

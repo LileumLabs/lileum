@@ -1,12 +1,13 @@
 use crate::{Var, evals::Evals, oracles::partial::Nature};
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use std::fmt::Debug;
 
 /// The definition of a multivariate polynomial as some function
 /// of multilinear polynomials.
 pub trait SumcheckFunction<F: Field>: Evals {
     type Natures: Copy + Debug + Nature;
-    type Data: Clone + Debug;
+    type Data: Clone + Debug + CanonicalSerialize;
 
     fn natures() -> Self::Mles<Self::Natures>;
 

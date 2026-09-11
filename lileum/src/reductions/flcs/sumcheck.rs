@@ -1,5 +1,6 @@
 use crate::oracles::MatrixNature;
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::oracle::CommittedNature;
 use lcs::{matrix::Matrix, structure::Exp};
 use std::{fmt::Debug, rc::Rc, vec::IntoIter};
@@ -10,7 +11,7 @@ use sumcheck::{
     oracles::{
         SumcheckFunction,
         composite::Either,
-        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, Func},
+        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, Func, SmallFunctions},
     },
 };
 use sumcheck_derive::EvalsCore;
@@ -26,6 +27,52 @@ pub struct FlcsEvals<V: Debug + Clone, const IO: usize, const S: usize, const I:
     constants: V,
     /// Constraint combination challenge.
     challenge: V,
+}
+
+impl<V: Debug + Clone + CanonicalSerialize, const IO: usize, const S: usize, const I: usize>
+    CanonicalSerialize for FlcsEvals<V, IO, S, I>
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            products,
+            w,
+            inputs,
+            input_selector,
+            gate_selectors,
+            constants,
+            challenge,
+        } = self;
+        products.serialize_with_mode(&mut writer, compress)?;
+        w.serialize_with_mode(&mut writer, compress)?;
+        inputs.serialize_with_mode(&mut writer, compress)?;
+        input_selector.serialize_with_mode(&mut writer, compress)?;
+        gate_selectors.serialize_with_mode(&mut writer, compress)?;
+        constants.serialize_with_mode(&mut writer, compress)?;
+        challenge.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            products,
+            w,
+            inputs,
+            input_selector,
+            gate_selectors,
+            constants,
+            challenge,
+        } = self;
+        products.serialized_size(compress)
+            + w.serialized_size(compress)
+            + inputs.serialized_size(compress)
+            + input_selector.serialized_size(compress)
+            + gate_selectors.serialized_size(compress)
+            + constants.serialized_size(compress)
+            + challenge.serialized_size(compress)
+    }
 }
 
 impl<F: Field, const IO: usize, const S: usize, const I: usize> FlcsEvals<Vec<F>, IO, S, I> {
@@ -128,7 +175,7 @@ impl<V: Debug + Copy + Default, const IO: usize, const S: usize, const I: usize>
 
 type Natures = Either<CoreNature, Either<CommittedNature, MatrixNature>>;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, CanonicalSerialize)]
 pub struct FlcsData {
     gates: Vec<Vec<Exp<usize>>>,
     multi_constraint: bool,
@@ -233,6 +280,26 @@ where
     }
 }
 
+impl<F: Field, const IO: usize, const S: usize, const I: usize> SmallFunctions<F>
+    for FlcsEvals<(), IO, S, I>
+{
+    fn small_functions() -> FlcsEvals<Option<fn(&[F], &MultiPoint<F>) -> F>, IO, S, I> {
+        let default = FlcsEvals::map_evals(&FlcsEvals::vector(), |_| None);
+
+        let inputs: Func<F> = eval_inputs;
+        let inputs = Some(inputs);
+
+        let input_selector: Func<F> = |_, point| eval_input_selector(point, I);
+        let input_selector = Some(input_selector);
+
+        FlcsEvals {
+            inputs,
+            input_selector,
+            ..default
+        }
+    }
+}
+
 #[test]
 fn print_natures() {
     use ark_vesta::Fr;
@@ -265,7 +332,7 @@ where
         inputs: true,
         ..Default::default()
     };
-    CoreOracle::set_witness(
+    CoreOracle::<F, FlcsEvals<(), _, _, _>>::set_witness(
         core_instance,
         &mut sumcheck_witness,
         filter,

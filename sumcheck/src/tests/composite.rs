@@ -5,12 +5,15 @@ use crate::{
     oracles::{
         QueryRelation, SumcheckFunction,
         composite::{CompositeOracle, CompositeOracleInstance, Either},
-        core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, CoreQueryRelation},
+        core::{
+            Coeffs, CoreNature, CoreOracle, CoreOracleInstance, CoreQueryRelation, SmallFunctions,
+        },
         empty::{EmptyInstance, EmptyRelation, NoNature},
         partial::PartialQueryRelation,
     },
 };
 use ark_ff::{Field, PrimeField};
+use ark_serialize::CanonicalSerialize;
 use rand::{SeedableRng, rngs::StdRng};
 use reduction::{Prover, ProverOutput, Relation, UnsafeVerifier, Verifier};
 use std::{fmt::Debug, iter::successors, rc::Rc, vec::IntoIter};
@@ -31,12 +34,7 @@ fn composite_sumcheck_test<F: PrimeField>() {
         .collect();
     let structure: Rc<Vec<SmallEvals<F>>> = Rc::new(structure);
 
-    let core_oracle = CoreOracle::new(SmallEvals {
-        challenge: None,
-        powers: Some(eval_powers as fn(&[F], &MultiPoint<F>) -> F),
-        range: Some(eval_range),
-    });
-    let oracle: Oracle<F> = Oracle::new((), structure.clone(), core_oracle, ());
+    let oracle: Oracle<F> = Oracle::new((), structure.clone(), (), ());
 
     // Create a prover for the SumcheckReduction, both relations have the same structure.
     let prover = Prover::<F, Poseidon<F>, _, _, Sumcheck<F>>::new(&oracle);
@@ -164,6 +162,34 @@ struct SmallEvals<V: Clone + Debug> {
     range: V,
 }
 
+impl<V: Clone + Debug + CanonicalSerialize> CanonicalSerialize for SmallEvals<V> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            challenge,
+            powers,
+            range,
+        } = self;
+        challenge.serialize_with_mode(&mut writer, compress)?;
+        powers.serialize_with_mode(&mut writer, compress)?;
+        range.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            challenge,
+            powers,
+            range,
+        } = self;
+        challenge.serialized_size(compress)
+            + powers.serialized_size(compress)
+            + range.serialized_size(compress)
+    }
+}
+
 impl<F: Field> SumcheckFunction<F> for SmallEvals<()> {
     type Natures = Either<CoreNature, NoNature>;
 
@@ -185,6 +211,16 @@ impl<F: Field> SumcheckFunction<F> for SmallEvals<()> {
             range,
         } = evals;
         challenge.clone() * powers * range
+    }
+}
+
+impl<F: Field> SmallFunctions<F> for SmallEvals<()> {
+    fn small_functions() -> SmallEvals<Option<fn(&[F], &MultiPoint<F>) -> F>> {
+        SmallEvals {
+            challenge: None,
+            powers: Some(eval_powers as fn(&[F], &MultiPoint<F>) -> F),
+            range: Some(eval_range),
+        }
     }
 }
 

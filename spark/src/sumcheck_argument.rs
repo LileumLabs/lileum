@@ -1,5 +1,6 @@
 use crate::SparseMle;
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::oracle::CommittedNature;
 use std::{fmt::Debug, vec::IntoIter};
 use sumcheck::{
@@ -8,7 +9,7 @@ use sumcheck::{
     oracles::{
         SumcheckFunction,
         composite::Either,
-        core::{Coeffs, CoreNature, Func},
+        core::{Coeffs, CoreNature, Func, SmallFunctions},
     },
 };
 use sumcheck_derive::EvalsCore;
@@ -18,6 +19,34 @@ pub struct DimensionEvals<V: Clone + Debug = ()> {
     address: V,
     pub(crate) eq_lookup: V,
     pub(crate) inverse: V,
+}
+
+impl<V: Clone + Debug + CanonicalSerialize> CanonicalSerialize for DimensionEvals<V> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            address,
+            eq_lookup,
+            inverse,
+        } = self;
+        address.serialize_with_mode(&mut writer, compress)?;
+        eq_lookup.serialize_with_mode(&mut writer, compress)?;
+        inverse.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            address,
+            eq_lookup,
+            inverse,
+        } = self;
+        address.serialized_size(compress)
+            + eq_lookup.serialized_size(compress)
+            + inverse.serialized_size(compress)
+    }
 }
 
 impl<V: Clone + Debug> DimensionEvals<V> {
@@ -38,6 +67,40 @@ pub struct SparkEvals<V: Clone + Debug, const N: usize> {
     challenges: SparkChallenges<V>,
 }
 
+impl<V: Clone + Debug + CanonicalSerialize, const N: usize> CanonicalSerialize
+    for SparkEvals<V, N>
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            dimensions,
+            value,
+            zerocheck,
+            challenges,
+        } = self;
+        dimensions.serialize_with_mode(&mut writer, compress)?;
+        value.serialize_with_mode(&mut writer, compress)?;
+        zerocheck.serialize_with_mode(&mut writer, compress)?;
+        challenges.serialize_with_mode(writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            dimensions,
+            value,
+            zerocheck,
+            challenges,
+        } = self;
+        dimensions.serialized_size(compress)
+            + value.serialized_size(compress)
+            + zerocheck.serialized_size(compress)
+            + challenges.serialized_size(compress)
+    }
+}
+
 impl<V: Clone + Debug + Default, const N: usize> Default for SparkEvals<V, N> {
     fn default() -> Self {
         let dimensions = [(); N].map(|_| Default::default());
@@ -46,27 +109,6 @@ impl<V: Clone + Debug + Default, const N: usize> Default for SparkEvals<V, N> {
             value: Default::default(),
             zerocheck: Default::default(),
             challenges: Default::default(),
-        }
-    }
-}
-
-impl<F: Field, const N: usize> SparkEvals<Option<Func<F>>, N> {
-    pub fn small_functions() -> Self {
-        let dimensions = [DimensionEvals::<Option<Func<F>>>::new(None, None, None); N];
-        let value = None;
-        let zerocheck: Func<F> = |chall: &[F], point: &MultiPoint<F>| {
-            assert_eq!(chall.len(), point.vars());
-            let chall = MultiPoint::new(chall.to_vec());
-            chall.eval_as_eq(point)
-        };
-        let zerocheck = Some(zerocheck);
-        let challenges = SparkChallenges::default();
-
-        Self {
-            dimensions,
-            value,
-            zerocheck,
-            challenges,
         }
     }
 }
@@ -163,6 +205,34 @@ impl<V: Clone + Debug> SparkChallenges<V> {
     }
 }
 
+impl<V: Clone + Debug + CanonicalSerialize> CanonicalSerialize for SparkChallenges<V> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            combination,
+            compression,
+            lookup,
+        } = self;
+        combination.serialize_with_mode(&mut writer, compress)?;
+        compression.serialize_with_mode(&mut writer, compress)?;
+        lookup.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            combination,
+            compression,
+            lookup,
+        } = self;
+        combination.serialized_size(compress)
+            + compression.serialized_size(compress)
+            + lookup.serialized_size(compress)
+    }
+}
+
 impl<F: Field, const N: usize> SumcheckFunction<F> for SparkEvals<(), N> {
     type Natures = Either<CoreNature, CommittedNature>;
     type Data = ();
@@ -227,4 +297,25 @@ where
     let product = (indexed_lookup + &challenges.lookup) * &dim.inverse;
 
     product - F::one()
+}
+
+impl<F: Field, const N: usize> SmallFunctions<F> for SparkEvals<(), N> {
+    fn small_functions() -> SparkEvals<Option<Func<F>>, N> {
+        let dimensions = [DimensionEvals::<Option<Func<F>>>::new(None, None, None); N];
+        let value = None;
+        let zerocheck: Func<F> = |chall: &[F], point: &MultiPoint<F>| {
+            assert_eq!(chall.len(), point.vars());
+            let chall = MultiPoint::new(chall.to_vec());
+            chall.eval_as_eq(point)
+        };
+        let zerocheck = Some(zerocheck);
+        let challenges = SparkChallenges::default();
+
+        SparkEvals {
+            dimensions,
+            value,
+            zerocheck,
+            challenges,
+        }
+    }
 }

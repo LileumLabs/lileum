@@ -1,5 +1,6 @@
 use crate::reductions::matrix_product::function::MatrixSumEvals;
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::CommitmentScheme;
 use lcs::matrix::Matrix;
 use reduction::{
@@ -22,14 +23,28 @@ use sumcheck::{
 /// For matrix M(X,Y) and point r, it can be used to to run
 /// sumcheck over M(r,Y).
 #[derive(Clone, Debug)]
-#[allow(dead_code)]
 pub struct MatrixSumOracle<F, C, const N: usize> {
     matrices: [Rc<Matrix>; N],
     _phantom: PhantomData<(F, C)>,
 }
 
+impl<F, C, const N: usize> CanonicalSerialize for MatrixSumOracle<F, C, N> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self { matrices, _phantom } = self;
+        matrices.serialize_with_mode(writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self { matrices, _phantom } = self;
+        matrices.serialized_size(compress)
+    }
+}
+
 impl<F, C, const N: usize> MatrixSumOracle<F, C, N> {
-    #[allow(dead_code)]
     pub fn new(matrices: [Rc<Matrix>; N]) -> Self {
         Self {
             matrices,

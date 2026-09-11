@@ -11,6 +11,7 @@ use crate::{
     },
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use core::panic;
 use reduction::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
@@ -23,6 +24,36 @@ use std::{fmt::Debug, marker::PhantomData, rc::Rc};
 pub enum Either<A, B> {
     Left(A),
     Right(B),
+}
+
+impl<A, B> CanonicalSerialize for Either<A, B>
+where
+    A: CanonicalSerialize,
+    B: CanonicalSerialize,
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        match self {
+            Either::Left(x) => {
+                false.serialize_with_mode(&mut writer, compress)?;
+                x.serialize_with_mode(writer, compress)
+            }
+            Either::Right(x) => {
+                true.serialize_with_mode(&mut writer, compress)?;
+                x.serialize_with_mode(writer, compress)
+            }
+        }
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        match self {
+            Either::Left(x) => false.serialized_size(compress) + x.serialized_size(compress),
+            Either::Right(x) => true.serialized_size(compress) + x.serialized_size(compress),
+        }
+    }
 }
 
 impl<A, B> From<Either<A, B>> for EvalLocation
@@ -320,6 +351,52 @@ where
     vars: usize,
 }
 
+impl<F: Field, SF: SumcheckFunction<F>, P1, P2> CanonicalSerialize
+    for CompositeReductionKey<F, SF, P1, P2>
+where
+    P1: PartialOracle<F, SF>,
+    P2: PartialOracle<F, SF>,
+    SF::Mles<Either<(), ()>>: CanonicalSerialize,
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            prover_evals,
+            evals_per_oracle,
+            data,
+            oracle1_key,
+            oracle2_key,
+            vars,
+        } = self;
+        prover_evals.serialize_with_mode(&mut writer, compress)?;
+        evals_per_oracle.serialize_with_mode(&mut writer, compress)?;
+        data.serialize_with_mode(&mut writer, compress)?;
+        oracle1_key.serialize_with_mode(&mut writer, compress)?;
+        oracle2_key.serialize_with_mode(&mut writer, compress)?;
+        vars.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            prover_evals,
+            evals_per_oracle,
+            data,
+            oracle1_key,
+            oracle2_key,
+            vars,
+        } = self;
+        prover_evals.serialized_size(compress)
+            + evals_per_oracle.serialized_size(compress)
+            + data.serialized_size(compress)
+            + oracle1_key.serialized_size(compress)
+            + oracle2_key.serialized_size(compress)
+            + vars.serialized_size(compress)
+    }
+}
+
 impl<F: Field, SF: SumcheckFunction<F>, P1, P2> CompositeReductionKey<F, SF, P1, P2>
 where
     P1: PartialOracle<F, SF>,
@@ -364,6 +441,7 @@ where
     SF: SumcheckFunction<F, Natures = Either<P1::Nature, P2::Nature>>,
     P1: PartialOracle<F, SF>,
     P2: PartialOracle<F, SF>,
+    SF::Mles<Either<(), ()>>: CanonicalSerialize,
     <QueryRelation<F, Self> as Relation>::Instance: Message<F, Params = (OracleParams, usize)>,
 {
     type ProverKey = CompositeReductionKey<F, SF, P1, P2>;
@@ -616,6 +694,41 @@ where
     evals_per_oracle: SF::Mles<Either<(), ()>>,
 }
 
+impl<F, SF, P1, P2> CanonicalSerialize for CompositeOracleKey<F, SF, P1, P2>
+where
+    F: Field,
+    SF: SumcheckFunction<F>,
+    P1: PartialOracle<F, SF>,
+    P2: PartialOracle<F, SF>,
+    SF::Mles<Either<(), ()>>: CanonicalSerialize,
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            oracle1_key,
+            oracle2_key,
+            evals_per_oracle,
+        } = self;
+        oracle1_key.serialize_with_mode(&mut writer, compress)?;
+        oracle2_key.serialize_with_mode(&mut writer, compress)?;
+        evals_per_oracle.serialize_with_mode(&mut writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            oracle1_key,
+            oracle2_key,
+            evals_per_oracle,
+        } = self;
+        oracle1_key.serialized_size(compress)
+            + oracle2_key.serialized_size(compress)
+            + evals_per_oracle.serialized_size(compress)
+    }
+}
+
 impl<F, SF, P1, P2> CompositeOracleKey<F, SF, P1, P2>
 where
     F: Field,
@@ -672,6 +785,7 @@ where
     P1: PartialOracle<F, SF>,
     P2: PartialOracle<F, SF>,
     SF::Natures: Into<Option<Either<P1::Nature, P2::Nature>>>,
+    SF::Mles<Either<(), ()>>: CanonicalSerialize,
 {
     type Instance = CompositeOracleInstance<F, SF, P1, P2>;
 

@@ -8,6 +8,7 @@ use ark_ec::{
     short_weierstrass::{self, Affine, SWCurveConfig},
 };
 use ark_ff::{BigInteger, Field, PrimeField, Zero};
+use ark_serialize::CanonicalSerialize;
 
 #[cfg(test)]
 mod tests;
@@ -60,7 +61,7 @@ fn find_z<C: SWCurveConfig>() -> Option<F<C>> {
     None
 }
 
-#[derive(Copy, PartialEq, Eq)]
+#[derive(Copy, PartialEq, Eq, CanonicalSerialize)]
 pub struct SvdwMap<C: SWCurveConfig> {
     z: C::BaseField,
 }

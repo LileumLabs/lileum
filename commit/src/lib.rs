@@ -1,4 +1,5 @@
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use reduction::{Argument, Message, NoError};
 use std::{
     fmt::Debug,
@@ -21,6 +22,7 @@ pub trait CommitmentSchemeCore<F: Field>: Clone + Debug + Eq + 'static {
         + Eq
         + Clone
         + Debug
+        + CanonicalSerialize
         + Message<F, Params = (), Error = NoError>;
 
     fn new(vars: usize) -> Self;

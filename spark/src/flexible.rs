@@ -8,6 +8,7 @@ use ::reduction::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::{CommitmentScheme, OpenInstance, OpeningRelation};
 use sponge::sponge::Duplex;
 use std::rc::Rc;
@@ -26,6 +27,7 @@ pub enum FlexibleSpark<F: Field, C: CommitmentScheme<F>> {
     S8(SparkReduction<F, C, 8>),
 }
 
+#[derive(Clone, Debug)]
 pub enum VerifierKey<F, C>
 where
     F: Field,
@@ -39,6 +41,68 @@ where
     S6(reduction::Key<F, C, SparkEvals<(), 6>, 6>),
     S7(reduction::Key<F, C, SparkEvals<(), 7>, 7>),
     S8(reduction::Key<F, C, SparkEvals<(), 8>, 8>),
+}
+
+impl<F, C> VerifierKey<F, C>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    fn tag(&self) -> u8 {
+        match self {
+            VerifierKey::S1(_) => 0,
+            VerifierKey::S2(_) => 1,
+            VerifierKey::S3(_) => 2,
+            VerifierKey::S4(_) => 3,
+            VerifierKey::S5(_) => 4,
+            VerifierKey::S6(_) => 5,
+            VerifierKey::S7(_) => 6,
+            VerifierKey::S8(_) => 7,
+        }
+    }
+}
+
+impl<F, C> CanonicalSerialize for VerifierKey<F, C>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let tag = self.tag();
+        tag.serialize_with_mode(&mut writer, compress)?;
+        match self {
+            VerifierKey::S1(key) => key.serialize_with_mode(writer, compress),
+            VerifierKey::S2(key) => key.serialize_with_mode(writer, compress),
+            VerifierKey::S3(key) => key.serialize_with_mode(writer, compress),
+            VerifierKey::S4(key) => key.serialize_with_mode(writer, compress),
+            VerifierKey::S5(key) => key.serialize_with_mode(writer, compress),
+            VerifierKey::S6(key) => key.serialize_with_mode(writer, compress),
+            VerifierKey::S7(key) => key.serialize_with_mode(writer, compress),
+            VerifierKey::S8(key) => key.serialize_with_mode(writer, compress),
+        }
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let tag = self.tag();
+        let tag = tag.serialized_size(compress);
+
+        let value = match self {
+            VerifierKey::S1(key) => key.serialized_size(compress),
+            VerifierKey::S2(key) => key.serialized_size(compress),
+            VerifierKey::S3(key) => key.serialized_size(compress),
+            VerifierKey::S4(key) => key.serialized_size(compress),
+            VerifierKey::S5(key) => key.serialized_size(compress),
+            VerifierKey::S6(key) => key.serialized_size(compress),
+            VerifierKey::S7(key) => key.serialized_size(compress),
+            VerifierKey::S8(key) => key.serialized_size(compress),
+        };
+
+        tag + value
+    }
 }
 
 pub enum ProverKey<F, C>

@@ -1,4 +1,5 @@
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::{
     CommitmentScheme,
     oracle::{
@@ -124,6 +125,32 @@ pub struct Key<F: Field, C: CommitmentScheme<F>, SF: SumcheckFunction<F>> {
     committed_key: CommittedVerifierKey<F, C>,
 }
 
+impl<F: Field, C: CommitmentScheme<F>, SF: SumcheckFunction<F>> CanonicalSerialize for Key<F, C, SF>
+where
+    SF::Mles<bool>: CanonicalSerialize,
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            vector,
+            committed_key,
+        } = self;
+        vector.serialize_with_mode(&mut writer, compress)?;
+        committed_key.serialize_with_mode(writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            vector,
+            committed_key,
+        } = self;
+        vector.serialized_size(compress) + committed_key.serialized_size(compress)
+    }
+}
+
 impl<F, C, SF> Key<F, C, SF>
 where
     F: Field,
@@ -166,6 +193,7 @@ where
     C: CommitmentScheme<F>,
     SF: SumcheckFunction<F>,
     SF::Natures: Into<EvalLocation> + Nature,
+    SF::Mles<bool>: CanonicalSerialize,
 {
     type Instance = MatrixProductInstance<F, C>;
 

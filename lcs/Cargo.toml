@@ -10,6 +10,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 ark-ff = "0.4"
+ark-serialize = { version = "0.4", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
 ark-vesta = "0.4.0"

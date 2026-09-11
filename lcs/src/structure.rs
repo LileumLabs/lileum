@@ -5,6 +5,7 @@ use crate::{
     gates::{Constant, Equality},
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use std::{
     any::TypeId,
     cmp::Ordering,
@@ -326,6 +327,63 @@ pub enum Exp<T> {
     Sub(Box<Self>, Box<Self>),
     /// Variant to identify the constant gate.
     Constant,
+}
+
+impl<T: CanonicalSerialize> Exp<T> {
+    fn serialize_rec<W: ark_serialize::Write>(
+        &self,
+        writer: &mut W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let tag: u8 = match self {
+            Exp::Atom(_) => 0,
+            Exp::Add(_, _) => 1,
+            Exp::Mul(_, _) => 2,
+            Exp::Sub(_, _) => 3,
+            Exp::Constant => 4,
+        };
+        tag.serialize_with_mode(&mut *writer, compress)?;
+        match self {
+            Exp::Atom(x) => {
+                x.serialize_with_mode(writer, compress)?;
+            }
+            Exp::Add(e1, e2) | Exp::Mul(e1, e2) | Exp::Sub(e1, e2) => {
+                e1.serialize_rec(writer, compress)?;
+                e2.serialize_rec(writer, compress)?;
+            }
+            Exp::Constant => {}
+        }
+        Ok(())
+    }
+}
+
+impl<T: CanonicalSerialize + Clone> CanonicalSerialize for Exp<T> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        self.serialize_rec(writer.by_ref(), compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let tag: u8 = match self {
+            Exp::Atom(_) => 0,
+            Exp::Add(_, _) => 1,
+            Exp::Mul(_, _) => 2,
+            Exp::Sub(_, _) => 3,
+            Exp::Constant => 4,
+        };
+        let tag = tag.serialized_size(compress);
+        let value = match self {
+            Exp::Atom(x) => x.serialized_size(compress),
+            Exp::Add(e1, e2) | Exp::Mul(e1, e2) | Exp::Sub(e1, e2) => {
+                e1.serialized_size(compress) + e2.serialized_size(compress)
+            }
+            Exp::Constant => 0,
+        };
+        tag + value
+    }
 }
 
 impl<T> Add<Self> for Exp<T> {

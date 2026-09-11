@@ -3,6 +3,7 @@ use super::{
 };
 use crate::{Message, TranscriptBuilder};
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use sponge::sponge::Duplex;
 
 pub use crate::relations::CompoundRelation;
@@ -15,6 +16,23 @@ pub struct SeqComposition<A, B, R>(A, B, R);
 pub struct CompoundKey<A, B> {
     a_key: A,
     b_key: B,
+}
+
+impl<A: CanonicalSerialize, B: CanonicalSerialize> CanonicalSerialize for CompoundKey<A, B> {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let CompoundKey { a_key, b_key } = self;
+        a_key.serialize_with_mode(&mut writer, compress)?;
+        b_key.serialize_with_mode(writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let CompoundKey { a_key, b_key } = self;
+        a_key.serialized_size(compress) + b_key.serialized_size(compress)
+    }
 }
 
 #[derive(Clone, Copy, Debug)]

@@ -30,7 +30,6 @@ pub struct ProverKey<F: Field, C: CommitmentScheme<F>, const N: usize> {
     pcs: C,
     sumcheck_key: sumcheck::ProverKey<F, SparkOracle<F, C, N>>,
     oracle_key: OracleKey<F, C, SparkEvals<(), N>>,
-    core_oracle: CoreOracle<F, SparkEvals<(), N>>,
     committed_oracle_key: oracle::ProverKey<F, SparkEvals<(), N>, C>,
 }
 
@@ -58,14 +57,7 @@ where
         let sumcheck_structure = SparkEvals::structure(mle);
         let sumcheck_structure = Rc::new(sumcheck_structure);
 
-        let core_oracle = CoreOracle::new(SparkEvals::small_functions());
-
-        let oracle = SparkOracle::new(
-            (),
-            Rc::clone(&sumcheck_structure),
-            core_oracle.clone(),
-            pcs.clone(),
-        );
+        let oracle = SparkOracle::new((), Rc::clone(&sumcheck_structure), (), pcs.clone());
 
         let (sumcheck_verifier_key, sumcheck_key) = SumcheckReduction::key_pair(&oracle);
 
@@ -87,7 +79,6 @@ where
             pcs,
             sumcheck_key,
             oracle_key,
-            core_oracle,
             committed_oracle_key,
         };
         (verifier_key, prover_key)
@@ -193,12 +184,7 @@ where
             proof: oracle_query_proof,
         } = reduced;
 
-        CoreOracle::prove(
-            &self.core_oracle,
-            core_instance,
-            witness.clone(),
-            transcript,
-        );
+        CoreOracle::<F, SparkEvals<(), N>>::prove(&(), core_instance, witness.clone(), transcript);
 
         let reduced = CommittedOracle::prove(
             &self.committed_oracle_key,

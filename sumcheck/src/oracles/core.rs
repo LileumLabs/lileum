@@ -14,25 +14,31 @@ use reduction::{
     TranscriptBuilder, VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::{convert::identity, marker::PhantomData, rc::Rc};
+use std::{convert::identity, fmt::Debug, marker::PhantomData, rc::Rc};
 
 pub type Func<F> = fn(&[F], &MultiPoint<F>) -> F;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CoreOracle<F: Field, SF: SumcheckFunction<F>> {
-    functions: SF::Mles<Func<F>>,
+pub trait SmallFunctions<F: Field>: SumcheckFunction<F> {
+    fn small_functions() -> Self::Mles<Option<Func<F>>>;
 }
 
-impl<F: Field, SF: SumcheckFunction<F>> CoreOracle<F, SF>
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CoreOracle<F, SF>(PhantomData<(F, SF)>)
+where
+    F: Field;
+
+impl<F: Field, SF> CoreOracle<F, SF>
 where
     SF::Natures: Nature,
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
 {
-    pub fn new(functions: SF::Mles<Option<Func<F>>>) -> Self {
+    pub fn functions() -> SF::Mles<Func<F>> {
         use CoreNature::*;
         let natures = SF::natures();
         let zero: Func<F> = |_, _| F::ZERO;
         let chall: Func<F> = |c, _| c[0];
-        let functions: SF::Mles<Func<F>> = SF::combine(&natures, &functions, |nature, func| {
+        let functions = SF::small_functions();
+        SF::combine(&natures, &functions, |nature, func| {
             let nature: Option<CoreNature> = nature.into_dynamic().into();
             match (nature, func) {
                 (None, None) => zero,
@@ -48,8 +54,7 @@ where
                     panic!("Challenges are handled automatically, no function should be provided");
                 }
             }
-        });
-        Self { functions }
+        })
     }
 
     /// TODO: doc
@@ -74,6 +79,16 @@ where
         for coeff in coeffs.flatten_vec().into_iter().flatten() {
             generator(&coeff, witness);
         }
+    }
+}
+
+impl<F: Field, SF> Default for CoreOracle<F, SF>
+where
+    SF::Natures: Nature,
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
+{
+    fn default() -> Self {
+        CoreOracle(PhantomData)
     }
 }
 
@@ -311,23 +326,34 @@ impl<A> From<Either<CoreNature, A>> for Option<CoreNature> {
     }
 }
 
-impl<F: Field, SF: SumcheckFunction<F>> PartialOracle<F, SF> for CoreOracle<F, SF>
+impl<F: Field, SF> From<CoreOracle<F, SF>> for ()
 where
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
+    SF::Natures: Nature,
+{
+    fn from(_value: CoreOracle<F, SF>) -> Self {}
+}
+
+impl<F: Field, SF> PartialOracle<F, SF> for CoreOracle<F, SF>
+where
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
     SF::Natures: Nature,
 {
     type Instance = CoreOracleInstance<F, SF>;
 
-    type VerifierKey = Self;
+    type VerifierKey = ();
 
     type Nature = CoreNature;
 
-    type Builder = Self;
+    type Builder = ();
 
     type QueryRelation = CoreQueryRelation<F, SF>;
 
-    fn build(builder: Self::Builder, _: &SF::Data, _: Rc<Vec<SF::Mles<F>>>) -> Self {
-        //TODO: check that the structure is correct.
-        builder
+    fn build(_: (), _: &SF::Data, _structure: Rc<Vec<SF::Mles<F>>>) -> Self {
+        // So that any issue causes an early panic here.
+        let _ = Self::functions();
+        // TODO: check that the structure is correct.
+        Self::default()
     }
 
     fn instance_evals(instance: &Self::Instance) -> SF::Mles<F> {
@@ -362,13 +388,13 @@ where
     }
 
     fn evals(
-        key: &Self::VerifierKey,
+        _key: &(),
         instance: &Self::Instance,
         point: &MultiPoint<F>,
     ) -> SF::Mles<OracleEval<F>> {
         let coeffs = decode::<F, SF>(instance.elements.clone(), point.vars());
-        let functions = &key.functions;
-        SF::combine(functions, &coeffs, |function, coeff| {
+        let functions = CoreOracle::<F, SF>::functions();
+        SF::combine(&functions, &coeffs, |function, coeff| {
             let eval = coeff.as_ref().map(|coeff| function(coeff, point));
             match eval {
                 Some(e) => OracleEval::Computed(e),
@@ -383,7 +409,7 @@ pub struct CoreQueryRelation<F, SF>(PhantomData<(F, SF)>);
 impl<F, SF> Relation for CoreQueryRelation<F, SF>
 where
     F: Field,
-    SF: SumcheckFunction<F>,
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
     SF::Natures: Nature,
 {
     type Structure = CoreOracle<F, SF>;
@@ -393,7 +419,7 @@ where
     type Witness = Vec<SF::Mles<F>>;
 
     fn check(
-        structure: &Self::Structure,
+        _structure: &Self::Structure,
         instance: &Self::Instance,
         witness: &Self::Witness,
     ) -> bool {
@@ -406,9 +432,9 @@ where
         let expected_evals = instance.evals();
 
         let coefficients = decode::<F, SF>(oracle_instance.elements.clone(), vars);
-        let functions = &structure.functions;
+        let functions = CoreOracle::<F, SF>::functions();
 
-        let evals = SF::combine(functions, &coefficients, |func, coeff| {
+        let evals = SF::combine(&functions, &coefficients, |func, coeff| {
             coeff.as_ref().map(|coeff| func(coeff, point))
         });
         let evals_valid = SF::combine(expected_evals, &evals, |expected, eval| {
@@ -427,12 +453,12 @@ where
 impl<F, SF> Reduction<F, CoreQueryRelation<F, SF>, ()> for CoreOracle<F, SF>
 where
     F: Field,
-    SF: SumcheckFunction<F>,
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
     SF::Natures: Nature,
 {
-    type ProverKey = Self;
+    type ProverKey = ();
 
-    type VerifierKey = Self;
+    type VerifierKey = ();
 
     type Proof = ();
 
@@ -448,23 +474,25 @@ where
         builder
     }
 
-    fn verifier_key(oracle: &Self) -> Self::VerifierKey {
-        oracle.clone()
-    }
+    fn verifier_key(_: &Self) -> Self::VerifierKey {}
 
-    fn key_pair(oracle: &Self) -> (Self::VerifierKey, Self::ProverKey) {
-        (oracle.clone(), oracle.clone())
+    fn key_pair(_: &Self) -> (Self::VerifierKey, Self::ProverKey) {
+        ((), ())
     }
 
     fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
-        key: &Self::ProverKey,
+        _key: &(),
         instance: PartialQueryInstance<F, SF, CoreOracleInstance<F, SF>>,
         witness: Vec<SF::Mles<F>>,
         _transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<(), Self::Proof> {
-        assert!(CoreQueryRelation::check(key, &instance, &witness));
+        assert!(CoreQueryRelation::check(
+            &CoreOracle::<F, SF>::default(),
+            &instance,
+            &witness
+        ));
         ProverOutput {
             instance: (),
             witness: (),
@@ -473,7 +501,7 @@ where
     }
 
     fn verify<S: Duplex<F>>(
-        key: &Self::VerifierKey,
+        _key: &Self::VerifierKey,
         instance: PartialQueryInstance<F, SF, CoreOracleInstance<F, SF>>,
         _proof: GuardedProof<Self::Proof>,
         _transcript: &mut VerifierTranscript<F, S>,
@@ -482,7 +510,7 @@ where
         // instead of relying on check().
         // As check doesn't make use of it.
         let witness = vec![];
-        if CoreQueryRelation::check(key, &instance, &witness) {
+        if CoreQueryRelation::check(&CoreOracle::<F, SF>::default(), &instance, &witness) {
             Ok(())
         } else {
             Err(())
@@ -493,7 +521,7 @@ where
 impl<F, SF> Argument<F, CoreQueryRelation<F, SF>> for CoreOracle<F, SF>
 where
     F: Field,
-    SF: SumcheckFunction<F>,
+    SF: SumcheckFunction<F> + SmallFunctions<F>,
     SF::Natures: Nature,
 {
 }

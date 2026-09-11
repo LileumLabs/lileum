@@ -7,6 +7,7 @@ use crate::{
     prove,
 };
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use reduction::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
@@ -52,6 +53,7 @@ pub enum SumcheckError {
 }
 
 /// The verifier key of the sumcheck reduction.
+#[derive(Clone, Debug, CanonicalSerialize)]
 pub struct SumcheckVerifierKey<F: Field, O: Oracle<F>> {
     // oracle_instance_params: <SumcheckInstance<F, O> as Message<F>>::Params,
     degree: usize,
