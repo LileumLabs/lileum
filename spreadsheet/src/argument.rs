@@ -58,15 +58,14 @@ impl<F: Field> SumcheckFunction<F> for Mles<()> {
 
 pub struct SpreadsheetRelation<F, C>(PhantomData<(F, C)>);
 
-pub struct SpreadsheetStructure<F: Field, C: CommitmentScheme<F>> {
+pub struct SpreadsheetStructure<C> {
     data_table_size: usize,
     gates: Vec<WiredGate>,
     pcs: C,
-    _f: PhantomData<F>,
 }
 
 impl<F: Field, C: CommitmentScheme<F>> Relation for SpreadsheetRelation<F, C> {
-    type Structure = SpreadsheetStructure<F, C>;
+    type Structure = SpreadsheetStructure<C>;
 
     type Instance = C::Commitment;
 
@@ -109,11 +108,11 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
         todo!()
     }
 
-    fn verifier_key(_structure: &SpreadsheetStructure<F, C>) -> Self::VerifierKey {
+    fn verifier_key(_structure: &SpreadsheetStructure<C>) -> Self::VerifierKey {
         todo!()
     }
 
-    fn key_pair(_structure: &SpreadsheetStructure<F, C>) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(_structure: &SpreadsheetStructure<C>) -> (Self::VerifierKey, Self::ProverKey) {
         todo!()
     }
 
