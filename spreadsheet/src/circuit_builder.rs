@@ -157,6 +157,40 @@ pub struct WiredGate {
     gate: GateType,
 }
 
+impl WiredGate {
+    pub fn compute_trace<F: Field>(gates: &[Self], data: &[F]) -> Vec<F> {
+        let mut trace = Vec::new();
+        for gate in gates {
+            let WiredGate {
+                io: [a, b, _],
+                gate,
+            } = gate;
+            let [a, b] = [a, b].map(|var: &Var| match var.1 {
+                DataOrTrace::Data => data[var.0],
+                DataOrTrace::Trace => trace[var.0],
+            });
+            let c = gate.compute(a, b);
+            trace.push(c);
+        }
+        trace
+    }
+
+    pub fn check<F: Field>(gates: &[Self], data: &[F]) -> bool {
+        let trace = Self::compute_trace(gates, data);
+        for gate in gates {
+            let WiredGate { io, gate } = gate;
+            let io = io.each_ref().map(|var| match var.1 {
+                DataOrTrace::Data => data[var.0],
+                DataOrTrace::Trace => trace[var.0],
+            });
+            if !gate.check(&io) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 struct CircuitBuilder {
     input_range: Range,

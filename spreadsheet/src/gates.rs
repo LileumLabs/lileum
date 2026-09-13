@@ -7,6 +7,24 @@ pub enum GateType {
     Eq,
 }
 
+impl GateType {
+    pub fn compute<F: Field>(&self, a: F, b: F) -> F {
+        match self {
+            GateType::Add => Add::compute(a, b),
+            GateType::Eq => Eq::compute(a, b),
+        }
+    }
+
+    pub fn check<F: Field>(&self, io: &[F; 3]) -> bool {
+        let [a, b, c] = io;
+        match self {
+            GateType::Add => Add::check(a, b, c),
+            GateType::Eq => Eq::check(a, b, c),
+        }
+        .is_zero()
+    }
+}
+
 pub trait BinaryGate<F: Field> {
     const TYPE: GateType;
     fn compute(a: F, b: F) -> F;
