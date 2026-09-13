@@ -9,3 +9,4 @@ reduction = { workspace = true }
 sumcheck = { workspace = true }
 sumcheck-derive = { workspace = true }
 commit = { workspace = true }
+sponge = { workspace = true }

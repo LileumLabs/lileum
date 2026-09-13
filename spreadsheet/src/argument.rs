@@ -6,7 +6,11 @@ use alloc::vec::{IntoIter, Vec};
 use ark_ff::Field;
 use commit::{CommitmentScheme, oracle::CommittedNature};
 use core::{fmt::Debug, marker::PhantomData};
-use reduction::Relation;
+use reduction::{
+    Argument, GuardedProof, ProverOutput, Reduction, Relation, TranscriptBuilder,
+    VerifierTranscript,
+};
+use sponge::sponge::Duplex;
 use sumcheck::{
     Var,
     evals::{Evals, EvalsCore},
@@ -86,3 +90,54 @@ impl<F: Field, C: CommitmentScheme<F>> Relation for SpreadsheetRelation<F, C> {
         WiredGate::check(&structure.gates, witness)
     }
 }
+
+impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRelation<F, C> {
+    type ProverKey = ();
+
+    type VerifierKey = ();
+
+    type Proof = ();
+
+    type Error = ();
+
+    type Params = ();
+
+    fn transcript_pattern(
+        _key: &Self::VerifierKey,
+        _builder: TranscriptBuilder,
+    ) -> TranscriptBuilder {
+        todo!()
+    }
+
+    fn verifier_key(_structure: &SpreadsheetStructure<F, C>) -> Self::VerifierKey {
+        todo!()
+    }
+
+    fn key_pair(_structure: &SpreadsheetStructure<F, C>) -> (Self::VerifierKey, Self::ProverKey) {
+        todo!()
+    }
+
+    fn params(_key: &Self::VerifierKey) -> Self::Params {
+        todo!()
+    }
+
+    fn prove<S: Duplex<F>>(
+        _key: &Self::ProverKey,
+        _instance: C::Commitment,
+        _witness: Vec<F>,
+        _transcript: &mut reduction::Transcript<F, S>,
+    ) -> ProverOutput<(), Self::Proof> {
+        todo!()
+    }
+
+    fn verify<S: Duplex<F>>(
+        _key: &Self::VerifierKey,
+        _instance: C::Commitment,
+        _proof: GuardedProof<Self::Proof>,
+        _transcript: &mut VerifierTranscript<F, S>,
+    ) -> Result<(), Self::Error> {
+        todo!()
+    }
+}
+
+impl<F: Field, C: CommitmentScheme<F>> Argument<F, Self> for SpreadsheetRelation<F, C> {}
