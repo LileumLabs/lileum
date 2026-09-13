@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 ark-ff = "0.4"
+ark-serialize = { version = "0.4", default-features = false, features = ["derive"] }
 reduction = { workspace = true }
 sumcheck = { workspace = true }
 sumcheck-derive = { workspace = true }
