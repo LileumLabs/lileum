@@ -191,7 +191,7 @@ impl<F: Field, O: Oracle<F>> ProverKey<F, O> {
         self.degree
     }
 
-    pub(crate) fn vars(&self) -> usize {
+    pub fn vars(&self) -> usize {
         self.vars
     }
 
