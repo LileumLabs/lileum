@@ -196,10 +196,17 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
     type Params = ();
 
     fn transcript_pattern(
-        _key: &Self::VerifierKey,
-        _builder: TranscriptBuilder,
+        key: &Self::VerifierKey,
+        builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
-        todo!()
+        builder
+            .round::<F, C::Commitment, 0>(&())
+            .subprotocol::<ZerocheckReduction<F, Oracle<F, C>>, _, _, _>(&key.zerocheck_key)
+            .subprotocol::<ZerocheckSumcheckReduction<F, _>, _, _, _>(&key.sumcheck)
+            .subprotocol::<CompositeOracle<F, _, _, _>, _, _, _>(&key.composite)
+            .subprotocol::<CoreOracle<F, Mles<()>>, _, _, _>(&())
+            .subprotocol::<CommittedOracle<F, C, Mles<()>>, _, _, _>(key.composite.p2_key())
+            .subprotocol::<C, _, _, _>(&key.pcs)
     }
 
     fn verifier_key(_structure: &SpreadsheetStructure<C>) -> Self::VerifierKey {
