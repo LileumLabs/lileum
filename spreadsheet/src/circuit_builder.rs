@@ -193,6 +193,10 @@ impl WiredGate {
     pub(crate) fn io(&self) -> [Var; 3] {
         self.io
     }
+
+    pub fn gate(&self) -> GateType {
+        self.gate
+    }
 }
 
 #[derive(Clone, Debug, Default)]

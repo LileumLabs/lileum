@@ -2,7 +2,10 @@ use crate::{
     circuit_builder::{DataOrTrace, WiredGate},
     gates::{self, BinaryGate},
 };
-use alloc::vec::{IntoIter, Vec};
+use alloc::{
+    rc::Rc,
+    vec::{IntoIter, Vec},
+};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::{
@@ -222,8 +225,26 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
             .subprotocol::<C, _, _, _>(&key.pcs)
     }
 
-    fn verifier_key(_structure: &SpreadsheetStructure<C>) -> Self::VerifierKey {
-        todo!()
+    fn verifier_key(structure: &SpreadsheetStructure<C>) -> Self::VerifierKey {
+        let mles = Rc::new(structure.sumcheck_structure());
+        let builder1 = ();
+        let builder2 = structure.pcs.clone();
+        let oracle = Oracle::<F, C>::new((), mles, builder1, builder2);
+
+        let sumcheck = ZerocheckSumcheckReduction::verifier_key(&oracle);
+
+        let zerocheck_key = sumcheck.vars();
+
+        let composite = CompositeOracle::verifier_key(&oracle);
+
+        let pcs = C::verifier_key(&structure.pcs);
+
+        VerifierKey {
+            zerocheck_key,
+            sumcheck,
+            composite,
+            pcs,
+        }
     }
 
     fn key_pair(_structure: &SpreadsheetStructure<C>) -> (Self::VerifierKey, Self::ProverKey) {
@@ -400,5 +421,23 @@ impl<F: Field, C: CommitmentScheme<F>> ProverKey<F, C> {
         }
 
         witness
+    }
+}
+
+impl<C> SpreadsheetStructure<C> {
+    fn sumcheck_structure<F: Field>(&self) -> Vec<Mles<F>> {
+        let mut mles = Vec::with_capacity(self.gates.len().next_power_of_two());
+
+        let zero: Mles<F> = Mles::default();
+        for gate in &self.gates {
+            let selectors = match gate.gate() {
+                gates::GateType::Add => [F::ONE, F::ZERO],
+                gates::GateType::Eq => [F::ZERO, F::ONE],
+            };
+            mles.push(Mles { selectors, ..zero });
+        }
+
+        mles.resize(self.gates.len().next_power_of_two(), zero);
+        mles
     }
 }
