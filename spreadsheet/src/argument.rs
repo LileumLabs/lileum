@@ -16,7 +16,7 @@ use reduction::{
 };
 use sponge::sponge::Duplex;
 use sumcheck::{
-    OracleQueryInstance, SumcheckMessage, SumcheckVerifierKey, Var,
+    MultiPoint, OracleQueryInstance, SumcheckMessage, SumcheckVerifierKey, Var,
     evals::{Evals, EvalsCore},
     oracles::{
         SumcheckFunction,
@@ -100,8 +100,13 @@ impl<F: Field> SumcheckFunction<F> for Mles<()> {
 }
 
 impl<F: Field> SmallFunctions<F> for Mles<()> {
-    fn small_functions() -> Self::Mles<Option<sumcheck::oracles::core::Func<F>>> {
-        todo!()
+    fn small_functions() -> Mles<Option<fn(&[F], &MultiPoint<F>) -> F>> {
+        Mles {
+            table: None,
+            trace: None,
+            selectors: [(); 2].map(|_| None),
+            lookups: [(); 3].map(|_| None),
+        }
     }
 }
 
