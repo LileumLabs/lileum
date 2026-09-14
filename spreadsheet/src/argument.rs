@@ -184,8 +184,16 @@ pub struct VerifierKey<F: Field, C: CommitmentScheme<F>> {
     pcs: C::VerifierKey,
 }
 
+pub struct ProverKey<F: Field, C: CommitmentScheme<F>> {
+    strucuture: SpreadsheetStructure<C>,
+    sumcheck: sumcheck::ProverKey<F, Oracle<F, C>>,
+    composite: CompositeKey<F, C>,
+    committed: commit::oracle::ProverKey<F, Mles<()>, C>,
+    pcs: C::ProverKey,
+}
+
 impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRelation<F, C> {
-    type ProverKey = ();
+    type ProverKey = ProverKey<F, C>;
 
     type VerifierKey = VerifierKey<F, C>;
 
@@ -222,12 +230,77 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
     }
 
     fn prove<S: Duplex<F>>(
-        _key: &Self::ProverKey,
-        _instance: C::Commitment,
-        _witness: Vec<F>,
-        _transcript: &mut reduction::Transcript<F, S>,
+        key: &Self::ProverKey,
+        instance: C::Commitment,
+        witness: Vec<F>,
+        transcript: &mut reduction::Transcript<F, S>,
     ) -> ProverOutput<(), Self::Proof> {
-        todo!()
+        //TODO: check len
+        let trace = WiredGate::compute_trace(&key.strucuture.gates, &witness);
+        let trace_commit = key.strucuture.pcs.commit_mle(&trace);
+
+        let [] = transcript.send_message(&trace_commit, &());
+
+        let oracle_instance = CompositeOracleInstance {
+            oracle1_instance: Self::core_oracle_instance(key.sumcheck.vars()),
+            oracle2_instance: Self::committed_oracle_instance(instance, trace_commit.clone()),
+        };
+
+        let witness: Vec<Mles<F>> = key.witness(&witness, &trace);
+
+        let ProverOutput {
+            instance,
+            witness,
+            proof: (),
+        } = ZerocheckReduction::<F, Oracle<F, C>>::prove(&8, oracle_instance, witness, transcript);
+
+        let ProverOutput {
+            instance,
+            witness,
+            proof: sumcheck_proof,
+        } = ZerocheckSumcheckReduction::prove(&key.sumcheck, instance, witness, transcript);
+
+        let ProverOutput {
+            instance: (core_instance, committed_instance),
+            witness,
+            proof: composite_proof,
+        } = CompositeOracle::prove(&key.composite, instance, witness, transcript);
+
+        let ProverOutput {
+            instance: (),
+            witness: (),
+            proof: (),
+        } = CoreOracle::prove(
+            key.composite.p1_key(),
+            core_instance,
+            witness.clone(),
+            transcript,
+        );
+
+        let ProverOutput {
+            instance,
+            witness,
+            proof: (),
+        } = CommittedOracle::prove(&key.committed, committed_instance, witness, transcript);
+
+        let ProverOutput {
+            instance: (),
+            witness: (),
+            proof: open_proof,
+        } = C::prove(&key.pcs, instance, witness, transcript);
+
+        let proof = Proof {
+            trace_committment: trace_commit,
+            sumcheck: sumcheck_proof,
+            composite: composite_proof,
+            open_proof,
+        };
+
+        ProverOutput {
+            instance: (),
+            witness: (),
+            proof,
+        }
     }
 
     fn verify<S: Duplex<F>>(
@@ -297,3 +370,21 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
 }
 
 impl<F: Field, C: CommitmentScheme<F>> Argument<F, Self> for SpreadsheetRelation<F, C> {}
+
+impl<F: Field, C: CommitmentScheme<F>> ProverKey<F, C> {
+    pub fn witness(&self, data: &[F], trace: &[F]) -> Vec<Mles<F>> {
+        let _ = (data, trace);
+        let mut witness = self.sumcheck.structure().to_vec();
+
+        for (evals, data) in witness.iter_mut().zip(data) {
+            evals.table = *data;
+        }
+
+        for (evals, trace) in witness.iter_mut().zip(trace) {
+            evals.trace = *trace;
+        }
+
+        //TODO: mising lookup
+        witness
+    }
+}
