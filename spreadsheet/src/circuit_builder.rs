@@ -149,7 +149,7 @@ impl SpreadsheetStructure {
 }
 
 #[derive(Clone, Copy, Debug)]
-struct Var(usize, DataOrTrace);
+pub(crate) struct Var(pub usize, pub DataOrTrace);
 
 #[derive(Clone, Copy, Debug)]
 pub struct WiredGate {
@@ -188,6 +188,10 @@ impl WiredGate {
             }
         }
         true
+    }
+
+    pub(crate) fn io(&self) -> [Var; 3] {
+        self.io
     }
 }
 

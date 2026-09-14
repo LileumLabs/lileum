@@ -1,5 +1,5 @@
 use crate::{
-    circuit_builder::WiredGate,
+    circuit_builder::{DataOrTrace, WiredGate},
     gates::{self, BinaryGate},
 };
 use alloc::vec::{IntoIter, Vec};
@@ -389,7 +389,16 @@ impl<F: Field, C: CommitmentScheme<F>> ProverKey<F, C> {
             evals.trace = *trace;
         }
 
-        //TODO: mising lookup
+        for (evals, gate) in witness.iter_mut().zip(&self.strucuture.gates) {
+            for (lookup, var) in evals.lookups.iter_mut().zip(gate.io()) {
+                let val = match var.1 {
+                    DataOrTrace::Data => data[var.0],
+                    DataOrTrace::Trace => trace[var.0],
+                };
+                *lookup = val;
+            }
+        }
+
         witness
     }
 }
