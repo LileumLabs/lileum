@@ -5,6 +5,7 @@ use crate::{
         matrix_sum::{MatrixSumInstance, MatrixSumOracle, MissingEvals},
     },
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::{
@@ -14,13 +15,13 @@ use commit::{
         VerifierKey as CommittedVerifierKey,
     },
 };
+use core::marker::PhantomData;
 use lcs::matrix::Matrix;
 use reduction::{
     GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
 };
 use spark::{FlexibleSparkRelation, SparkInstance};
 use sponge::sponge::Duplex;
-use std::{marker::PhantomData, rc::Rc};
 use sumcheck::{
     ProverKey as SumcheckProver, SumcheckError, SumcheckInstance, SumcheckMessage,
     SumcheckReduction, SumcheckVerifierKey,
@@ -130,7 +131,7 @@ where
 
     fn verifier_key(structure: &MatrixProductOracle<F, C, SF, N>) -> Self::VerifierKey {
         let vars = structure.vars();
-        let mles = vec![MatrixSumEvals::zero(); 1 << vars];
+        let mles = alloc::vec![MatrixSumEvals::zero(); 1 << vars];
         let mles = Rc::new(mles);
 
         let builder1 = MatrixSumOracle::new(structure.matrices().clone());
@@ -172,7 +173,7 @@ where
         let vars = structure.vars();
 
         let (oracle, sumcheck_key) = {
-            let mles = vec![MatrixSumEvals::zero(); 1 << vars];
+            let mles = alloc::vec![MatrixSumEvals::zero(); 1 << vars];
             let mles = Rc::new(mles);
 
             let builder1 = MatrixSumOracle::new(structure.matrices().clone());

@@ -2,14 +2,15 @@ use crate::{
     MultiPoint, OracleQueryInstance,
     oracles::{EvalLocation, Oracle, QueryRelation, SumcheckFunction},
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
+use core::fmt::Debug;
 use reduction::{
     Argument, GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript,
     TranscriptBuilder, VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::{fmt::Debug, rc::Rc};
 
 #[derive(Clone, Debug)]
 /// An oracle over MLEs which have a small representation and

@@ -1,3 +1,6 @@
+#![no_std]
+extern crate alloc;
+
 pub mod composition;
 pub mod message;
 mod proof;

@@ -1,8 +1,9 @@
 use crate::SparseMle;
+use alloc::vec::{IntoIter, Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::oracle::CommittedNature;
-use std::{fmt::Debug, vec::IntoIter};
+use core::fmt::Debug;
 use sumcheck::{
     MultiPoint, Var,
     evals::{Evals, EvalsCore},
@@ -151,7 +152,7 @@ impl<F: Field, const N: usize> SparkEvals<Vec<F>, N> {
         challenges: &SparkChallenges<F>,
         zerocheck_point: MultiPoint<F>,
     ) -> Self {
-        let challenges = SparkChallenges::map_evals(challenges, |c| vec![*c]);
+        let challenges = SparkChallenges::map_evals(challenges, |c| alloc::vec![*c]);
         let zerocheck = zerocheck_point.inner();
         SparkEvals {
             zerocheck,

@@ -6,6 +6,7 @@ use ::reduction::{
     Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
 use commit::CommitmentScheme;
 use sponge::sponge::Duplex;

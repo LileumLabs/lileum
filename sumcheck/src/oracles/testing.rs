@@ -3,8 +3,8 @@ use crate::{
     evals::{EvalsExt, Mles},
     oracles::{EvalLocation, Oracle, SumcheckFunction, partial::Nature},
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
-use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct TestingOracle<F: Field, SF: SumcheckFunction<F>> {
@@ -76,7 +76,7 @@ where
 impl<F: Field, SF: SumcheckFunction<F>> TestingOracle<F, SF> {
     pub fn new(vars: usize, data: SF::Data) -> Self {
         let zero = SF::map_evals(&SF::natures(), |_| F::ZERO);
-        let evals = vec![zero; 1 << vars];
+        let evals = alloc::vec![zero; 1 << vars];
         let evals = Rc::new(evals);
         Self { vars, evals, data }
     }

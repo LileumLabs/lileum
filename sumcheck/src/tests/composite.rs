@@ -12,11 +12,16 @@ use crate::{
         partial::PartialQueryRelation,
     },
 };
+use alloc::{
+    fmt::Debug,
+    rc::Rc,
+    vec::{IntoIter, Vec},
+};
 use ark_ff::{Field, PrimeField};
 use ark_serialize::CanonicalSerialize;
+use core::iter::successors;
 use rand::{SeedableRng, rngs::StdRng};
 use reduction::{Prover, ProverOutput, Relation, UnsafeVerifier, Verifier};
-use std::{fmt::Debug, iter::successors, rc::Rc, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
 
 type Oracle<F, SF = SmallEvals<()>> = CompositeOracle<F, SF, CoreOracle<F, SF>, ()>;
@@ -67,9 +72,9 @@ fn composite_sumcheck_test<F: PrimeField>() {
 
     let core_instance = CoreOracleInstance::<F, SmallEvals<()>>::new(
         &SmallEvals {
-            challenge: vec![chall],
+            challenge: alloc::vec![chall],
             powers,
-            range: vec![],
+            range: Vec::new(),
         },
         VARS,
     );

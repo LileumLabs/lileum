@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use ark_ff::Field;
 
 /// A point with `n` variables

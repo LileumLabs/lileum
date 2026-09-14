@@ -6,7 +6,7 @@ use rand::thread_rng;
 #[test]
 fn test_gen() {
     let z = find_z::<VestaConfig>().unwrap();
-    println!("z: {}", z);
+    std::println!("z: {}", z);
 }
 
 #[test]

@@ -1,7 +1,7 @@
 use crate::{Var, evals::Evals, oracles::partial::Nature};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 /// The definition of a multivariate polynomial as some function
 /// of multilinear polynomials.

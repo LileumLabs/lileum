@@ -1,4 +1,5 @@
 use crate::ipa::vector_utils::{fold_basis, fold_vec};
+use alloc::vec::Vec;
 use ark_ec::{AffineRepr, CurveGroup, Group, VariableBaseMSM};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
@@ -183,7 +184,7 @@ where
             basis,
             commitment,
         };
-        let mut messages = vec![];
+        let mut messages = Vec::new();
         let last_round = Self::reduce(round, transcript, u, &mut messages);
         let Round { a, .. } = last_round;
         debug_assert_eq!(a.len(), 1);
@@ -196,7 +197,7 @@ where
         let seed = seed.unwrap_or(0);
         let mut rng = StdRng::seed_from_u64(seed);
         let mut point = || G::rand(&mut rng);
-        let basis: Vec<G> = std::iter::repeat(())
+        let basis: Vec<G> = core::iter::repeat(())
             .map(|_| point())
             .take(1 << len_log)
             .collect();

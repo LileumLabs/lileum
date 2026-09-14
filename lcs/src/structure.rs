@@ -4,12 +4,12 @@ use crate::{
     constraint_system::{ConstraintSystem, Constraints, Gate, GateRegistry, Val, WitnessReader},
     gates::{Constant, Equality},
 };
+use alloc::{boxed::Box, collections::BTreeMap, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
-use std::{
+use core::{
     any::TypeId,
     cmp::Ordering,
-    collections::BTreeMap,
     fmt::Display,
     ops::{Add, Mul, Sub},
 };
@@ -142,7 +142,7 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
     pub fn gate_counts(&self) -> Vec<(&'static str, usize)> {
         let registry = &self.registry;
         let constraints = &self.constraints;
-        let mut counts = vec![0; registry.gate_registry.len()];
+        let mut counts = alloc::vec![0; registry.gate_registry.len()];
 
         for constraint in constraints {
             counts[constraint.selector] += 1;
@@ -197,7 +197,7 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
         } = self;
 
         let mut io_matrices = [(); MAX_IO].map(|_| Matrix::with_capacity(constraints.len()));
-        let mut gate_selectors = vec![];
+        let mut gate_selectors = Vec::new();
 
         let constant_selector = registry.gate_registry.iter().find_map(|(id, gate)| {
             if TypeId::of::<Constant>() == *id {
@@ -413,7 +413,7 @@ impl<T> Sub<Self> for Exp<T> {
 impl<T: Clone> Val for Exp<T> {}
 
 impl<T: Display> Display for MultiSet<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         for (i, n) in self.0.iter() {
             for _ in 0..*n {
                 write!(f, "v{i}")?;

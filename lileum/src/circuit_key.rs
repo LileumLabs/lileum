@@ -7,6 +7,7 @@ use crate::{
 };
 use ark_ff::Field;
 use commit::CommitmentScheme;
+use core::marker::PhantomData;
 use lcs::{
     circuit::{BuildStructure, Circuit, Prove},
     structure::LcsStructure,
@@ -14,7 +15,6 @@ use lcs::{
 };
 use reduction::{FoldingRelation, Prover, ProverOutput, Verifier};
 use sponge::sponge::Duplex;
-use std::marker::PhantomData;
 
 type FoldingProver<F, D, R> = Prover<F, D, FoldingRelation<R>, R, FlcsFoldingScheme>;
 type FoldingVerifier<F, D, R> = Verifier<F, D, FoldingRelation<R>, R, FlcsFoldingScheme>;

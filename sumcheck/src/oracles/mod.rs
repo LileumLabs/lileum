@@ -1,8 +1,9 @@
 use crate::{MultiPoint, Var, evals::Mles};
+use ::core::{fmt::Debug, marker::PhantomData};
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use reduction::{Message, Relation};
-use std::{fmt::Debug, marker::PhantomData, rc::Rc};
 
 pub mod composite;
 pub mod core;

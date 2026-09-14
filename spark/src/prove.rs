@@ -5,13 +5,13 @@ use crate::{
     sumcheck_argument::{SparkChallenges, SparkEvals},
 };
 use ::reduction::{ProverOutput, Reduction, Transcript};
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::{Field, batch_inversion};
 use commit::{
     CommitmentScheme, OpeningRelation,
     oracle::{self, CommittedOracle},
 };
 use sponge::sponge::Duplex;
-use std::rc::Rc;
 use sumcheck::{
     self, MultiPoint, SumcheckReduction, eq,
     oracles::{

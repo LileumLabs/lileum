@@ -6,6 +6,7 @@
 //! While any domain could be supported, right now only the inplicit domain
 //! 0..d will be used
 
+use alloc::vec::Vec;
 use ark_ff::{Field, fields::batch_inversion};
 use ark_serialize::CanonicalSerialize;
 
@@ -100,6 +101,7 @@ impl<F: Field> BarycentricWeights<F> {
 #[cfg(test)]
 mod tests {
     use super::BarycentricWeights;
+    use alloc::vec::Vec;
     use ark_ff::Field;
     use ark_poly::{DenseUVPolynomial, Polynomial, univariate::DensePolynomial};
     use ark_vesta::Fr;

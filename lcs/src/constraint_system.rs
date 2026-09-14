@@ -1,8 +1,8 @@
 use crate::{circuit::Var, gates::Constant, structure::Exp};
+use alloc::{boxed::Box, collections::BTreeMap, vec::Vec};
 use ark_ff::Field;
-use std::{
+use core::{
     any::{Any, TypeId, type_name},
-    collections::BTreeMap,
     ops,
 };
 
@@ -71,7 +71,7 @@ impl<V: Copy> Iterator for Constraints<V> {
             Constraints::Append(constraints, c) => {
                 let c = *c;
                 let dummy = Box::new(Constraints::Constraint(c));
-                let constraints = *std::mem::replace(constraints, dummy);
+                let constraints = *core::mem::replace(constraints, dummy);
                 *self = constraints;
                 Some(c)
             }
@@ -93,13 +93,13 @@ impl<V> From<Constraints<V>> for Vec<V> {
     fn from(value: Constraints<V>) -> Self {
         // Not the most efficient, but it isn't performance critical anyway.
         match value {
-            Constraints::Constraint(c) => vec![c],
+            Constraints::Constraint(c) => alloc::vec![c],
             Constraints::Append(tail, head) => {
                 let mut constraints: Vec<V> = From::from(*tail);
                 constraints.push(head);
                 constraints
             }
-            Constraints::Empty => vec![],
+            Constraints::Empty => Vec::new(),
         }
     }
 }

@@ -1,9 +1,13 @@
 use crate::oracles::MatrixNature;
+use alloc::{
+    rc::Rc,
+    vec::{IntoIter, Vec},
+};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::oracle::CommittedNature;
+use core::fmt::Debug;
 use lcs::{matrix::Matrix, structure::Exp};
-use std::{fmt::Debug, rc::Rc, vec::IntoIter};
 use sumcheck::{
     MultiPoint, Var,
     eq::eq_subset,
@@ -79,12 +83,12 @@ impl<F: Field, const IO: usize, const S: usize, const I: usize> FlcsEvals<Vec<F>
     pub fn coefficients(inputs: [F; I], challenge: F) -> Self {
         Self {
             inputs: inputs.to_vec(),
-            products: [(); IO].map(|_| vec![]),
-            w: vec![],
-            input_selector: vec![],
-            gate_selectors: [(); S].map(|_| vec![]),
-            constants: vec![],
-            challenge: vec![challenge],
+            products: [(); IO].map(|_| Vec::new()),
+            w: Vec::new(),
+            input_selector: Vec::new(),
+            gate_selectors: [(); S].map(|_| Vec::new()),
+            constants: Vec::new(),
+            challenge: alloc::vec![challenge],
         }
     }
 }
@@ -307,7 +311,7 @@ fn print_natures() {
 
     let natures = <FlcsEvals<(), 4, 3, 3> as SumcheckFunction<Fr>>::natures();
     let natures = FlcsEvals::map_evals(&natures, |nature| EvalLocation::from(*nature));
-    dbg!(natures);
+    std::dbg!(natures);
 }
 
 pub fn compute_sumcheck_witness<F, const IO: usize, const S: usize, const I: usize>(

@@ -8,10 +8,13 @@ use crate::{
         testing::{TestingNature, TestingOracle},
     },
 };
+use alloc::{
+    fmt::Debug,
+    vec::{IntoIter, Vec},
+};
 use ark_ff::{Field, PrimeField};
 use rand::{SeedableRng, rngs::StdRng};
 use reduction::{FoldingRelation, Prover, ProverOutput, Relation, Verifier};
-use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
 
 type FoldingScheme<F> = SumFold<F, TestingOracle<F, ProductSum<()>>>;

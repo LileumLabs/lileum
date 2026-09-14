@@ -4,7 +4,7 @@ use crate::{
     oracles::{EvalLocation, Oracle},
 };
 use ark_ff::Field;
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+use core::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Degree(pub usize);

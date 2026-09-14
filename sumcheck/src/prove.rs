@@ -3,10 +3,10 @@ use crate::{
     evals::{Evals, Mles},
     oracles::{EvalLocation, Oracle, OracleData, SumcheckFunction},
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use reduction::Transcript;
 use sponge::sponge::Duplex;
-use std::rc::Rc;
 
 pub struct ProverKey<F: Field, O: Oracle<F>> {
     degree: usize,
@@ -83,8 +83,8 @@ impl<F: Field, O: Oracle<F>> ProverKey<F, O> {
         mut witness: Vec<Mles<O::Function, F>>,
         transcript: &mut Transcript<F, S>,
     ) -> (Vec<SumcheckMessage<F>>, MultiPoint<F>, F) {
-        let mut vars = vec![];
-        let mut messages = vec![];
+        let mut vars = Vec::new();
+        let mut messages = Vec::new();
 
         for _ in 0..self.vars {
             let message = self.message(&witness);
@@ -141,7 +141,7 @@ impl<F: Field, O: Oracle<F>> ProverKey<F, O> {
         // e1 - e0 and the f(x-1).
         let (left, right) = mles.split_at(mles.len() / 2);
 
-        let mut message = vec![F::zero(); degree + 1];
+        let mut message = alloc::vec![F::zero(); degree + 1];
         for (left, right) in left.iter().zip(right) {
             Self::eval_acc(&self.data, &mut message, [left, right]);
         }

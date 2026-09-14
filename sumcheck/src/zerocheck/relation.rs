@@ -4,9 +4,10 @@ use crate::{
     relation::oracle_evals,
     zerocheck::ZeroSumcheckInstance,
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
+use core::marker::PhantomData;
 use reduction::{Message, Relation};
-use std::marker::PhantomData;
 
 /// The sumcheck relation over a given oracle.
 #[derive(Clone, Copy, Debug)]
@@ -59,7 +60,7 @@ impl<F: Field, O: Oracle<F>> Message<F> for ZeroSumcheckInstance<F, O> {
         if self.zerocheck_powers.factors().len() != params.0.vars {
             return Err(ZerocheckError::Zerocheck);
         }
-        let mut elems: Vec<F> = vec![self.sum];
+        let mut elems: Vec<F> = alloc::vec![self.sum];
         elems.extend(
             self.zerocheck_powers
                 .factors()

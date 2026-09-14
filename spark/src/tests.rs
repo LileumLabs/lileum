@@ -2,13 +2,14 @@ use crate::{
     FlexibleSpark, FlexibleSparkRelation, FlexibleSparkStructure, SparkInstance, SparkReduction,
     SparseMle, StaticSparkRelation, StaticSparkStructure,
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::PrimeField;
 use commit::{CommitmentScheme, OpeningRelation};
+use core::iter::repeat;
 use hash_to_curve::svdw::SvdwMap;
 use rand::{Rng, SeedableRng, rngs::StdRng};
 use reduction::{Prover, ProverOutput, Relation, Verifier};
 use sponge::{poseidon2::PoseidonDefault, sponge::Sponge};
-use std::{iter::repeat, rc::Rc};
 use sumcheck::MultiPoint;
 
 type Poseidon<F> = Sponge<F, PoseidonDefault<F>, 2, 1, 3>;

@@ -1,7 +1,8 @@
 use crate::grain::Grain;
+use alloc::vec::Vec;
 use ark_ff::{BigInteger, PrimeField};
 use automata::FiniteAutomaton;
-use std::{cmp::Ordering, marker::PhantomData};
+use core::{cmp::Ordering, marker::PhantomData};
 
 pub enum Field {
     Prime,
@@ -185,7 +186,7 @@ pub fn parse_field(string: &str) -> Vec<bool> {
         .chars()
         .flat_map(|char| {
             let byte = char.to_digit(16).unwrap();
-            vec![
+            alloc::vec![
                 byte & 0b1000 != 0,
                 byte & 0b0100 != 0,
                 byte & 0b0010 != 0,
@@ -193,31 +194,6 @@ pub fn parse_field(string: &str) -> Vec<bool> {
             ]
         })
         .collect()
-}
-fn print_nibble(nibble: &[bool]) {
-    let exponents = [8, 4, 2, 1];
-    let mut byte = 0;
-    for i in 0..4 {
-        if nibble[i] {
-            byte += exponents[i];
-        }
-    }
-    print!("{:x}", byte)
-}
-
-#[allow(unused)]
-pub fn print_integer_big_endian(int: &[bool]) {
-    let partial_bit_len = int.len() % 4;
-    let partial_bit: Vec<bool> = std::iter::repeat_n(false, 4 - partial_bit_len)
-        .chain(int[0..partial_bit_len].to_owned())
-        .collect();
-    if partial_bit_len != 0 {
-        print_nibble(&partial_bit);
-    }
-    for chunk in int[partial_bit_len..].chunks(4) {
-        print_nibble(chunk);
-    }
-    println!();
 }
 
 // comparing against the last constant produced by

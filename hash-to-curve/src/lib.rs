@@ -1,6 +1,10 @@
+#![no_std]
+#[cfg(test)]
+extern crate std;
+
 use ark_ec::CurveGroup;
 use ark_serialize::CanonicalSerialize;
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 pub mod svdw;
 pub trait CurveMap<G: CurveGroup>: Debug + Clone + CanonicalSerialize {

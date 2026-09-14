@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 /// Stack from which elements cab be popped.
 pub struct PopableStack<'a, S: StackMachine> {
     pub(crate) stack: &'a mut Vec<S::StackElem>,
@@ -11,7 +13,7 @@ pub struct PushableStack<'a, T, const N: usize> {
 
 /// Allows to take an input element, taking an input is optional.
 pub struct Input<'a, T> {
-    input: &'a mut std::vec::IntoIter<T>,
+    input: &'a mut alloc::vec::IntoIter<T>,
 }
 
 /// obtained after pop, contains elements, stack, and input.
@@ -24,7 +26,7 @@ pub struct PopResult<'a, S: StackMachine, const P: usize, const N: usize> {
 impl<'a, S: StackMachine> PopableStack<'a, S> {
     pub(crate) fn new(
         stack: &'a mut Vec<S::StackElem>,
-        input: &'a mut std::vec::IntoIter<S::Input>,
+        input: &'a mut alloc::vec::IntoIter<S::Input>,
     ) -> Self {
         let input = Input { input };
         Self { stack, input }

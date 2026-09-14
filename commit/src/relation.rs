@@ -1,7 +1,8 @@
 use crate::CommitmentSchemeCore;
+use alloc::vec::Vec;
 use ark_ff::Field;
+use core::{fmt::Debug, marker::PhantomData};
 use reduction::{Message, Relation};
-use std::{fmt::Debug, marker::PhantomData};
 use sumcheck::{MultiPoint, evals::eval_simple_mle, oracles::UnexpectedVars};
 
 /// For structure pcs.

@@ -1,8 +1,9 @@
 //! Utilities for zerocheck.
 
 use crate::MultiPoint;
+use alloc::vec::Vec;
 use ark_ff::Field;
-use std::{
+use core::{
     iter::successors,
     ops::{Add, Mul},
 };
@@ -69,7 +70,7 @@ impl<F: Field> CompactPowers<F> {
         // as write_evals() recurses in the reverse order.
         flips.reverse();
 
-        let mut mle = vec![F::zero(); 1 << vars];
+        let mut mle = alloc::vec![F::zero(); 1 << vars];
         mle[0] = eval_at_zero;
         mle[1] = eval_at_zero;
 
@@ -112,7 +113,7 @@ fn test<F: Field>(chall: F) {
     let vars = 5;
     let powers = CompactPowers::new(chall, vars);
     assert_eq!(
-        powers.point_eval(&MultiPoint::new(vec![F::zero(); vars])),
+        powers.point_eval(&MultiPoint::new(alloc::vec![F::zero(); vars])),
         F::one()
     );
     let powers = powers.eval_over_domain();
@@ -162,9 +163,7 @@ impl<F: Field> Add<Self> for CompactPowers<F> {
 #[cfg(test)]
 fn bits(x: usize, left: usize) -> Vec<u8> {
     match left {
-        0 => {
-            vec![]
-        }
+        0 => Vec::new(),
         left => {
             let bit = x & 0b1;
             let mut tail = bits(x >> 1, left - 1);
@@ -215,7 +214,7 @@ impl<F: Field> ShrinkingPowers<F> {
     pub(crate) fn new(powers: CompactPowers<F>) -> Self {
         Self {
             powers,
-            constants: vec![],
+            constants: Vec::new(),
         }
     }
 
@@ -232,7 +231,7 @@ impl<F: Field> ShrinkingPowers<F> {
             .cloned()
             .fold(F::one(), |acc, c| acc * c);
         if self.powers.coefficients.is_empty() {
-            vec![scale]
+            alloc::vec![scale]
         } else {
             self.powers.eval_over_domain_scaled(scale)
         }
@@ -255,7 +254,7 @@ fn mle_equivalence_test<F: Field>(elems: Vec<F>) {
     for (fix, (b, c)) in fixes.iter().zip(powers.coefficients.clone()) {
         let eval = b * fix + c * (F::one() - fix);
         full_eval *= eval;
-        println!("factor_eval: {}", eval)
+        std::println!("factor_eval: {}", eval)
     }
     let check_point = MultiPoint::new(fixes.to_vec());
     assert_eq!(full_eval, powers.point_eval(&check_point));

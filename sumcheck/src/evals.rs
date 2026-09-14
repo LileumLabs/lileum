@@ -1,6 +1,7 @@
 use crate::{MultiPoint, eq::eq};
+use alloc::vec::{IntoIter, Vec};
 use ark_ff::Field;
-use std::{fmt::Debug, vec::IntoIter};
+use core::fmt::Debug;
 
 /// A trait that defines an abstract set of multilinear extensions.
 /// The convention is to have an struct generic over V, which implements
@@ -56,7 +57,7 @@ pub trait EvalsCore<V: Clone + Debug>: Sized + Clone + Debug {
     /// Unflatten Self from elems, can be assumed to be the output of flatten.
     fn unflatten(elems: &mut IntoIter<V>) -> Self;
     fn flatten_vec(self) -> Vec<V> {
-        let mut vec = vec![];
+        let mut vec = Vec::new();
         self.flatten(&mut vec);
         vec
     }
@@ -68,7 +69,7 @@ pub trait EvalsCore<V: Clone + Debug>: Sized + Clone + Debug {
 
 pub trait EvalsExt<F: Field>: EvalsCore<F> {
     fn eval(mles: &[Self], point: &MultiPoint<F>) -> Self {
-        use std::iter::Iterator;
+        use core::iter::Iterator;
         assert_eq!(
             mles.len().ilog2() as usize,
             point.vars(),
@@ -76,7 +77,7 @@ pub trait EvalsExt<F: Field>: EvalsCore<F> {
         );
         let eq: Vec<F> = eq(point);
         let dummy = mles[0].clone().flatten_vec();
-        let dummy: Self = Self::unflatten_vec(vec![F::zero(); dummy.len()]);
+        let dummy: Self = Self::unflatten_vec(alloc::vec![F::zero(); dummy.len()]);
 
         eq.into_iter().zip(mles).fold(dummy.clone(), |acc, x| {
             let acc: Self = acc;

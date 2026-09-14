@@ -1,10 +1,14 @@
+#![no_std]
+extern crate alloc;
+
+use alloc::vec::Vec;
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
-use reduction::{Argument, Message, NoError};
-use std::{
+use core::{
     fmt::Debug,
     ops::{Add, Mul},
 };
+use reduction::{Argument, Message, NoError};
 
 pub mod multipoint;
 pub mod oracle;

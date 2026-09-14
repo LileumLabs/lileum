@@ -2,8 +2,10 @@ use crate::{
     oracles::{FlcsOracle, FlcsOracleParams},
     reductions::flcs::{FlcsEvals, compute_sumcheck_witness},
 };
+use alloc::vec::Vec;
 use ark_ff::Field;
 use commit::CommitmentScheme;
+use core::marker::PhantomData;
 use lcs::{
     constraint_system::Constraints,
     matrix::Matrix,
@@ -11,7 +13,6 @@ use lcs::{
     witness::LinearCombinations,
 };
 use reduction::{Message, NoError, Relation};
-use std::marker::PhantomData;
 use sumcheck::{
     oracles::{Oracle, partial::OracleParams},
     zerocheck::{ZeroSumcheck, ZeroSumcheckInstance},

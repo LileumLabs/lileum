@@ -5,9 +5,11 @@ use crate::{
     },
     {CommitmentScheme, CommitmentSchemeCore, OpenInstance, OpeningRelation},
 };
+use alloc::vec::Vec;
 use ark_ec::{AffineRepr, CurveGroup, VariableBaseMSM};
 use ark_ff::PrimeField;
 use ark_serialize::CanonicalSerialize;
+use core::ops::{Add, Mul};
 use hash_to_curve::CurveMap;
 use reduction::{
     Argument, GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, Transcript,
@@ -16,7 +18,6 @@ use reduction::{
     utils::cycle_cast,
 };
 use sponge::sponge::Duplex;
-use std::ops::{Add, Mul};
 use sumcheck::eq::eq;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -232,7 +233,7 @@ where
         } = instance;
 
         let commitment: G = commit.0 + u * eval;
-        let mut challenges = vec![];
+        let mut challenges = Vec::new();
         let commitment: Result<G, IpaError> = (0..key.vars).try_fold(commitment, |acc, i| {
             let (msg, [chall]) = transcript
                 .receive_message(

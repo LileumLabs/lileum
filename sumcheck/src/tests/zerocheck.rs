@@ -8,10 +8,13 @@ use crate::{
     },
     zerocheck::{ZeroSumcheck, Zerocheck, ZerocheckReduction, ZerocheckSumcheckReduction},
 };
+use alloc::{
+    fmt::Debug,
+    vec::{IntoIter, Vec},
+};
 use ark_ff::{Field, PrimeField};
 use rand::{SeedableRng, rngs::StdRng};
 use reduction::{Prover, ProverOutput, Relation, Verifier};
-use std::{fmt::Debug, vec::IntoIter};
 use sumcheck_derive::EvalsCore;
 
 type Reduction1<F> = ZerocheckReduction<F, TestingOracle<F, ProductGate<()>>>;

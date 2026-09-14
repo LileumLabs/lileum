@@ -9,6 +9,7 @@ use crate::{
     },
     relations::{ClcsInstance, ClcsRelation, ClcsStructure, FlcsRelation, FlcsStructure},
 };
+use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use commit::{CommitmentScheme, oracle::CommittedOracle};
 use lcs::structure::LcsStructure;
@@ -17,7 +18,6 @@ use reduction::{
     VerifierTranscript,
 };
 use sponge::sponge::Duplex;
-use std::rc::Rc;
 use sumcheck::oracles::composite::CompositeOracle;
 
 #[derive(Clone, Debug)]

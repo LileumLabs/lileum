@@ -2,8 +2,9 @@ use crate::{
     error::{Error, Mismatch},
     permutation::{Permutation, UnsafePermutation},
 };
+use alloc::{boxed::Box, vec::Vec};
 use ark_ff::{Field, PrimeField};
-use std::{fmt::Display, marker::PhantomData};
+use core::{fmt::Display, marker::PhantomData};
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub(crate) enum Pattern {
@@ -12,7 +13,7 @@ pub(crate) enum Pattern {
 }
 
 impl Display for Pattern {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Pattern::Absorb(n) => {
                 write!(f, "A{}", n)
@@ -56,7 +57,9 @@ pub struct SpongeInitializer<
 
 impl SpongeBuilder {
     pub fn new() -> Self {
-        Self { pattern: vec![] }
+        Self {
+            pattern: Vec::new(),
+        }
     }
     pub fn absorb(self, elements: u32) -> Self {
         assert!(elements <= (u32::MAX >> 1), "can absorb at most 2^31 - 1");
@@ -106,7 +109,7 @@ impl SpongeBuilder {
     fn encode_iv<F: Field>(pattern: &[Pattern]) -> Vec<F> {
         let base_field_bits = <F::BasePrimeField as PrimeField>::MODULUS_BIT_SIZE;
         let bits = base_field_bits + F::extension_degree() as u32;
-        let mut elems = vec![];
+        let mut elems = Vec::new();
         for phase in pattern.iter() {
             let msb: u32 = 0x80_00_00_00;
             let int = match phase {
@@ -325,6 +328,7 @@ pub trait Duplex<F: Field> {
     fn squeeze(&mut self) -> Result<F, Error>;
     fn finish(self) -> Result<(), Error>;
     /// Prints the state, for debugging purposes.
+    #[cfg(test)]
     fn print(&self);
 }
 
@@ -345,7 +349,7 @@ where
         let state = init.state;
         Sponge {
             pattern,
-            running_pattern: vec![],
+            running_pattern: Vec::new(),
             permutation,
             state,
             absorb_pos: 0,
@@ -365,8 +369,10 @@ where
     fn finish(self) -> Result<(), Error> {
         Sponge::finish(self)
     }
+
+    #[cfg(test)]
     fn print(&self) {
-        println!("s: {:?}", self.state);
+        std::println!("s: {:?}", self.state);
     }
 }
 
@@ -399,6 +405,7 @@ impl<F: Field> Duplex<F> for UnsafeSponge<F> {
         self.inner.finish()
     }
 
+    #[cfg(test)]
     fn print(&self) {
         self.inner.print();
     }

@@ -1,11 +1,11 @@
-use crate::SumcheckMessage;
-use crate::barycentric_eval::BarycentricWeights;
+use crate::{SumcheckMessage, barycentric_eval::BarycentricWeights};
+use alloc::vec::Vec;
 use ark_ff::Field;
-use std::ops::Mul;
+use core::ops::Mul;
 
 impl<F: Field> SumcheckMessage<F> {
     pub fn zero(degree: usize) -> Self {
-        Self(vec![F::ZERO; degree + 1])
+        Self(alloc::vec![F::ZERO; degree + 1])
     }
 
     pub(crate) fn new_degree_n(eval_at_0: F, eval_at_1: F, degree: usize) -> Self {

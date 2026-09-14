@@ -1,5 +1,10 @@
 //! New sumcheck implementation based on the new Reduction.
 
+#![no_std]
+extern crate alloc;
+#[cfg(test)]
+extern crate std;
+
 mod barycentric_eval;
 pub(crate) mod degree;
 pub mod eq;
@@ -25,13 +30,14 @@ pub use prove::ProverKey;
 pub use reduction::{SumcheckError, SumcheckReduction, SumcheckVerifierKey};
 pub use relation::{SumcheckInstance, SumcheckRelation};
 
+use alloc::vec::Vec;
+use ark_ff::Field;
+use core::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+
 #[derive(Clone, Debug)]
 /// A message of the sumcheck protocol, represented as
 /// the evaluations of polynomial over the domain 0..d.
 pub struct SumcheckMessage<F>(Vec<F>);
-
-use ark_ff::Field;
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 pub trait Var<F: Field>:
     Sized

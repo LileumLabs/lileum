@@ -3,11 +3,9 @@ use crate::{
     constraint_system::{ConstraintSystem, Gate, Val, WitnessReader},
     matrix::Matrix,
 };
+use alloc::{collections::BTreeSet, vec::Vec};
 use ark_ff::Field;
-use std::{
-    collections::BTreeSet,
-    ops::{Add, Index, Mul, Sub},
-};
+use core::ops::{Add, Index, Mul, Sub};
 
 #[derive(Clone, Copy, Debug)]
 /// `Field` wrapper which implements `Var`.
@@ -119,7 +117,7 @@ impl<'a, F: Field, const IO: usize> WitnessReader<'a, F, Fi<F>> for VarReader<IO
 
 impl<F: Field, const MAX_IO: usize> WitnessGenerator<F, MAX_IO> {
     fn new(check: bool) -> Self {
-        let witness = vec![];
+        let witness = Vec::new();
         Self {
             witness,
             check,
@@ -164,7 +162,7 @@ pub struct LinearCombinations<const N: usize> {
 
 impl<const N: usize> LinearCombinations<N> {
     pub fn from_tables(matrices: [&Matrix; N]) -> Self {
-        let mut combinations = vec![];
+        let mut combinations = Vec::new();
         let len = *matrices.map(Matrix::len).iter().max().unwrap();
 
         for i in 0..len {
