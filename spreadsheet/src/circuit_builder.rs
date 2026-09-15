@@ -6,6 +6,12 @@ use ark_ff::Field;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Address(usize, usize);
 
+impl Address {
+    pub(crate) fn new(row: u32, col: u32) -> Self {
+        Self(row as usize, col as usize)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Range(Address, Address);
 
@@ -16,6 +22,10 @@ impl From<Address> for Range {
 }
 
 impl Range {
+    pub fn new(from: Address, to: Address) -> Self {
+        Self(from, to)
+    }
+
     pub fn is_subset_of(&self, other: &Self) -> bool {
         self.0.0 >= other.0.0
             && self.0.1 >= other.0.1

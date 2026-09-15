@@ -1,0 +1,31 @@
+use core::str::FromStr;
+use crate::circuit_builder::{Address, Range};
+
+grammar;
+
+// NOTE: Some descriptions are simplified.
+
+Letter: u8 = <c:r"[a-zA-Z]"> => c.as_bytes()[0].to_ascii_uppercase() - b'A' + 1;
+
+A1RelativeColum: u32 = {
+    <n1: Letter> => n1 as u32 - 1,
+    <n1: Letter> <n2: Letter> => n1 as u32 * 26 + n2 as u32 - 1,
+} 
+
+A1Column: u32 = {
+    A1RelativeColum,
+    "$" <A1RelativeColum>
+}
+
+RowDigitSequence: u32 = <s:r"[1-9][0-9]{0,4}"> => u32::from_str(s).unwrap();
+
+A1RelativeRow: u32 = RowDigitSequence;
+
+A1Row: u32 = {
+    A1RelativeRow,
+    "$" <A1RelativeRow>
+}
+
+pub A1Cell: Address = <A1Column> <A1Row> => Address::new(<>);
+
+pub A1Range: Range = <A1Cell> ":" <A1Cell> => Range::new(<>);
