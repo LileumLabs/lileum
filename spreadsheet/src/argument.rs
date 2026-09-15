@@ -14,7 +14,7 @@ use commit::{
 };
 use core::{fmt::Debug, marker::PhantomData};
 use reduction::{
-    Argument, GuardedProof, ProverOutput, Reduction, Relation, TranscriptBuilder,
+    Argument, GuardedProof, NoError, ProverOutput, Reduction, Relation, TranscriptBuilder,
     VerifierTranscript,
 };
 use sponge::sponge::Duplex;
@@ -210,7 +210,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
 
     type Error = ();
 
-    type Params = ();
+    type Params = NoError;
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -283,7 +283,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
     }
 
     fn params(_key: &Self::VerifierKey) -> Self::Params {
-        todo!()
+        panic!("Can't be called");
     }
 
     fn prove<S: Duplex<F>>(
