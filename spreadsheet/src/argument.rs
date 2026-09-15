@@ -139,6 +139,7 @@ where
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct SpreadsheetStructure<C> {
     data_table_size: usize,
     gates: Vec<WiredGate>,
@@ -247,8 +248,38 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
         }
     }
 
-    fn key_pair(_structure: &SpreadsheetStructure<C>) -> (Self::VerifierKey, Self::ProverKey) {
-        todo!()
+    fn key_pair(structure: &SpreadsheetStructure<C>) -> (Self::VerifierKey, Self::ProverKey) {
+        let mles = Rc::new(structure.sumcheck_structure());
+        let builder1 = ();
+        let builder2 = structure.pcs.clone();
+        let oracle = Oracle::<F, C>::new((), mles, builder1, builder2);
+
+        let (sumcheck_verifier, sumcheck_prover) = ZerocheckSumcheckReduction::key_pair(&oracle);
+
+        let zerocheck_key = sumcheck_verifier.vars();
+
+        let composite = CompositeOracle::verifier_key(&oracle);
+
+        let (pcs_verifier, pcs_prover) = C::key_pair(&structure.pcs);
+
+        let verifier_key = VerifierKey {
+            zerocheck_key,
+            sumcheck: sumcheck_verifier,
+            composite: composite.clone(),
+            pcs: pcs_verifier,
+        };
+
+        let (_, committed) = CommittedOracle::key_pair(&oracle.inner_oracles().1);
+
+        let prover_key = ProverKey {
+            strucuture: structure.clone(),
+            sumcheck: sumcheck_prover,
+            composite,
+            committed,
+            pcs: pcs_prover,
+        };
+
+        (verifier_key, prover_key)
     }
 
     fn params(_key: &Self::VerifierKey) -> Self::Params {
