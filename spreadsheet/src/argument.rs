@@ -19,7 +19,7 @@ use reduction::{
 };
 use sponge::sponge::Duplex;
 use sumcheck::{
-    MultiPoint, OracleQueryInstance, SumcheckMessage, SumcheckVerifierKey, Var,
+    MultiPoint, OracleQueryInstance, SumcheckError, SumcheckMessage, SumcheckVerifierKey, Var,
     evals::{Evals, EvalsCore},
     oracles::{
         SumcheckFunction,
@@ -201,6 +201,14 @@ pub struct ProverKey<F: Field, C: CommitmentScheme<F>> {
     pcs: C::ProverKey,
 }
 
+#[derive(Clone, Debug)]
+pub enum SpreadsheetError<F: Field, C: CommitmentScheme<F>> {
+    Sumcheck(SumcheckError),
+    CompositeOracle,
+    CoreOracle,
+    Pcs(C::Error),
+}
+
 impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRelation<F, C> {
     type ProverKey = ProverKey<F, C>;
 
@@ -208,7 +216,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
 
     type Proof = Proof<F, C>;
 
-    type Error = ();
+    type Error = SpreadsheetError<F, C>;
 
     type Params = NoError;
 
@@ -366,22 +374,20 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
         proof: GuardedProof<Self::Proof>,
         transcript: &mut VerifierTranscript<F, S>,
     ) -> Result<(), Self::Error> {
-        let (trace_commit, []) = transcript
-            .receive_message(|proof| proof.trace_committment.clone(), &proof, &())
-            .unwrap();
+        let Ok((trace_commit, [])) =
+            transcript.receive_message(|proof| proof.trace_committment.clone(), &proof, &());
 
         let oracle_instance = CompositeOracleInstance {
             oracle1_instance: Self::core_oracle_instance(key.sumcheck.vars()),
             oracle2_instance: Self::committed_oracle_instance(instance, trace_commit),
         };
         let instance = oracle_instance;
-        let instance = ZerocheckReduction::verify(
+        let Ok(instance) = ZerocheckReduction::verify(
             &key.zerocheck_key,
             instance,
             GuardedProof::empty(),
             transcript,
-        )
-        .unwrap();
+        );
 
         let instance: OracleQueryInstance<F, _> = ZerocheckSumcheckReduction::verify(
             &key.sumcheck,
@@ -389,7 +395,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
             proof.clone().map(|proof| proof.sumcheck),
             transcript,
         )
-        .unwrap();
+        .map_err(SpreadsheetError::Sumcheck)?;
 
         let (core_instance, committed_instance) = CompositeOracle::verify(
             &key.composite,
@@ -397,7 +403,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
             proof.clone().map(|proof| proof.composite),
             transcript,
         )
-        .unwrap();
+        .map_err(|_| SpreadsheetError::CompositeOracle)?;
 
         let () = CoreOracle::verify(
             key.composite.p1_key(),
@@ -405,15 +411,14 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
             GuardedProof::empty(),
             transcript,
         )
-        .unwrap();
+        .map_err(|_| SpreadsheetError::CoreOracle)?;
 
-        let open_instance = CommittedOracle::verify(
+        let Ok(open_instance) = CommittedOracle::verify(
             key.composite.p2_key(),
             committed_instance,
             GuardedProof::empty(),
             transcript,
-        )
-        .unwrap();
+        );
 
         let () = C::verify(
             &key.pcs,
@@ -421,7 +426,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
             proof.map(|proof| proof.open_proof),
             transcript,
         )
-        .unwrap();
+        .map_err(SpreadsheetError::Pcs)?;
         Ok(())
     }
 }
