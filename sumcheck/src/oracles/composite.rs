@@ -12,7 +12,7 @@ use crate::{
 };
 use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
-use ark_serialize::CanonicalSerialize;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use core::{fmt::Debug, marker::PhantomData, panic};
 use reduction::{
     GuardedProof, Message, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
@@ -411,9 +411,9 @@ where
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
 /// All evaluations provided by the prover to the 2 oracles.
-pub struct ProverEvals<F>(Vec<F>);
+pub struct ProverEvals<F: Field>(Vec<F>);
 
 impl<F: Field> Message<F> for ProverEvals<F> {
     type Params = usize;

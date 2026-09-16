@@ -24,6 +24,7 @@ pub mod zerocheck;
 // mod symbolic;
 pub mod utils;
 
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 pub use oracles::OracleQueryInstance;
 pub use point::MultiPoint;
 pub use prove::ProverKey;
@@ -34,10 +35,10 @@ use alloc::vec::Vec;
 use ark_ff::Field;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
 /// A message of the sumcheck protocol, represented as
 /// the evaluations of polynomial over the domain 0..d.
-pub struct SumcheckMessage<F>(Vec<F>);
+pub struct SumcheckMessage<F: Field>(Vec<F>);
 
 pub trait Var<F: Field>:
     Sized

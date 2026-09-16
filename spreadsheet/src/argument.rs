@@ -7,7 +7,7 @@ use alloc::{
     vec::{IntoIter, Vec},
 };
 use ark_ff::Field;
-use ark_serialize::CanonicalSerialize;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Valid};
 use commit::{
     CommitmentScheme,
     oracle::{CommittedNature, CommittedOracle, CommittedOracleInstance},
@@ -183,6 +183,88 @@ pub struct Proof<F: Field, C: CommitmentScheme<F>> {
     sumcheck: Vec<SumcheckMessage<F>>,
     composite: ProverEvals<F>,
     open_proof: C::Proof,
+}
+
+impl<F: Field, C: CommitmentScheme<F>> Valid for Proof<F, C>
+where
+    C::Commitment: CanonicalDeserialize,
+    C::Proof: CanonicalDeserialize,
+{
+    fn check(&self) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            trace_committment,
+            sumcheck,
+            composite,
+            open_proof,
+        } = self;
+        trace_committment.check()?;
+        sumcheck.check()?;
+        composite.check()?;
+        open_proof.check()
+    }
+}
+
+impl<F: Field, C: CommitmentScheme<F>> CanonicalDeserialize for Proof<F, C>
+where
+    C::Commitment: CanonicalDeserialize,
+    C::Proof: CanonicalDeserialize,
+{
+    fn deserialize_with_mode<R: ark_serialize::Read>(
+        mut reader: R,
+        compress: ark_serialize::Compress,
+        validate: ark_serialize::Validate,
+    ) -> Result<Self, ark_serialize::SerializationError> {
+        let trace_committment =
+            CanonicalDeserialize::deserialize_with_mode(&mut reader, compress, validate)?;
+        let sumcheck =
+            CanonicalDeserialize::deserialize_with_mode(&mut reader, compress, validate)?;
+        let composite =
+            CanonicalDeserialize::deserialize_with_mode(&mut reader, compress, validate)?;
+        let open_proof = CanonicalDeserialize::deserialize_with_mode(reader, compress, validate)?;
+
+        Ok(Proof {
+            trace_committment,
+            sumcheck,
+            composite,
+            open_proof,
+        })
+    }
+}
+
+impl<F: Field, C: CommitmentScheme<F>> CanonicalSerialize for Proof<F, C>
+where
+    C::Commitment: CanonicalSerialize,
+    C::Proof: CanonicalSerialize,
+{
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        mut writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        let Self {
+            trace_committment,
+            sumcheck,
+            composite,
+            open_proof,
+        } = self;
+        trace_committment.serialize_with_mode(&mut writer, compress)?;
+        sumcheck.serialize_with_mode(&mut writer, compress)?;
+        composite.serialize_with_mode(&mut writer, compress)?;
+        open_proof.serialize_with_mode(writer, compress)
+    }
+
+    fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+        let Self {
+            trace_committment,
+            sumcheck,
+            composite,
+            open_proof,
+        } = self;
+        trace_committment.serialized_size(compress)
+            + sumcheck.serialized_size(compress)
+            + composite.serialized_size(compress)
+            + open_proof.serialized_size(compress)
+    }
 }
 
 #[derive(CanonicalSerialize)]
