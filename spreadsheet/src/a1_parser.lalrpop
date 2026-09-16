@@ -1,5 +1,6 @@
 use core::str::FromStr;
-use crate::circuit_builder::{Address, Area};
+use alloc::string::String;
+use crate::circuit_builder::{Address, Area, Range};
 
 grammar;
 
@@ -21,6 +22,10 @@ RowDigitSequence: u32 = <s:r"[1-9][0-9]{0,4}"> => u32::from_str(s).unwrap();
 
 A1RelativeRow: u32 = RowDigitSequence;
 
+// Simplified char.
+// https://www.w3.org/TR/2008/REC-xml-20081126/#charsets
+Char: String = <"[a-zA-Z0-1]*"> => String::from(<>);
+
 A1Row: u32 = {
     A1RelativeRow,
     "$" <A1RelativeRow>
@@ -29,3 +34,19 @@ A1Row: u32 = {
 pub A1Cell: Address = <A1Column> <A1Row> => Address::new(<>);
 
 pub A1Area: Area = <A1Cell> ":" <A1Cell> => Area::new(<>);
+
+A1Reference: Area = A1Area;
+
+ExternalCellReference: Range = SingleSheetReference;
+
+SingleSheetReference: Range = <SingleSheetPrefix> <A1Reference> => Range::new(<>);
+
+SingleSheetPrefix: String = <SingleSheet> "!";
+
+SingleSheet: String = SheetName;
+
+SheetName: String = SheetNameCharacters;
+
+SheetNameCharacters: String = Char;
+
+pub CellReference: Range = ExternalCellReference;

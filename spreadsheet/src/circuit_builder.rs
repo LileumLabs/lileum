@@ -2,7 +2,7 @@ use crate::{
     SpreadsheetKey,
     gates::{self, BinaryGate, GateType},
 };
-use alloc::{collections::btree_map::BTreeMap, vec::Vec};
+use alloc::{collections::btree_map::BTreeMap, string::String, vec::Vec};
 use ark_ff::Field;
 
 /// (row, column)
@@ -61,6 +61,18 @@ impl Area {
         assert!(Area::from(*address).is_subset_of(self));
         let Address(row, colum) = address;
         row * self.colums() + colum
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Range {
+    worksheet: String,
+    area: Area,
+}
+
+impl Range {
+    pub fn new(worksheet: String, area: Area) -> Self {
+        Self { worksheet, area }
     }
 }
 
