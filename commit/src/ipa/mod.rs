@@ -2,7 +2,7 @@ use crate::ipa::vector_utils::{fold_basis, fold_vec};
 use alloc::vec::Vec;
 use ark_ec::{AffineRepr, CurveGroup, Group, VariableBaseMSM};
 use ark_ff::Field;
-use ark_serialize::CanonicalSerialize;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use hash_to_curve::CurveMap;
 use rand::{SeedableRng, rngs::StdRng};
 use reduction::{
@@ -76,8 +76,8 @@ impl<F, G: VariableBaseMSM<ScalarField = F>> Round<F, G> {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Proof<F, G> {
+#[derive(Debug, Clone, CanonicalSerialize, CanonicalDeserialize)]
+pub struct Proof<F: Field, G: CurveGroup> {
     messages: Vec<(G, G)>,
     a: F,
 }
