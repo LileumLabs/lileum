@@ -1,4 +1,7 @@
-use crate::gates::{self, BinaryGate, GateType};
+use crate::{
+    SpreadsheetKey,
+    gates::{self, BinaryGate, GateType},
+};
 use alloc::{collections::btree_map::BTreeMap, vec::Vec};
 use ark_ff::Field;
 
@@ -116,12 +119,12 @@ pub struct Formula {
     input_location: DataOrTrace,
 }
 
-pub struct SpreadsheetStructure {
+pub struct SpreadsheetBuilder {
     input_range: Range,
     formulas: BTreeMap<Address, Formula>,
 }
 
-impl SpreadsheetStructure {
+impl SpreadsheetBuilder {
     pub fn new(input_range: Range) -> Self {
         Self {
             input_range,
@@ -139,7 +142,7 @@ impl SpreadsheetStructure {
         self.formulas.clone().into_iter().collect()
     }
 
-    pub fn circuit<F: Field>(&self, selected_assertions: Vec<Address>) -> Vec<WiredGate> {
+    pub fn circuit<F: Field>(&self, selected_assertions: Vec<Address>) -> (Range, Vec<WiredGate>) {
         // For now we take all of them, but we should filter out
         // unreachable formulas.
         let _ = selected_assertions;
@@ -154,7 +157,11 @@ impl SpreadsheetStructure {
                 assert!(old.is_none());
             }
         }
-        builder.gates
+        (self.input_range, builder.gates)
+    }
+
+    pub fn keys(&self) -> SpreadsheetKey {
+        SpreadsheetKey::new(self)
     }
 }
 
@@ -251,6 +258,14 @@ impl CircuitBuilder {
 }
 
 impl Formula {
+    pub fn new(ty: FormulaType, input: Range, input_location: DataOrTrace) -> Self {
+        Self {
+            ty,
+            input,
+            input_location,
+        }
+    }
+
     fn implement<F: Field>(&self, builder: &mut CircuitBuilder) -> Option<Var> {
         let Self {
             ty,

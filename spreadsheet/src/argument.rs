@@ -14,7 +14,7 @@ use commit::{
 };
 use core::{fmt::Debug, marker::PhantomData};
 use reduction::{
-    Argument, GuardedProof, NoError, ProverOutput, Reduction, Relation, TranscriptBuilder,
+    Argument, GuardedProof, ProverOutput, Reduction, Relation, TranscriptBuilder,
     VerifierTranscript,
 };
 use sponge::sponge::Duplex;
@@ -218,7 +218,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
 
     type Error = SpreadsheetError<F, C>;
 
-    type Params = NoError;
+    type Params = ();
 
     fn transcript_pattern(
         key: &Self::VerifierKey,
@@ -290,9 +290,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
         (verifier_key, prover_key)
     }
 
-    fn params(_key: &Self::VerifierKey) -> Self::Params {
-        panic!("Can't be called");
-    }
+    fn params(_: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,
@@ -461,6 +459,14 @@ impl<F: Field, C: CommitmentScheme<F>> ProverKey<F, C> {
 }
 
 impl<C> SpreadsheetStructure<C> {
+    pub fn new(data_table_size: usize, gates: Vec<WiredGate>, pcs: C) -> Self {
+        Self {
+            data_table_size,
+            gates,
+            pcs,
+        }
+    }
+
     fn sumcheck_structure<F: Field>(&self) -> Vec<Mles<F>> {
         let mut mles = Vec::with_capacity(self.gates.len().next_power_of_two());
 

@@ -7,11 +7,13 @@ edition = "2024"
 ark-ff = "0.4"
 ark-serialize = { version = "0.4", default-features = false, features = ["derive"] }
 lalrpop-util = { version = "0.23", features = ["lexer", "unicode"] }
+ark-vesta = "0.4"
 reduction = { workspace = true }
 sumcheck = { workspace = true }
 sumcheck-derive = { workspace = true }
-commit = { workspace = true }
+commit = { workspace = true, features = ["ipa"] }
 sponge = { workspace = true }
+hash-to-curve = { workspace = true }
 
 [build-dependencies]
 lalrpop = "0.23"
