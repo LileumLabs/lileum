@@ -13,5 +13,5 @@ pub mod parsers {
     pub use a1_parser::{A1CellParser, A1RangeParser};
 }
 
-pub use argument::SpreadsheetRelation;
+pub use argument::{Proof, SpreadsheetRelation};
 pub use key::SpreadsheetKey;
