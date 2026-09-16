@@ -16,15 +16,15 @@ impl Address {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Range(Address, Address);
+pub struct Area(Address, Address);
 
-impl From<Address> for Range {
+impl From<Address> for Area {
     fn from(value: Address) -> Self {
-        Range(value, value)
+        Area(value, value)
     }
 }
 
-impl Range {
+impl Area {
     pub fn new(from: Address, to: Address) -> Self {
         Self(from, to)
     }
@@ -50,15 +50,15 @@ impl Range {
         self.rows() * self.colums()
     }
 
-    pub fn iter(&self) -> RangeIter<'_> {
-        RangeIter {
+    pub fn iter(&self) -> AreaIter<'_> {
+        AreaIter {
             current: 0,
-            range: self,
+            area: self,
         }
     }
 
     fn flat_index(&self, address: &Address) -> usize {
-        assert!(Range::from(*address).is_subset_of(self));
+        assert!(Area::from(*address).is_subset_of(self));
         let Address(row, colum) = address;
         row * self.colums() + colum
     }
@@ -74,25 +74,25 @@ impl core::ops::Add<&Self> for Address {
     }
 }
 
-pub struct RangeIter<'a> {
+pub struct AreaIter<'a> {
     current: usize,
-    range: &'a Range,
+    area: &'a Area,
 }
 
-impl<'a> Iterator for RangeIter<'a> {
+impl<'a> Iterator for AreaIter<'a> {
     type Item = Address;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.range.cells() >= self.current {
+        if self.area.cells() >= self.current {
             None
         } else {
-            let row = self.current / self.range.colums();
-            let column = self.current % self.range.colums();
+            let row = self.current / self.area.colums();
+            let column = self.current % self.area.colums();
             self.current += 1;
             // Adress relative to the start of the range.
             let relative_address = Address(row, column);
             // Make absolute.
-            Some(relative_address + &self.range.0)
+            Some(relative_address + &self.area.0)
         }
     }
 }
@@ -115,19 +115,19 @@ pub enum FormulaType {
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Formula {
     ty: FormulaType,
-    input: Range,
+    input: Area,
     input_location: DataOrTrace,
 }
 
 pub struct SpreadsheetBuilder {
-    input_range: Range,
+    input_area: Area,
     formulas: BTreeMap<Address, Formula>,
 }
 
 impl SpreadsheetBuilder {
-    pub fn new(input_range: Range) -> Self {
+    pub fn new(input_area: Area) -> Self {
         Self {
-            input_range,
+            input_area,
             formulas: BTreeMap::new(),
         }
     }
@@ -142,14 +142,14 @@ impl SpreadsheetBuilder {
         self.formulas.clone().into_iter().collect()
     }
 
-    pub fn circuit<F: Field>(&self, selected_assertions: Vec<Address>) -> (Range, Vec<WiredGate>) {
+    pub fn circuit<F: Field>(&self, selected_assertions: Vec<Address>) -> (Area, Vec<WiredGate>) {
         // For now we take all of them, but we should filter out
         // unreachable formulas.
         let _ = selected_assertions;
 
         let formulas = self.sort_formulas();
 
-        let mut builder = CircuitBuilder::new(self.input_range);
+        let mut builder = CircuitBuilder::new(self.input_area);
         for (addres, formula) in formulas {
             let val = formula.implement::<F>(&mut builder);
             if let Some(val) = val {
@@ -157,7 +157,7 @@ impl SpreadsheetBuilder {
                 assert!(old.is_none());
             }
         }
-        (self.input_range, builder.gates)
+        (self.input_area, builder.gates)
     }
 
     pub fn keys(&self) -> SpreadsheetKey {
@@ -218,7 +218,7 @@ impl WiredGate {
 
 #[derive(Clone, Debug, Default)]
 struct CircuitBuilder {
-    input_range: Range,
+    input_area: Area,
     gates: Vec<WiredGate>,
     next_var: usize,
     /// Maps cells to the variable corresponding to evaluation of the
@@ -227,9 +227,9 @@ struct CircuitBuilder {
 }
 
 impl CircuitBuilder {
-    fn new(input_range: Range) -> Self {
+    fn new(input_area: Area) -> Self {
         Self {
-            input_range,
+            input_area,
             ..Default::default()
         }
     }
@@ -251,14 +251,14 @@ impl CircuitBuilder {
 
     fn read_cell(&self, address: &Address, location: DataOrTrace) -> Var {
         match location {
-            DataOrTrace::Data => Var(self.input_range.flat_index(address), location),
+            DataOrTrace::Data => Var(self.input_area.flat_index(address), location),
             DataOrTrace::Trace => *self.address_map.get(address).unwrap(),
         }
     }
 }
 
 impl Formula {
-    pub fn new(ty: FormulaType, input: Range, input_location: DataOrTrace) -> Self {
+    pub fn new(ty: FormulaType, input: Area, input_location: DataOrTrace) -> Self {
         Self {
             ty,
             input,
@@ -294,11 +294,11 @@ impl Formula {
 
     fn chain_gates<F: Field, G: BinaryGate<F>>(
         builder: &mut CircuitBuilder,
-        range: &Range,
+        area: &Area,
         location: DataOrTrace,
     ) -> Var {
-        let mut range = range.iter();
-        let first_two = (range.next(), range.next());
+        let mut area = area.iter();
+        let first_two = (area.next(), area.next());
 
         match first_two {
             // forbid for now, maybe allow in the future.
@@ -309,7 +309,7 @@ impl Formula {
                 let a = builder.read_cell(&a, location);
                 let b = builder.read_cell(&b, location);
                 let c = builder.add_binary_gate::<F, G>(a, b);
-                range.fold(c, |a, b| {
+                area.fold(c, |a, b| {
                     let b = builder.read_cell(&b, location);
                     builder.add_binary_gate::<F, G>(a, b)
                 })

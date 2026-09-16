@@ -10,7 +10,7 @@ mod key;
 
 pub mod parsers {
     lalrpop_util::lalrpop_mod!(a1_parser);
-    pub use a1_parser::{A1CellParser, A1RangeParser};
+    pub use a1_parser::{A1AreaParser, A1CellParser};
 }
 
 pub use argument::{Proof, SpreadsheetRelation};

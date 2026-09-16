@@ -1,5 +1,5 @@
 use core::str::FromStr;
-use crate::circuit_builder::{Address, Range};
+use crate::circuit_builder::{Address, Area};
 
 grammar;
 
@@ -28,4 +28,4 @@ A1Row: u32 = {
 
 pub A1Cell: Address = <A1Column> <A1Row> => Address::new(<>);
 
-pub A1Range: Range = <A1Cell> ":" <A1Cell> => Range::new(<>);
+pub A1Area: Area = <A1Cell> ":" <A1Cell> => Area::new(<>);
