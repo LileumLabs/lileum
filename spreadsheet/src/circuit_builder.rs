@@ -75,8 +75,8 @@ impl Area {
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Range {
-    worksheet: String,
-    area: Area,
+    pub worksheet: String,
+    pub area: Area,
 }
 
 impl Range {
