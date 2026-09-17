@@ -24,6 +24,15 @@ impl From<Address> for Area {
     }
 }
 
+impl TryInto<Address> for Area {
+    type Error = ();
+
+    fn try_into(self) -> Result<Address, Self::Error> {
+        let Self(from, to) = self;
+        if from == to { Ok(from) } else { Err(()) }
+    }
+}
+
 impl Area {
     pub fn new(from: Address, to: Address) -> Self {
         Self(from, to)
