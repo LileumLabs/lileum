@@ -1,52 +1,135 @@
-use core::str::FromStr;
-use alloc::string::String;
 use crate::circuit_builder::{Address, Area, Range};
+use crate::parsing::{compose_column, compose_decimal, digit, Arr2, Arr3, Arr4};
+use alloc::string::String;
+use alloc::vec::Vec;
 
 grammar;
 
-// NOTE: Some descriptions are simplified.
-
-Letter: u8 = <c:r"[a-zA-Z]"> => c.as_bytes()[0].to_ascii_uppercase() - b'A' + 1;
-
-A1RelativeColum: u32 = {
-    <n1: Letter> => n1 as u32 - 1,
-    <n1: Letter> <n2: Letter> => n1 as u32 * 26 + n2 as u32 - 1,
-} 
-
-A1Column: u32 = {
-    A1RelativeColum,
-    "$" <A1RelativeColum>
+match {
+    r"[a-dA-D]",
+    r"\s*" => { },
+    _
+} else {
+    r"[a-eA-E]",
+    r"[0-9]"
+} else {
+    r"[a-wA-W]",
+} else {
+    r"[a-zA-Z]",
+} else {
+    //https://www.w3.org/TR/2008/REC-xml-20081126/#charsets
+    r"[\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\x{10000}-\x{10FFFF}]" => Char
 }
 
-RowDigitSequence: u32 = <s:r"[1-9][0-9]{0,4}"> => u32::from_str(s).unwrap();
-
-A1RelativeRow: u32 = RowDigitSequence;
-
-// Simplified char.
-// https://www.w3.org/TR/2008/REC-xml-20081126/#charsets
-Char: String = <"[a-zA-Z0-1]*"> => String::from(<>);
-
-A1Row: u32 = {
-    A1RelativeRow,
-    "$" <A1RelativeRow>
+Upto2<T>: Vec<T> = {
+    <T?> => <>.into_iter().collect(),
+    <T> <T> => [<>].to_vec(),
 }
+Upto3<T>: Vec<T> = <mut t: Upto2<T>> <h:T?> => {t.extend(h); t };
+Upto4<T>: Vec<T> = <mut t: Upto3<T>> <h:T?> => {t.extend(h); t };
+Upto5<T>: Vec<T> = <mut t: Upto4<T>> <h:T?> => {t.extend(h); t };
+
+Exactly2<T>: Arr2<T> = <T> <T> => [<>];
+Exactly3<T>: Arr3<T> = <T> <T> <T> => [<>];
+Exactly4<T>: Arr4<T> = <T> <T> <T> <T> => [<>];
+
+pub AtoD: char = <r"[a-dA-D]"> => <>.chars().next().unwrap();
+
+pub AtoE: char = {
+    AtoD,
+    <r"[a-eA-E]"> => <>.chars().next().unwrap(),
+}
+
+pub AtoW: char = {
+    <r"[a-wA-W]"> => <>.chars().next().unwrap(),
+    AtoE
+}
+
+pub Letter: char = {
+    <r"[a-zA-Z]"> => <>.chars().next().unwrap(),
+    AtoW
+}
+
+A1RelativeColumn: u32 = {
+    // These 2 are what its supposed to be, but I couldn't get them to work.
+    //<a: Letter> <b: Letter?>  => if let Some(b) = b { compose_column([a,b])} else {compose_column([a])},
+    //<AtoW> <Letter> <Letter>    => compose_column([<>]),
+    // Using these 3 for now. Accepts a bit more than supposed.
+    <Letter>                    => compose_column([<>]),
+    <Letter> <Letter>           => compose_column([<>]),
+    <Letter> <Letter> <Letter>  => compose_column([<>]),
+    "X" <AtoE> <Letter>       => compose_column(['X',<>]),
+    "XF" <AtoD>               => compose_column(['X','F',<>])
+}
+
+A1AbsoluteColumn: u32 = "$" <A1RelativeColumn>;
+
+pub A1Column: u32 = { A1RelativeColumn, A1AbsoluteColumn};
+
+NonzeroDecimalDigit: u8 = <x: r"[1-9]"> => x.as_bytes()[0] - b'0';
+
+DecimalDigit: u8 = {
+    <x: r"[0-9]"> => x.as_bytes()[0] - b'0',
+    NonzeroDecimalDigit
+}
+
+// row-digit-sequence = 
+// nonzero-decimal-digit *5decimal-digit /  
+// "10" %x30-33 4decimal-digit / 
+// "104" %x30-37 3decimal-digit / 
+// "1048" %x30-34 2decimal-digit / 
+// "10485" %x30-36 decimal-digit / 
+// "104857" %x30-36
+pub RowDigitSequence: u32 = {
+    <a:NonzeroDecimalDigit> <b:Upto2<DecimalDigit>> => compose_decimal([a].into_iter().chain(b)),
+    "10" <a:"r[0-3]"> <b:Exactly4<DecimalDigit>> => compose_decimal([1,0,digit(a)].into_iter().chain(b)),
+    "104" <a:"r[0-7]"> <b:Exactly3<DecimalDigit>> => compose_decimal([1,0,4,digit(a)].into_iter().chain(b)),
+    "1048" <a:"r[0-4]"> <b:Exactly2<DecimalDigit>> => compose_decimal([1,0,4,8,digit(a)].into_iter().chain(b)),
+    "10485" <a:"r[0-6]"> <b:DecimalDigit> => compose_decimal([1,0,4,8,5,digit(a),b].into_iter()),
+    "104857" <a:"r[0-6]"> => compose_decimal([1,0,4,8,5,7,digit(a)].into_iter())
+}
+
+pub A1RelativeRow: u32 = RowDigitSequence;
+
+pub A1AbsoluteRow: u32 = "$" <A1RelativeRow>;
+
+pub A1Row: u32 = {A1RelativeRow, A1AbsoluteRow};
 
 pub A1Cell: Address = <A1Column> <A1Row> => Address::new(<>);
 
 pub A1Area: Area = <A1Cell> ":" <A1Cell> => Area::new(<>);
 
-A1Reference: Area = A1Area;
+pub A1Reference: Area = {
+    <A1Column> ":" <A1Column> => panic!("whole column range unsupported"),
+    <A1Row> ":" <A1Row>       => panic!("whole row range unsupported"),
+    <x:A1Cell>                => Area::new(x,x),
+    <A1Area>                  => <>
+}
 
-ExternalCellReference: Range = SingleSheetReference;
+LocalCellReference: Area = A1Reference;
 
-SingleSheetReference: Range = <SingleSheetPrefix> <A1Reference> => Range::new(<>);
+pub Character: char = {
+    <c:Char> => c.chars().next().unwrap(),
+    Letter,
+    <DecimalDigit> => (<> + b'0') as char
+}
 
-SingleSheetPrefix: String = <SingleSheet> "!";
+SheetNameCharacter: char = Character;
 
-SingleSheet: String = SheetName;
+SheetNameCharacters: String = <chars: SheetNameCharacter*> => chars.into_iter().collect();
 
-SheetName: String = SheetNameCharacters;
+pub SheetName: String = SheetNameCharacters;
 
-SheetNameCharacters: String = Char;
+// partial
+pub SingleSheet: String = {
+    SheetName
+}
 
-pub CellReference: Range = ExternalCellReference;
+pub SingleSheetPrefix: String = <SingleSheet> "!";
+
+pub SingleSheetReference: Range = {
+    <SingleSheetPrefix> <A1Reference> => Range::new(<>),
+    <SingleSheetPrefix> "#REF!" => panic!("unsupported")
+}
+
+
