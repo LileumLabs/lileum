@@ -35,14 +35,7 @@ pub type Arr4<T> = [T; 4];
 
 #[test]
 fn parse() {
-    use std::dbg;
     let input = "sheet1!AA2:C33";
-    // let input = "A2:C3";
-    // let input = "22";
-    dbg!(input);
     let parsed = SingleSheetReferenceParser::new().parse(input);
-    // let parsed = A1ReferenceParser::new().parse(input);
-    // let parsed = A1AreaParser::new().parse(input);
-    // let parsed = A1RowParser::new().parse(input);
-    dbg!(parsed);
+    assert!(parsed.is_ok());
 }
