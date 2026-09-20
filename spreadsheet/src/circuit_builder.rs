@@ -47,12 +47,12 @@ impl Area {
 
     pub fn rows(&self) -> usize {
         let Self(from, to) = self;
-        to.0 - from.0
+        to.0 - from.0 + 1
     }
 
     pub fn colums(&self) -> usize {
         let Self(from, to) = self;
-        to.1 - from.1
+        to.1 - from.1 + 1
     }
 
     pub fn cells(&self) -> usize {
