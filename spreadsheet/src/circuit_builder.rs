@@ -127,13 +127,13 @@ pub enum DataOrTrace {
     Trace,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FormulaType {
     Sum,
     Eq,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq)]
 pub struct Formula {
     ty: FormulaType,
     input: Area,
