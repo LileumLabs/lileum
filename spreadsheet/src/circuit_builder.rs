@@ -338,3 +338,53 @@ impl Formula {
         }
     }
 }
+
+#[test]
+fn builder() {
+    let mut builder = SpreadsheetBuilder::new(Area(Address(0, 0), Address(4, 0)));
+    builder.add_formula(
+        Formula {
+            ty: FormulaType::Sum,
+            input: Area::new(Address(0, 0), Address(2, 0)),
+            input_location: DataOrTrace::Data,
+        },
+        Address(1, 0),
+    );
+    builder.add_formula(
+        Formula {
+            ty: FormulaType::Sum,
+            input: Area::new(Address(2, 0), Address(4, 0)),
+            input_location: DataOrTrace::Data,
+        },
+        Address(1, 1),
+    );
+    builder.add_formula(
+        Formula {
+            ty: FormulaType::Eq,
+            input: Area::new(Address(0, 2), Address(1, 2)),
+            input_location: DataOrTrace::Trace,
+        },
+        Address(1, 2),
+    );
+    builder.keys();
+}
+
+#[test]
+fn subset() {
+    let set = Area(Address(0, 2), Address(0, 2));
+    let subset = Area(Address(0, 0), Address(0, 4));
+
+    assert!(subset.is_subset_of(&set));
+}
+
+#[test]
+fn iter_area() {
+    use std::vec;
+    let area = Area(Address(0, 0), Address(2, 0));
+    let mut iter = area.iter();
+    assert_eq!(
+        iter.by_ref().collect::<Vec<Address>>(),
+        vec![Address(0, 0), Address(1, 0), Address(2, 0)]
+    );
+    assert!(iter.next().is_none());
+}
