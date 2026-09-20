@@ -104,7 +104,7 @@ impl<'a> Iterator for AreaIter<'a> {
     type Item = Address;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.area.cells() >= self.current {
+        if self.current >= self.area.cells() {
             None
         } else {
             let row = self.current / self.area.colums();
