@@ -95,7 +95,7 @@ pub A1AbsoluteRow: u32 = "$" <A1RelativeRow>;
 
 pub A1Row: u32 = {A1RelativeRow, A1AbsoluteRow};
 
-pub A1Cell: Address = <A1Column> <A1Row> => Address::new(<>);
+pub A1Cell: Address = <c:A1Column> <r:A1Row> => Address::new(r-1,c);
 
 pub A1Area: Area = <A1Cell> ":" <A1Cell> => Area::new(<>);
 
