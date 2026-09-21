@@ -550,10 +550,16 @@ impl<C> SpreadsheetStructure<C> {
     }
 
     fn sumcheck_structure<F: Field>(&self) -> Vec<Mles<F>> {
-        let mut mles = Vec::with_capacity(self.gates.len().next_power_of_two());
+        let Self {
+            data_table_size,
+            gates,
+            ..
+        } = self;
+        let len = gates.len().max(*data_table_size).next_power_of_two();
+        let mut mles = Vec::with_capacity(len);
 
         let zero: Mles<F> = Mles::default();
-        for gate in &self.gates {
+        for gate in gates {
             let selectors = match gate.gate() {
                 gates::GateType::Add => [F::ONE, F::ZERO],
                 gates::GateType::Eq => [F::ZERO, F::ONE],
@@ -561,7 +567,7 @@ impl<C> SpreadsheetStructure<C> {
             mles.push(Mles { selectors, ..zero });
         }
 
-        mles.resize(self.gates.len().next_power_of_two(), zero);
+        mles.resize(len, zero);
         mles
     }
 }
