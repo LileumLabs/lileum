@@ -342,6 +342,9 @@ impl Formula {
 #[test]
 fn builder() {
     let mut builder = SpreadsheetBuilder::new(Area(Address(0, 0), Address(4, 0)));
+    // Something like:
+    // | ....... | ....... | .......
+    // | SUM(..) | SUM(..) | EQ(B1:B2)
     builder.add_formula(
         Formula {
             ty: FormulaType::Sum,
@@ -361,7 +364,7 @@ fn builder() {
     builder.add_formula(
         Formula {
             ty: FormulaType::Eq,
-            input: Area::new(Address(0, 2), Address(1, 2)),
+            input: Area::new(Address(1, 0), Address(1, 0)),
             input_location: DataOrTrace::Trace,
         },
         Address(1, 2),
