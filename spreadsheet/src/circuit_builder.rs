@@ -371,8 +371,8 @@ fn builder() {
 
 #[test]
 fn subset() {
-    let set = Area(Address(0, 2), Address(0, 2));
-    let subset = Area(Address(0, 0), Address(0, 4));
+    let set = Area(Address(0, 0), Address(0, 4));
+    let subset = Area(Address(0, 2), Address(0, 2));
 
     assert!(subset.is_subset_of(&set));
 }
