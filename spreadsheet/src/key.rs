@@ -6,6 +6,7 @@ use crate::{
 use alloc::vec::Vec;
 use ark_ff::Field;
 use commit::CommitmentScheme;
+use common::power_of_two_vec::Pow2Vec;
 use reduction::{Prover, ProverOutput, Verifier};
 use sponge::sponge::Duplex;
 
@@ -59,11 +60,12 @@ where
     pub fn prover(&self, data: &[F], committment: C::Commitment) -> Proof<F, C> {
         //TODO: Maybe commit to data again and check they match.
         let instance = committment;
+        let witness = Pow2Vec::from_padded_slice(data, F::ZERO);
         let ProverOutput {
             instance: (),
             witness: (),
             proof,
-        } = self.prover.prove(instance, data.to_vec());
+        } = self.prover.prove(instance, witness);
         proof
     }
 

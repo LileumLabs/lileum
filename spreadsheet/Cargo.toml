@@ -12,6 +12,7 @@ reduction = { workspace = true }
 sumcheck = { workspace = true }
 sumcheck-derive = { workspace = true }
 commit = { workspace = true, features = ["ipa"] }
+common = { workspace = true }
 sponge = { workspace = true }
 hash-to-curve = { workspace = true }
 

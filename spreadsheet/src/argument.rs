@@ -12,6 +12,7 @@ use commit::{
     CommitmentScheme,
     oracle::{CommittedNature, CommittedOracle, CommittedOracleInstance},
 };
+use common::power_of_two_vec::Pow2Vec;
 use core::{fmt::Debug, marker::PhantomData};
 use reduction::{
     Argument, GuardedProof, ProverOutput, Reduction, Relation, TranscriptBuilder,
@@ -141,8 +142,7 @@ where
 
 #[derive(Clone, Debug)]
 pub struct SpreadsheetStructure<C> {
-    data_table_size: usize,
-    gates: Vec<WiredGate>,
+    gates: Pow2Vec<WiredGate>,
     pcs: C,
 }
 
@@ -151,24 +151,23 @@ impl<F: Field, C: CommitmentScheme<F>> Relation for SpreadsheetRelation<F, C> {
 
     type Instance = C::Commitment;
 
-    type Witness = Vec<F>;
+    type Witness = Pow2Vec<F>;
 
     fn check(
         structure: &Self::Structure,
         instance: &Self::Instance,
         witness: &Self::Witness,
     ) -> bool {
-        assert!(witness.len().is_power_of_two());
-        if structure.data_table_size != witness.len() {
+        if witness.inner().len() != structure.gates.inner().len() {
             return false;
         }
 
-        let expected_commit = structure.pcs.commit_mle(witness);
+        let expected_commit = structure.pcs.commit_mle(witness.inner());
         if &expected_commit != instance {
             return false;
         }
 
-        WiredGate::check(&structure.gates, witness)
+        WiredGate::check(structure.gates.inner(), witness.inner())
     }
 }
 
@@ -377,11 +376,11 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,
         instance: C::Commitment,
-        witness: Vec<F>,
+        witness: Pow2Vec<F>,
         transcript: &mut reduction::Transcript<F, S>,
     ) -> ProverOutput<(), Self::Proof> {
         //TODO: check len
-        let trace = WiredGate::compute_trace(&key.strucuture.gates, &witness);
+        let trace = WiredGate::compute_trace(key.strucuture.gates.inner(), witness.inner());
         let trace_commit = key.strucuture.pcs.commit_mle(&trace);
 
         let [] = transcript.send_message(&trace_commit, &());
@@ -391,7 +390,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
             oracle2_instance: Self::committed_oracle_instance(instance, trace_commit.clone()),
         };
 
-        let witness: Vec<Mles<F>> = key.witness(&witness, &trace);
+        let witness: Vec<Mles<F>> = key.witness(witness.inner(), &trace);
 
         let ProverOutput {
             instance,
@@ -541,33 +540,32 @@ impl<F: Field, C: CommitmentScheme<F>> ProverKey<F, C> {
 }
 
 impl<C> SpreadsheetStructure<C> {
-    pub fn new(data_table_size: usize, gates: Vec<WiredGate>, pcs: C) -> Self {
-        Self {
-            data_table_size,
-            gates,
-            pcs,
-        }
+    pub fn new(data_table_size: usize, mut gates: Vec<WiredGate>, pcs: C) -> Self {
+        let len = data_table_size.max(gates.len()).next_power_of_two();
+        gates.resize(len, WiredGate::padding());
+        let gates = Pow2Vec::new(gates);
+
+        Self { gates, pcs }
+    }
+
+    pub fn vars(&self) -> usize {
+        self.gates.inner().len().ilog2() as usize
     }
 
     fn sumcheck_structure<F: Field>(&self) -> Vec<Mles<F>> {
-        let Self {
-            data_table_size,
-            gates,
-            ..
-        } = self;
-        let len = gates.len().max(*data_table_size).next_power_of_two();
-        let mut mles = Vec::with_capacity(len);
-
+        let Self { gates, .. } = self;
         let zero: Mles<F> = Mles::default();
-        for gate in gates {
-            let selectors = match gate.gate() {
-                gates::GateType::Add => [F::ONE, F::ZERO],
-                gates::GateType::Eq => [F::ZERO, F::ONE],
-            };
-            mles.push(Mles { selectors, ..zero });
-        }
-
-        mles.resize(len, zero);
-        mles
+        gates
+            .inner()
+            .iter()
+            .map(|gate| {
+                let selectors = match gate.gate() {
+                    gates::GateType::Add => [F::ONE, F::ZERO],
+                    gates::GateType::Eq => [F::ZERO, F::ONE],
+                    gates::GateType::Nop => [F::ZERO, F::ZERO],
+                };
+                Mles { selectors, ..zero }
+            })
+            .collect()
     }
 }

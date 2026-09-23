@@ -196,6 +196,14 @@ pub struct WiredGate {
 }
 
 impl WiredGate {
+    /// Crate a gate to be use for padding.
+    pub fn padding() -> Self {
+        Self {
+            io: [Var(0, DataOrTrace::Data); 3],
+            gate: GateType::Nop,
+        }
+    }
+
     pub fn compute_trace<F: Field>(gates: &[Self], data: &[F]) -> Vec<F> {
         let mut trace = Vec::new();
         for gate in gates {

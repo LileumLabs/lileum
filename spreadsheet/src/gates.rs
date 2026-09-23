@@ -5,6 +5,8 @@ use sumcheck::Var;
 pub enum GateType {
     Add,
     Eq,
+    // Constrains nothing, useful for padding.
+    Nop,
 }
 
 impl GateType {
@@ -12,6 +14,7 @@ impl GateType {
         match self {
             GateType::Add => Add::compute(a, b),
             GateType::Eq => Eq::compute(a, b),
+            GateType::Nop => Nop::compute(a, b),
         }
     }
 
@@ -20,6 +23,7 @@ impl GateType {
         match self {
             GateType::Add => Add::check(a, b, c),
             GateType::Eq => Eq::check(a, b, c),
+            GateType::Nop => Nop::check(a, b, c),
         }
         .is_zero()
     }
@@ -33,6 +37,7 @@ pub trait BinaryGate<F: Field> {
 
 pub struct Add;
 pub struct Eq;
+pub struct Nop;
 
 impl<F: Field> BinaryGate<F> for Add {
     const TYPE: GateType = GateType::Add;
@@ -55,5 +60,17 @@ impl<F: Field> BinaryGate<F> for Eq {
 
     fn check<V: Var<F>>(a: &V, b: &V, _: &V) -> V {
         a.clone() - b
+    }
+}
+
+impl<F: Field> BinaryGate<F> for Nop {
+    const TYPE: GateType = GateType::Nop;
+
+    fn compute(_: F, _: F) -> F {
+        F::zero()
+    }
+
+    fn check<V: Var<F>>(a: &V, _: &V, _: &V) -> V {
+        a.clone() - a
     }
 }
