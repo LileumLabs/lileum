@@ -129,12 +129,13 @@ where
     pub fn committed_oracle_instance(
         data_commit: C::Commitment,
         trace_commit: C::Commitment,
+        lookup_commits: [C::Commitment; 3],
     ) -> CommittedOracleInstance<F, C, Mles<()>> {
         let commits = Mles {
             table: Some(data_commit),
             trace: Some(trace_commit),
             selectors: [(); 2].map(|_| None),
-            lookups: [(); 3].map(|_| None),
+            lookups: lookup_commits.map(Some),
         };
         CommittedOracleInstance::new(commits)
     }
@@ -179,6 +180,7 @@ type CompositeKey<F, C, SF = Mles<()>> =
 #[derive(Clone, Debug)]
 pub struct Proof<F: Field, C: CommitmentScheme<F>> {
     trace_committment: C::Commitment,
+    lookup_commitments: [C::Commitment; 3],
     sumcheck: Vec<SumcheckMessage<F>>,
     composite: ProverEvals<F>,
     open_proof: C::Proof,
@@ -192,11 +194,13 @@ where
     fn check(&self) -> Result<(), ark_serialize::SerializationError> {
         let Self {
             trace_committment,
+            lookup_commitments,
             sumcheck,
             composite,
             open_proof,
         } = self;
         trace_committment.check()?;
+        lookup_commitments.check()?;
         sumcheck.check()?;
         composite.check()?;
         open_proof.check()
@@ -215,6 +219,8 @@ where
     ) -> Result<Self, ark_serialize::SerializationError> {
         let trace_committment =
             CanonicalDeserialize::deserialize_with_mode(&mut reader, compress, validate)?;
+        let lookup_commitments =
+            CanonicalDeserialize::deserialize_with_mode(&mut reader, compress, validate)?;
         let sumcheck =
             CanonicalDeserialize::deserialize_with_mode(&mut reader, compress, validate)?;
         let composite =
@@ -223,6 +229,7 @@ where
 
         Ok(Proof {
             trace_committment,
+            lookup_commitments,
             sumcheck,
             composite,
             open_proof,
@@ -242,11 +249,13 @@ where
     ) -> Result<(), ark_serialize::SerializationError> {
         let Self {
             trace_committment,
+            lookup_commitments,
             sumcheck,
             composite,
             open_proof,
         } = self;
         trace_committment.serialize_with_mode(&mut writer, compress)?;
+        lookup_commitments.serialize_with_mode(&mut writer, compress)?;
         sumcheck.serialize_with_mode(&mut writer, compress)?;
         composite.serialize_with_mode(&mut writer, compress)?;
         open_proof.serialize_with_mode(writer, compress)
@@ -255,11 +264,13 @@ where
     fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
         let Self {
             trace_committment,
+            lookup_commitments,
             sumcheck,
             composite,
             open_proof,
         } = self;
         trace_committment.serialized_size(compress)
+            + lookup_commitments.serialized_size(compress)
             + sumcheck.serialized_size(compress)
             + composite.serialized_size(compress)
             + open_proof.serialized_size(compress)
@@ -307,6 +318,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
     ) -> TranscriptBuilder {
         builder
             .round::<F, C::Commitment, 0>(&())
+            .round::<F, [C::Commitment; 3], 0>(&())
             .subprotocol::<ZerocheckReduction<F, Oracle<F, C>>, _, _, _>(&key.zerocheck_key)
             .subprotocol::<ZerocheckSumcheckReduction<F, _>, _, _, _>(&key.sumcheck)
             .subprotocol::<CompositeOracle<F, _, _, _>, _, _, _>(&key.composite)
@@ -385,18 +397,30 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
 
         let [] = transcript.send_message(&trace_commit, &());
 
+        let witness: Vec<Mles<F>> = key.witness(witness.inner(), &trace);
+        let lookup_commits = key.commit_lookups(&witness);
+
+        let [] = transcript.send_message(&lookup_commits, &());
+
         let oracle_instance = CompositeOracleInstance {
             oracle1_instance: Self::core_oracle_instance(key.sumcheck.vars()),
-            oracle2_instance: Self::committed_oracle_instance(instance, trace_commit.clone()),
+            oracle2_instance: Self::committed_oracle_instance(
+                instance,
+                trace_commit.clone(),
+                lookup_commits.clone(),
+            ),
         };
-
-        let witness: Vec<Mles<F>> = key.witness(witness.inner(), &trace);
 
         let ProverOutput {
             instance,
             witness,
             proof: (),
-        } = ZerocheckReduction::<F, Oracle<F, C>>::prove(&8, oracle_instance, witness, transcript);
+        } = ZerocheckReduction::<F, Oracle<F, C>>::prove(
+            &key.strucuture.vars(),
+            oracle_instance,
+            witness,
+            transcript,
+        );
 
         let ProverOutput {
             instance,
@@ -435,6 +459,7 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
 
         let proof = Proof {
             trace_committment: trace_commit,
+            lookup_commitments: lookup_commits,
             sumcheck: sumcheck_proof,
             composite: composite_proof,
             open_proof,
@@ -455,10 +480,16 @@ impl<F: Field, C: CommitmentScheme<F>> Reduction<F, Self, ()> for SpreadsheetRel
     ) -> Result<(), Self::Error> {
         let Ok((trace_commit, [])) =
             transcript.receive_message(|proof| proof.trace_committment.clone(), &proof, &());
+        let Ok((lookup_commits, [])) =
+            transcript.receive_message(|proof| proof.lookup_commitments.clone(), &proof, &());
 
         let oracle_instance = CompositeOracleInstance {
             oracle1_instance: Self::core_oracle_instance(key.sumcheck.vars()),
-            oracle2_instance: Self::committed_oracle_instance(instance, trace_commit),
+            oracle2_instance: Self::committed_oracle_instance(
+                instance,
+                trace_commit,
+                lookup_commits,
+            ),
         };
         let instance = oracle_instance;
         let Ok(instance) = ZerocheckReduction::verify(
@@ -536,6 +567,17 @@ impl<F: Field, C: CommitmentScheme<F>> ProverKey<F, C> {
         }
 
         witness
+    }
+
+    fn commit_lookups(&self, mles: &[Mles<F>]) -> [C::Commitment; 3] {
+        let pcs = &self.strucuture.pcs;
+        let lookups1: Vec<F> = mles.iter().map(|mles| mles.lookups[0]).collect();
+        let commit1 = pcs.commit_mle(&lookups1);
+        let lookups2: Vec<F> = mles.iter().map(|mles| mles.lookups[0]).collect();
+        let commit2 = pcs.commit_mle(&lookups2);
+        let lookups3: Vec<F> = mles.iter().map(|mles| mles.lookups[0]).collect();
+        let commit3 = pcs.commit_mle(&lookups3);
+        [commit1, commit2, commit3]
     }
 }
 
