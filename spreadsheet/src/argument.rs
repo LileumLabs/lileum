@@ -114,6 +114,7 @@ impl<F: Field> SmallFunctions<F> for Mles<()> {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct SpreadsheetRelation<F, C>(PhantomData<(F, C)>);
 
 impl<F, C> SpreadsheetRelation<F, C>
@@ -573,9 +574,9 @@ impl<F: Field, C: CommitmentScheme<F>> ProverKey<F, C> {
         let pcs = &self.strucuture.pcs;
         let lookups1: Vec<F> = mles.iter().map(|mles| mles.lookups[0]).collect();
         let commit1 = pcs.commit_mle(&lookups1);
-        let lookups2: Vec<F> = mles.iter().map(|mles| mles.lookups[0]).collect();
+        let lookups2: Vec<F> = mles.iter().map(|mles| mles.lookups[1]).collect();
         let commit2 = pcs.commit_mle(&lookups2);
-        let lookups3: Vec<F> = mles.iter().map(|mles| mles.lookups[0]).collect();
+        let lookups3: Vec<F> = mles.iter().map(|mles| mles.lookups[2]).collect();
         let commit3 = pcs.commit_mle(&lookups3);
         [commit1, commit2, commit3]
     }
