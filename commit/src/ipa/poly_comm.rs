@@ -8,7 +8,7 @@ use crate::{
 use alloc::vec::Vec;
 use ark_ec::{AffineRepr, CurveGroup, VariableBaseMSM};
 use ark_ff::PrimeField;
-use ark_serialize::CanonicalSerialize;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Valid};
 use core::ops::{Add, Mul};
 use hash_to_curve::CurveMap;
 use reduction::{
@@ -55,6 +55,22 @@ where
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IpaCommitment<G>(pub(crate) G);
+
+impl<G: CanonicalDeserialize> Valid for IpaCommitment<G> {
+    fn check(&self) -> Result<(), ark_serialize::SerializationError> {
+        self.0.check()
+    }
+}
+
+impl<G: CanonicalDeserialize> CanonicalDeserialize for IpaCommitment<G> {
+    fn deserialize_with_mode<R: ark_serialize::Read>(
+        reader: R,
+        compress: ark_serialize::Compress,
+        validate: ark_serialize::Validate,
+    ) -> Result<Self, ark_serialize::SerializationError> {
+        G::deserialize_with_mode(reader, compress, validate).map(Self)
+    }
+}
 
 impl<G: CanonicalSerialize> CanonicalSerialize for IpaCommitment<G> {
     fn serialize_with_mode<W: ark_serialize::Write>(

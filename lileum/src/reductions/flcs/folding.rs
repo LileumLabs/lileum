@@ -33,7 +33,7 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct FoldingProof<F>(SumcheckMessage<F>);
+pub struct FoldingProof<F: Field>(SumcheckMessage<F>);
 
 #[derive(Clone, Copy, Debug)]
 pub struct FoldingError(pub SumcheckError);
