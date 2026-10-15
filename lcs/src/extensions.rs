@@ -6,7 +6,7 @@ use core::fmt::Debug;
 pub trait LcsExtension<F: Field>: Debug + Default {
     type Constraint;
     type StructureBuilder: Default;
-    type Witness: Default;
+    type WitnessBuilder: Default;
 
     /// Records the application of a constraint during structure
     /// generation.
@@ -19,7 +19,7 @@ pub trait LcsExtension<F: Field>: Debug + Default {
     /// Extends the extension's witness with the given
     /// constriant.
     fn compute_constraint<const N: usize>(
-        witness: &mut Self::Witness,
+        witness: &mut Self::WitnessBuilder,
         vars: [F; N],
         constraint: Self::Constraint,
     );
@@ -30,7 +30,7 @@ pub enum Never {}
 impl<F: Field> LcsExtension<F> for () {
     type Constraint = Never;
     type StructureBuilder = ();
-    type Witness = ();
+    type WitnessBuilder = ();
 
     fn record_constraint<const N: usize>(_: &mut (), _: [Var<WitnessIndex>; N], _: Never) {}
 

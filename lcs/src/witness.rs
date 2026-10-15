@@ -42,7 +42,7 @@ pub struct WitnessGenerator<F: Field, const IO: usize, E: LcsExtension<F> = ()> 
     witness: Vec<Fi<F>>,
     constants: BTreeSet<F>,
     check: bool,
-    extended_witness: E::Witness,
+    extended_witness: E::WitnessBuilder,
 }
 
 #[derive(Clone, Debug)]
@@ -135,7 +135,7 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> WitnessGenerator<F, MAX_
             witness,
             check,
             constants: BTreeSet::default(),
-            extended_witness: E::Witness::default(),
+            extended_witness: E::WitnessBuilder::default(),
         }
     }
 
