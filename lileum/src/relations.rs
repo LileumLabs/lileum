@@ -1,4 +1,5 @@
 use crate::{
+    extensions::Extension,
     oracles::{FlcsOracle, FlcsOracleParams},
     reductions::flcs::{FlcsEvals, compute_sumcheck_witness},
 };
@@ -19,12 +20,15 @@ use sumcheck::{
 };
 
 #[derive(Clone, Copy, Debug)]
-pub struct ClcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
+pub struct ClcsRelation<F, C, const I: usize, const IO: usize, const S: usize, E = ()>(
+    PhantomData<(F, C, E)>,
+);
 
 #[derive(Clone, Debug)]
-pub struct ClcsInstance<F: Field, C: CommitmentScheme<F>, const I: usize> {
+pub struct ClcsInstance<F: Field, C: CommitmentScheme<F>, const I: usize, E: Extension<F, C> = ()> {
     pub(crate) witness_commit: C::Commitment,
     pub(crate) public_inputs: [F; I],
+    pub(crate) extended_instance: E::Instance,
 }
 
 impl<F: Field, C: CommitmentScheme<F>, const I: usize> ClcsInstance<F, C, I> {
@@ -49,22 +53,29 @@ impl<F: Field, C: CommitmentScheme<F>, const I: usize> Message<F> for ClcsInstan
     }
 }
 
-pub struct ClcsStructure<F: Field, C: CommitmentScheme<F>, const IO: usize, const S: usize> {
-    pub(crate) lcs_structure: LcsStructure<F, IO, S>,
-    pub(crate) pcs: C,
-}
-
-impl<F, C, const I: usize, const IO: usize, const S: usize> Relation
-    for ClcsRelation<F, C, I, IO, S>
+pub struct ClcsStructure<F, C, const IO: usize, const S: usize, E = ()>
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
-    type Structure = ClcsStructure<F, C, IO, S>;
+    pub(crate) lcs_structure: LcsStructure<F, IO, S>,
+    pub(crate) pcs: C,
+    pub(crate) extended: E::Structure,
+}
 
-    type Instance = ClcsInstance<F, C, I>;
+impl<F, C, E, const I: usize, const IO: usize, const S: usize> Relation
+    for ClcsRelation<F, C, I, IO, S, E>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    E: Extension<F, C>,
+{
+    type Structure = ClcsStructure<F, C, IO, S, E>;
 
-    type Witness = Vec<F>;
+    type Instance = ClcsInstance<F, C, I, E>;
+
+    type Witness = (Vec<F>, E::Witness);
 
     fn check(
         structure: &Self::Structure,
@@ -83,15 +94,16 @@ where
         let ClcsInstance {
             witness_commit,
             public_inputs,
+            extended_instance,
         } = instance;
 
-        let expected_commit = structure.pcs.commit_mle(witness);
+        let expected_commit = structure.pcs.commit_mle(&witness.0);
 
         if witness_commit != &expected_commit {
             return false;
         }
 
-        if witness.len() != (1 << structure.lcs_structure.vars()) {
+        if witness.0.len() != (1 << structure.lcs_structure.vars()) {
             return false;
         }
 
@@ -99,7 +111,7 @@ where
             return false;
         }
 
-        for (witness, input) in witness.iter().zip(public_inputs) {
+        for (witness, input) in witness.0.iter().zip(public_inputs) {
             if witness != input {
                 return false;
             }
@@ -107,7 +119,7 @@ where
 
         let matrices: [&Matrix; IO] = io_matrices.each_ref();
         let linear_combinations = LinearCombinations::from_tables(matrices);
-        let mut linear_combinations = linear_combinations.compute(witness);
+        let mut linear_combinations = linear_combinations.compute(&witness.0);
 
         for (i, selector) in gate_selectors.iter().enumerate() {
             let io: [F; IO] = linear_combinations.next().unwrap_or([F::ZERO; IO]);
@@ -117,6 +129,15 @@ where
                 return false;
             }
         }
+
+        // Checking extensions
+        {
+            let instance = (witness_commit.clone(), extended_instance.clone());
+            let structure = &structure.extended;
+            if !E::R1::check(structure, &instance, witness) {
+                return false;
+            }
+        };
 
         true
     }

@@ -1,5 +1,7 @@
 use super::Relation;
-use crate::{FoldingRelation, GuardedProof, Transcript, TranscriptBuilder, VerifierTranscript};
+use crate::{
+    FoldingRelation, GuardedProof, NoError, Transcript, TranscriptBuilder, VerifierTranscript,
+};
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use core::fmt::Debug;
@@ -103,3 +105,49 @@ pub trait Argument<F: Field, R: Relation>: Reduction<F, R, ()> {}
 
 /// A reduction from R x R -> R.
 pub trait FoldingScheme<F: Field, R: Relation>: Reduction<F, FoldingRelation<R>, R> {}
+
+impl<F: Field, R1: Relation> Reduction<F, R1, R1> for () {
+    type ProverKey = ();
+
+    type VerifierKey = ();
+
+    type Proof = ();
+
+    type Error = NoError;
+
+    type Params = ();
+
+    fn transcript_pattern(_: &(), builder: TranscriptBuilder) -> TranscriptBuilder {
+        builder
+    }
+
+    fn verifier_key(_: &R1::Structure) -> Self::VerifierKey {}
+
+    fn key_pair(_: &R1::Structure) -> (Self::VerifierKey, Self::ProverKey) {
+        ((), ())
+    }
+
+    fn params(_: &()) -> Self::Params {}
+
+    fn prove<S: Duplex<F>>(
+        _: &Self::ProverKey,
+        instance: <R1 as Relation>::Instance,
+        witness: <R1 as Relation>::Witness,
+        _: &mut Transcript<F, S>,
+    ) -> ProverOutput<R1, Self::Proof> {
+        ProverOutput {
+            instance,
+            witness,
+            proof: (),
+        }
+    }
+
+    fn verify<S: Duplex<F>>(
+        _: &(),
+        instance: R1::Instance,
+        _: GuardedProof<()>,
+        _: &mut VerifierTranscript<F, S>,
+    ) -> Result<<R1 as Relation>::Instance, Self::Error> {
+        Ok(instance)
+    }
+}

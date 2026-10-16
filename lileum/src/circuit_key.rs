@@ -60,7 +60,11 @@ where
         let vars = lcs_structure.vars();
 
         let pcs = CS::new(vars);
-        let structure = ClcsStructure { lcs_structure, pcs };
+        let structure = ClcsStructure {
+            lcs_structure,
+            pcs,
+            extended: (),
+        };
         let flcs_structure = structure.to_flcs();
 
         let to_flcs = Verifier::new(&structure);
@@ -187,6 +191,7 @@ where
         let instance: ClcsInstance<F, CS, I> = ClcsInstance {
             witness_commit,
             public_inputs,
+            extended_instance: (),
         };
 
         (instance, witness, output)
