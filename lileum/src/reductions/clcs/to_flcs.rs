@@ -62,15 +62,18 @@ where
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
         instance: ClcsInstance<F, C, I>,
-        witness: Vec<F>,
+        witness: (Vec<F>, ()),
         transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<FlcsRelation<F, C, I, IO, S>, Self::Proof> {
         let vars = key;
         let [challenge] = transcript.send_message(&(), &());
 
+        let (witness, _) = witness;
+
         let ClcsInstance {
             witness_commit,
             public_inputs,
+            extended_instance: (),
         } = instance;
 
         let coefficients = FlcsEvals::coefficients(public_inputs, challenge);
@@ -110,6 +113,7 @@ where
         let ClcsInstance {
             witness_commit,
             public_inputs,
+            extended_instance: (),
         } = instance;
 
         let coefficients = FlcsEvals::coefficients(public_inputs, challenge);

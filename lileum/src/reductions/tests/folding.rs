@@ -18,7 +18,11 @@ where
         <HashChain<N> as BuildStructure<F, 1, 1, 1, 4>>::structure();
 
     let pcs = C::new(lcs_structure.vars());
-    let structure = ClcsStructure { lcs_structure, pcs };
+    let structure = ClcsStructure {
+        lcs_structure,
+        pcs,
+        extended: (),
+    };
     let flcs_structure = structure.to_flcs::<2>();
 
     let input = F::from(8u8);

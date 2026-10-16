@@ -14,7 +14,7 @@ where
 }
 
 pub trait Extension<F: Field, C: CommitmentScheme<F>>: LcsExtension<F> {
-    type Instance;
+    type Instance: Clone;
     type Witness;
     type Structure;
 

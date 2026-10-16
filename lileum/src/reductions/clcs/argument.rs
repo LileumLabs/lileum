@@ -76,7 +76,7 @@ where
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
         instance: ClcsInstance<F, C, I>,
-        witness: Vec<F>,
+        witness: (Vec<F>, ()),
         transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<(), Self::Proof> {
         let ProverOutput {
@@ -113,7 +113,11 @@ where
 {
     pub fn to_flcs<const I: usize>(&self) -> FlcsStructure<F, C, IO, S, I> {
         use sumcheck::oracles::partial::PartialOracle;
-        let ClcsStructure { lcs_structure, pcs } = self;
+        let ClcsStructure {
+            lcs_structure,
+            pcs,
+            extended: (),
+        } = self;
         let (lcs_structure, pcs) = (lcs_structure.clone(), pcs.clone());
 
         let gates = lcs_structure
