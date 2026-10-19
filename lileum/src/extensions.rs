@@ -27,7 +27,15 @@ where
     type R2: Relation + Clone;
     type R3: Relation + Clone;
 
-    type Reduction1: Reduction<F, Self::R1, Self::R2>;
+    type Reduction1: Reduction<
+            F,
+            Self::R1,
+            Self::R2,
+            Proof = (),
+            Error = NoError,
+            VerifierKey = (),
+            ProverKey = (),
+        >;
     type Reduction2: Reduction<F, Self::R2, Self::R3>;
     // Aggregates the R3 instance-witness into the lileum's core
     // argument.
