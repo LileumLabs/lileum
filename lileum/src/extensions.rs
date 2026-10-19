@@ -1,9 +1,11 @@
 use alloc::vec::Vec;
 use ark_ff::Field;
-use commit::{CommitmentScheme, OpeningRelation};
-use core::marker::PhantomData;
+use commit::CommitmentScheme;
+use core::{fmt::Debug, marker::PhantomData};
 use lcs::extensions::LcsExtension;
-use reduction::{GuardedProof, NoError, Reduction, Relation, VerifierTranscript};
+use reduction::{GuardedProof, NoError, ProverOutput, Reduction, Relation, VerifierTranscript};
+
+use crate::extensions::aggregation::{UnitAggregation, sealed::Aggregate};
 
 pub trait ExtensionRelation<F, C, I = (), W = (), S = ()>:
     Relation<Instance = (C::Commitment, I), Witness = (Vec<F>, W), Structure = S>
@@ -13,16 +15,28 @@ where
 {
 }
 
-pub trait Extension<F: Field, C: CommitmentScheme<F>>: LcsExtension<F> {
+pub trait Extension<F: Field, C: CommitmentScheme<F>>: LcsExtension<F>
+where
+    <Self::R2 as Relation>::Instance: Clone + Debug + Eq,
+{
     type Instance: Clone;
     type Witness;
     type Structure;
 
     type R1: ExtensionRelation<F, C, Self::Instance, Self::Witness, Self::Structure>;
-    type R2: Relation;
+    type R2: Relation + Clone;
+    type R3: Relation + Clone;
 
     type Reduction1: Reduction<F, Self::R1, Self::R2>;
-    type Reduction2: Reduction<F, Self::R2, OpeningRelation<F, C>>;
+    type Reduction2: Reduction<F, Self::R2, Self::R3>;
+    // Aggregates the R3 instance-witness into the lileum's core
+    // argument.
+    // The trait can't be implemented outside this crate, one
+    // of the available implementations should be chosen from
+    // the `aggregation` module.
+    // Generally, the intension is to support instances isomorphic
+    // to [OpenInstance; N].
+    type AgregationScheme: Aggregate<F, C, Self::R3>;
 }
 
 pub struct IdentityRelation<F, C>(PhantomData<(F, C)>);
@@ -52,7 +66,7 @@ where
 
 pub struct IdentityReduction;
 
-impl<F, C> Reduction<F, IdentityRelation<F, C>, OpeningRelation<F, C>> for IdentityReduction
+impl<F, C> Reduction<F, IdentityRelation<F, C>, ()> for IdentityReduction
 where
     F: Field,
     C: CommitmentScheme<F>,
@@ -87,8 +101,12 @@ where
         _instance: (C::Commitment, ()),
         _witness: (Vec<F>, ()),
         _transcript: &mut reduction::Transcript<F, S>,
-    ) -> reduction::ProverOutput<OpeningRelation<F, C>, Self::Proof> {
-        panic!("() shouldn't actually be used as an extension")
+    ) -> ProverOutput<(), Self::Proof> {
+        ProverOutput {
+            instance: (),
+            witness: (),
+            proof: (),
+        }
     }
 
     fn verify<S>(
@@ -96,8 +114,8 @@ where
         _instance: (C::Commitment, ()),
         _proof: GuardedProof<()>,
         _transcript: &mut VerifierTranscript<F, S>,
-    ) -> Result<<OpeningRelation<F, C> as Relation>::Instance, Self::Error> {
-        panic!("() shouldn't actually be used as an extension")
+    ) -> Result<(), Self::Error> {
+        Ok(())
     }
 }
 
@@ -110,9 +128,123 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for () {
 
     type R1 = IdentityRelation<F, C>;
 
-    type R2 = OpeningRelation<F, C>;
+    type R2 = ();
+
+    type R3 = ();
 
     type Reduction1 = IdentityReduction;
 
     type Reduction2 = ();
+
+    type AgregationScheme = UnitAggregation;
+}
+
+pub mod aggregation {
+    use alloc::vec::Vec;
+    use ark_ff::Field;
+    use commit::{CommitmentScheme, OpenInstance, OpeningRelation};
+    use core::marker::PhantomData;
+    use reduction::{
+        GuardedProof, NoError, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
+        VerifierTranscript,
+    };
+    use sponge::sponge::Duplex;
+
+    pub struct AggregationRelation<F, C, R>(PhantomData<(F, C, R)>);
+
+    impl<F, C, R> Relation for AggregationRelation<F, C, R>
+    where
+        F: Field,
+        C: CommitmentScheme<F>,
+        R: Relation,
+    {
+        type Structure = (C, R::Structure);
+
+        type Instance = (OpenInstance<F, C>, R::Instance);
+
+        type Witness = (Vec<F>, R::Witness);
+
+        fn check(
+            structure: &Self::Structure,
+            instance: &Self::Instance,
+            witness: &Self::Witness,
+        ) -> bool {
+            if !OpeningRelation::check(&structure.0, &instance.0, &witness.0) {
+                return false;
+            }
+            if !R::check(&structure.1, &instance.1, &witness.1) {
+                return false;
+            }
+            true
+        }
+    }
+
+    pub(crate) mod sealed {
+        use super::*;
+        // A reduction which can aggregate the output of an extension into
+        // the core lileum argument.
+        // It is implemented for supported relations, it shouldn't be implemented
+        // outside of this crate.
+        pub trait Aggregate<F: Field, C: CommitmentScheme<F>, R: Relation>:
+            Reduction<F, AggregationRelation<F, C, R>, OpeningRelation<F, C>>
+        {
+        }
+    }
+
+    pub struct UnitAggregation;
+
+    impl<F: Field, C: CommitmentScheme<F>>
+        Reduction<F, AggregationRelation<F, C, ()>, OpeningRelation<F, C>> for UnitAggregation
+    {
+        type ProverKey = ();
+
+        type VerifierKey = ();
+
+        type Proof = ();
+
+        type Error = NoError;
+
+        type Params = ();
+
+        fn transcript_pattern(
+            _key: &Self::VerifierKey,
+            builder: TranscriptBuilder,
+        ) -> TranscriptBuilder {
+            builder
+        }
+
+        fn verifier_key(_: &(C, ())) -> Self::VerifierKey {}
+
+        fn key_pair(_: &(C, ())) -> (Self::VerifierKey, Self::ProverKey) {
+            ((), ())
+        }
+
+        fn params(_: &()) -> Self::Params {}
+
+        fn prove<S: Duplex<F>>(
+            _key: &Self::ProverKey,
+            instance: (OpenInstance<F, C>, ()),
+            witness: (Vec<F>, ()),
+            _transcript: &mut Transcript<F, S>,
+        ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
+            let (instance, ()) = instance;
+            let (witness, ()) = witness;
+            ProverOutput {
+                instance,
+                witness,
+                proof: (),
+            }
+        }
+
+        fn verify<S: Duplex<F>>(
+            _key: &Self::VerifierKey,
+            instance: (OpenInstance<F, C>, ()),
+            _proof: GuardedProof<Self::Proof>,
+            _transcript: &mut VerifierTranscript<F, S>,
+        ) -> Result<OpenInstance<F, C>, Self::Error> {
+            Ok(instance.0)
+        }
+    }
+
+    impl<F: Field, C: CommitmentScheme<F>> sealed::Aggregate<F, C, ()> for UnitAggregation {}
 }
