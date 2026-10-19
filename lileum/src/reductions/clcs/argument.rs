@@ -152,6 +152,7 @@ where
             lcs_structure,
             pcs,
             oracle,
+            extended: (),
         }
     }
 }

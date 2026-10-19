@@ -126,6 +126,7 @@ where
             lcs_structure,
             pcs,
             oracle,
+            extended: (),
         } = structure;
 
         let sumcheck_key = ZerocheckSumcheckReduction::<
@@ -169,6 +170,7 @@ where
             lcs_structure,
             pcs,
             oracle,
+            extended: (),
         } = structure;
 
         let (_, sumcheck) = ZerocheckSumcheckReduction::<
@@ -219,10 +221,11 @@ where
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
         instance: FlcsInstance<F, C, IO, S, I>,
-        witness: Vec<F>,
+        witness: (Vec<F>, ()),
         transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
         let instance = instance.0;
+        let (witness, ()) = witness;
 
         let witness = key.witness(&witness, &instance.oracle_instance().oracle1_instance);
         let ProverOutput {

@@ -40,7 +40,7 @@ where
     let verifier: Verifier<F, Poseidon<F>, _, FlcsRelation<F, C, 2, 4, 5>, FlcsFoldingScheme> =
         Verifier::new(&flcs_structure);
 
-    let witnesses = [witness1, witness2];
+    let witnesses = [(witness1, ()), (witness2, ())];
 
     let ProverOutput {
         instance,

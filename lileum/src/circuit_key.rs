@@ -104,7 +104,7 @@ where
             instance: (),
             witness: (),
             proof,
-        } = self.flcs_prover.prove(instance, witness.0);
+        } = self.flcs_prover.prove(instance, (witness.0, ()));
 
         Proof::Flcs(proof)
     }
@@ -148,9 +148,15 @@ where
             instance,
             witness,
             proof,
-        } = self.folding_prover.prove(instances, witnesses.map(|w| w.0));
+        } = self
+            .folding_prover
+            .prove(instances, witnesses.map(|w| (w.0, ())));
 
-        (instance, Witness(witness), FoldingProof(proof, PhantomData))
+        (
+            instance,
+            Witness(witness.0),
+            FoldingProof(proof, PhantomData),
+        )
     }
 
     pub fn fold_verify(

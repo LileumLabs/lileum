@@ -78,7 +78,7 @@ where
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
         instance: FlcsInstance<F, C, IO, S, I>,
-        witness: Vec<F>,
+        witness: (Vec<F>, ()),
         transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<(), Self::Proof> {
         let ProverOutput {

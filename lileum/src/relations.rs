@@ -167,29 +167,35 @@ fn eval_exp<F: Field, const IO: usize>(exp: &Exp<usize>, io: [F; IO], constant: 
     }
 }
 
-pub struct FlcsStructure<F, C, const IO: usize, const S: usize, const I: usize>
+pub struct FlcsStructure<F, C, const IO: usize, const S: usize, const I: usize, E = ()>
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
     pub lcs_structure: LcsStructure<F, IO, S>,
     pub pcs: C,
     pub oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
+    pub extended: <E::R2 as Relation>::Structure,
 }
 
 #[derive(Clone, Debug)]
-pub struct FlcsRelation<F, C, const I: usize, const IO: usize, const S: usize>(PhantomData<(F, C)>);
+pub struct FlcsRelation<F, C, const I: usize, const IO: usize, const S: usize, E = ()>(
+    PhantomData<(F, C, E)>,
+);
 
 type ZeroInstance<F, C, const IO: usize, const S: usize, const I: usize> =
     ZeroSumcheckInstance<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FlcsInstance<F, C, const IO: usize, const S: usize, const I: usize>(
+pub struct FlcsInstance<F, C, const IO: usize, const S: usize, const I: usize, E = ()>(
     pub ZeroInstance<F, C, IO, S, I>,
+    pub <E::R2 as Relation>::Instance,
 )
 where
     F: Field,
-    C: CommitmentScheme<F>;
+    C: CommitmentScheme<F>,
+    E: Extension<F, C>;
 
 impl<F, C, const IO: usize, const S: usize, const I: usize> Message<F>
     for FlcsInstance<F, C, IO, S, I>
@@ -213,17 +219,19 @@ where
     }
 }
 
-impl<F, C, const I: usize, const IO: usize, const S: usize> Relation
-    for FlcsRelation<F, C, I, IO, S>
+impl<F, C, E, const I: usize, const IO: usize, const S: usize> Relation
+    for FlcsRelation<F, C, I, IO, S, E>
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
-    type Structure = FlcsStructure<F, C, IO, S, I>;
+    type Structure = FlcsStructure<F, C, IO, S, I, E>;
 
-    type Instance = FlcsInstance<F, C, IO, S, I>;
+    type Instance = FlcsInstance<F, C, IO, S, I, E>;
 
-    type Witness = Vec<F>;
+    // NOTE: It may be better to have a dedicated witness type later on.
+    type Witness = (Vec<F>, <E::R2 as Relation>::Witness);
 
     fn check(
         structure: &Self::Structure,
@@ -233,7 +241,11 @@ where
         let oracle = &structure.oracle;
         let core = &instance.0.oracle_instance().oracle1_instance;
         let matrices = oracle.inner_oracles().1.matrices();
+        let (witness, extended_witness) = witness;
         let witness = compute_sumcheck_witness(&oracle.structure(), matrices, witness, core);
-        ZeroSumcheck::check(oracle, &instance.0, &witness)
+        if !ZeroSumcheck::check(oracle, &instance.0, &witness) {
+            return false;
+        }
+        E::R2::check(&structure.extended, &instance.1, extended_witness)
     }
 }

@@ -95,8 +95,10 @@ where
             proof,
         } = ZerocheckReduction::prove(key, oracle_instance, Vec::new(), transcript);
 
+        let witness = (witness, ());
+
         ProverOutput {
-            instance: FlcsInstance(instance),
+            instance: FlcsInstance(instance, ()),
             witness,
             proof,
         }
@@ -126,6 +128,6 @@ where
 
         let Ok(instance) =
             ZerocheckReduction::verify(vars, oracle_instance, GuardedProof::empty(), transcript);
-        Ok(FlcsInstance(instance))
+        Ok(FlcsInstance(instance, ()))
     }
 }
