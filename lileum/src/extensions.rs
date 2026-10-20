@@ -1,11 +1,14 @@
 use alloc::vec::Vec;
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 use commit::CommitmentScheme;
 use core::{fmt::Debug, marker::PhantomData};
 use lcs::extensions::LcsExtension;
 use reduction::{GuardedProof, NoError, ProverOutput, Reduction, Relation, VerifierTranscript};
 
-use crate::extensions::aggregation::{UnitAggregation, sealed::Aggregate};
+use crate::extensions::aggregation::{
+    AggregationProof, AggregationVerifierKey, UnitAggregation, sealed::Aggregate,
+};
 
 pub trait ExtensionRelation<F, C, I = (), W = (), S = ()>:
     Relation<Instance = (C::Commitment, I), Witness = (Vec<F>, W), Structure = S>
@@ -15,17 +18,23 @@ where
 {
 }
 
-pub trait Extension<F: Field, C: CommitmentScheme<F>>: LcsExtension<F>
+pub trait Extension<F: Field, C: CommitmentScheme<F>>: LcsExtension<F> + Clone + Debug
 where
     <Self::R2 as Relation>::Instance: Clone + Debug + Eq,
+    <Self::Reduction2 as Reduction<F, Self::R2, Self::R3>>::VerifierKey:
+        Clone + Debug + CanonicalSerialize,
+    <Self::Reduction2 as Reduction<F, Self::R2, Self::R3>>::Proof: Clone + Debug,
+    <Self::R3 as Relation>::Structure: Clone,
+    AggregationVerifierKey<F, C, Self>: Clone + Debug,
+    AggregationProof<F, C, Self>: Debug,
 {
     type Instance: Clone;
     type Witness;
     type Structure;
 
     type R1: ExtensionRelation<F, C, Self::Instance, Self::Witness, Self::Structure>;
-    type R2: Relation + Clone;
-    type R3: Relation + Clone;
+    type R2: Relation + Clone + Debug;
+    type R3: Relation + Clone + Debug;
 
     type Reduction1: Reduction<
             F,
@@ -36,7 +45,7 @@ where
             VerifierKey = (),
             ProverKey = (),
         >;
-    type Reduction2: Reduction<F, Self::R2, Self::R3>;
+    type Reduction2: Reduction<F, Self::R2, Self::R3> + Clone + Debug;
     // Aggregates the R3 instance-witness into the lileum's core
     // argument.
     // The trait can't be implemented outside this crate, one
@@ -148,6 +157,7 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for () {
 }
 
 pub mod aggregation {
+    use crate::extensions::Extension;
     use alloc::vec::Vec;
     use ark_ff::Field;
     use commit::{CommitmentScheme, OpenInstance, OpeningRelation};
@@ -188,6 +198,7 @@ pub mod aggregation {
     }
 
     pub(crate) mod sealed {
+
         use super::*;
         // A reduction which can aggregate the output of an extension into
         // the core lileum argument.
@@ -198,6 +209,26 @@ pub mod aggregation {
         {
         }
     }
+
+    pub type AggregationVerifierKey<F, C, E> =
+        <<E as Extension<F, C>>::AgregationScheme as Reduction<
+            F,
+            AggregationRelation<F, C, <E as Extension<F, C>>::R3>,
+            OpeningRelation<F, C>,
+        >>::VerifierKey;
+
+    pub type AggregationProverKey<F, C, E> =
+        <<E as Extension<F, C>>::AgregationScheme as Reduction<
+            F,
+            AggregationRelation<F, C, <E as Extension<F, C>>::R3>,
+            OpeningRelation<F, C>,
+        >>::ProverKey;
+
+    pub type AggregationProof<F, C, E> = <<E as Extension<F, C>>::AgregationScheme as Reduction<
+        F,
+        AggregationRelation<F, C, <E as Extension<F, C>>::R3>,
+        OpeningRelation<F, C>,
+    >>::Proof;
 
     pub struct UnitAggregation;
 

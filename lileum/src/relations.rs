@@ -177,6 +177,7 @@ where
     pub pcs: C,
     pub oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
     pub extended: <E::R2 as Relation>::Structure,
+    pub aggregation: <E::R3 as Relation>::Structure,
 }
 
 #[derive(Clone, Debug)]

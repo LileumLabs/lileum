@@ -1,4 +1,8 @@
 use crate::{
+    extensions::{
+        Extension,
+        aggregation::{AggregationProof, AggregationProverKey, AggregationVerifierKey},
+    },
     oracles::{FlcsOracle, MatrixProductOracle},
     reductions::{
         flcs::{FlcsEvals, compute_sumcheck_witness},
@@ -15,7 +19,8 @@ use commit::{
 };
 use lcs::matrix::Matrix;
 use reduction::{
-    GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder, VerifierTranscript,
+    GuardedProof, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
+    VerifierTranscript,
 };
 use spark::{
     FlexibleSpark, FlexibleSparkStructure,
@@ -40,10 +45,11 @@ type CompositeKey<F, C, const IO: usize, SF> =
     CompositeReductionKey<F, SF, CoreOracle<F, SF>, MatrixProductOracle<F, C, SF, IO>>;
 
 #[derive(Clone, Debug, CanonicalSerialize)]
-pub struct VerifierKey<F, C, const IO: usize, const S: usize, const I: usize>
+pub struct VerifierKey<F, C, const IO: usize, const S: usize, const I: usize, E = ()>
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
     sumcheck_key: SumcheckVerifierKey<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>,
     composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S, I>>,
@@ -51,12 +57,15 @@ where
     spark_keys: [flexible::VerifierKey<F, C>; IO],
     batching1: multipoint::VerifierKey<F, C, IO>,
     batching2: multipoint::VerifierKey<F, C, 3>,
+    extended: <E::Reduction2 as Reduction<F, E::R2, E::R3>>::VerifierKey,
+    aggregation: AggregationVerifierKey<F, C, E>,
 }
 
-pub struct ProverKey<F, C, const IO: usize, const S: usize, const I: usize>
+pub struct ProverKey<F, C, const IO: usize, const S: usize, const I: usize, E = ()>
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
     sumcheck: SumcheckProverKey<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>,
     composite_key: CompositeKey<F, C, IO, FlcsEvals<(), IO, S, I>>,
@@ -65,16 +74,23 @@ where
     spark_keys: [flexible::ProverKey<F, C>; IO],
     batching1: multipoint::ProverKey<F, C, IO>,
     batching2: multipoint::ProverKey<F, C, 3>,
+    extended: <E::Reduction2 as Reduction<F, E::R2, E::R3>>::ProverKey,
+    aggregation: AggregationProverKey<F, C, E>,
 }
 
 #[derive(Clone, Debug)]
-pub struct Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
+pub struct Proof<F: Field, C: CommitmentScheme<F>, const IO: usize, E = ()>
+where
+    E: Extension<F, C>,
+{
     sumcheck_proof: Vec<SumcheckMessage<F>>,
     oracle_evals1: ProverEvals<F>,
     matrix_product: matrix_product::Proof<F>,
     spark_proofs: [flexible::Proof<F, C>; IO],
     batching1: multipoint::Proof<F>,
     batching2: multipoint::Proof<F>,
+    extended: <E::Reduction2 as Reduction<F, E::R2, E::R3>>::Proof,
+    aggregation: AggregationProof<F, C, E>,
 }
 
 #[derive(Clone, Debug)]
@@ -86,19 +102,22 @@ pub enum FlcsError {
     Spark(FlexibleSparkError),
     Batching1(multipoint::Error),
     Batching2(multipoint::Error),
+    Extension,
+    Aggregation,
 }
 
-impl<F, C, const I: usize, const IO: usize, const S: usize>
-    Reduction<F, FlcsRelation<F, C, I, IO, S>, OpeningRelation<F, C>> for FlcsReduction
+impl<F, C, E, const I: usize, const IO: usize, const S: usize>
+    Reduction<F, FlcsRelation<F, C, I, IO, S, E>, OpeningRelation<F, C>> for FlcsReduction
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
-    type ProverKey = ProverKey<F, C, IO, S, I>;
+    type ProverKey = ProverKey<F, C, IO, S, I, E>;
 
-    type VerifierKey = VerifierKey<F, C, IO, S, I>;
+    type VerifierKey = VerifierKey<F, C, IO, S, I, E>;
 
-    type Proof = Proof<F, C, IO>;
+    type Proof = Proof<F, C, IO, E>;
 
     type Error = FlcsError;
 
@@ -119,14 +138,17 @@ where
         builder
             .subprotocol::<MultipointBatching<F, C, IO>, _, _, _>(&key.batching1)
             .subprotocol::<MultipointBatching<F, C, 3>, _, _, _>(&key.batching2)
+            .subprotocol::<E::Reduction2, _, _, _>(&key.extended)
+            .subprotocol::<E::AgregationScheme, _, _, _>(&key.aggregation)
     }
 
-    fn verifier_key(structure: &FlcsStructure<F, C, IO, S, I>) -> Self::VerifierKey {
+    fn verifier_key(structure: &FlcsStructure<F, C, IO, S, I, E>) -> Self::VerifierKey {
         let FlcsStructure {
             lcs_structure,
             pcs,
             oracle,
-            extended: (),
+            extended,
+            aggregation,
         } = structure;
 
         let sumcheck_key = ZerocheckSumcheckReduction::<
@@ -149,6 +171,9 @@ where
         let batching1 = MultipointBatching::verifier_key(&batching_structure);
         let batching2 = MultipointBatching::verifier_key(&batching_structure);
 
+        let extended = E::Reduction2::verifier_key(extended);
+        let aggregation = E::AgregationScheme::verifier_key(&(pcs.clone(), aggregation.clone()));
+
         VerifierKey {
             sumcheck_key,
             composite_key,
@@ -156,13 +181,17 @@ where
             spark_keys,
             batching1,
             batching2,
+            extended,
+            aggregation,
         }
     }
 
-    fn key_pair(structure: &FlcsStructure<F, C, IO, S, I>) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(
+        structure: &FlcsStructure<F, C, IO, S, I, E>,
+    ) -> (Self::VerifierKey, Self::ProverKey) {
         let verifier_key = <Self as Reduction<
             F,
-            FlcsRelation<F, C, I, IO, S>,
+            FlcsRelation<F, C, I, IO, S, E>,
             OpeningRelation<F, C>,
         >>::verifier_key(structure);
 
@@ -170,7 +199,8 @@ where
             lcs_structure,
             pcs,
             oracle,
-            extended: (),
+            extended,
+            aggregation,
         } = structure;
 
         let (_, sumcheck) = ZerocheckSumcheckReduction::<
@@ -202,6 +232,9 @@ where
         let (_, batching1) = MultipointBatching::key_pair(&batching_structure);
         let (_, batching2) = MultipointBatching::key_pair(&batching_structure);
 
+        let (_, extended) = E::Reduction2::key_pair(extended);
+        let (_, aggregation) = E::AgregationScheme::key_pair(&(pcs.clone(), aggregation.clone()));
+
         let prover_key = ProverKey {
             sumcheck,
             composite_key,
@@ -210,6 +243,8 @@ where
             spark_keys,
             batching1,
             batching2,
+            extended,
+            aggregation,
         };
         (verifier_key, prover_key)
     }
@@ -220,12 +255,12 @@ where
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
-        instance: FlcsInstance<F, C, IO, S, I>,
-        witness: (Vec<F>, ()),
+        instance: FlcsInstance<F, C, IO, S, I, E>,
+        witness: (Vec<F>, <E::R2 as Relation>::Witness),
         transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
-        let instance = instance.0;
-        let (witness, ()) = witness;
+        let FlcsInstance(instance, extended_instance) = instance;
+        let (witness, extended_witness) = witness;
 
         let witness = key.witness(&witness, &instance.oracle_instance().oracle1_instance);
         let ProverOutput {
@@ -299,6 +334,25 @@ where
             proof: batching2,
         } = MultipointBatching::prove(&key.batching2, instance, witness, transcript);
 
+        let ProverOutput {
+            instance: extended_instance,
+            witness: extended_witness,
+            proof: extended_proof,
+        } = E::Reduction2::prove(
+            &key.extended,
+            extended_instance,
+            extended_witness,
+            transcript,
+        );
+
+        let instance = (instance, extended_instance);
+        let witness = (witness, extended_witness);
+        let ProverOutput {
+            instance,
+            witness,
+            proof: aggregation,
+        } = E::AgregationScheme::prove(&key.aggregation, instance, witness, transcript);
+
         let proof = Proof {
             sumcheck_proof,
             oracle_evals1,
@@ -306,6 +360,8 @@ where
             spark_proofs,
             batching1,
             batching2,
+            extended: extended_proof,
+            aggregation,
         };
 
         ProverOutput {
@@ -317,11 +373,11 @@ where
 
     fn verify<D: Duplex<F>>(
         key: &Self::VerifierKey,
-        instance: FlcsInstance<F, C, IO, S, I>,
+        instance: FlcsInstance<F, C, IO, S, I, E>,
         proof: GuardedProof<Self::Proof>,
         transcript: &mut VerifierTranscript<F, D>,
     ) -> Result<OpenInstance<F, C>, Self::Error> {
-        let instance = instance.0;
+        let FlcsInstance(instance, extended_instance) = instance;
 
         let instance =
             ZerocheckSumcheckReduction::<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>::verify(
@@ -384,19 +440,39 @@ where
         let instance = MultipointBatching::verify(
             &key.batching2,
             instance,
-            proof.map(|proof| proof.batching2),
+            proof.clone().map(|proof| proof.batching2),
             transcript,
         )
         .map_err(FlcsError::Batching2)?;
+
+        let extended_instance = E::Reduction2::verify(
+            &key.extended,
+            extended_instance,
+            proof.clone().map(|proof| proof.extended),
+            transcript,
+        )
+        // TODO:Return full error.
+        .map_err(|_| FlcsError::Extension)?;
+
+        let instance = (instance, extended_instance);
+        let instance = E::AgregationScheme::verify(
+            &key.aggregation,
+            instance,
+            proof.map(|proof| proof.aggregation),
+            transcript,
+        )
+        // TODO:Return full error.
+        .map_err(|_| FlcsError::Aggregation)?;
 
         Ok(instance)
     }
 }
 
-impl<F, C, const IO: usize, const S: usize, const I: usize> ProverKey<F, C, IO, S, I>
+impl<F, C, E, const IO: usize, const S: usize, const I: usize> ProverKey<F, C, IO, S, I, E>
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
     fn witness(
         &self,

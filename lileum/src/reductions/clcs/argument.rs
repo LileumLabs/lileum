@@ -153,6 +153,7 @@ where
             pcs,
             oracle,
             extended: (),
+            aggregation: (),
         }
     }
 }
