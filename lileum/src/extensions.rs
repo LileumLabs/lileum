@@ -34,7 +34,6 @@ where
 {
     type Instance: Clone + Message<F, Params = (), Error = NoError>;
     type Witness;
-    type Structure;
 
     type R1: ExtensionRelation<F, C, Self::Instance, Self::Witness, Self::Structure>;
     type R2: Relation + Clone + Debug;
@@ -144,8 +143,6 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for () {
     type Instance = ();
 
     type Witness = ();
-
-    type Structure = ();
 
     type R1 = IdentityRelation<F, C>;
 
