@@ -39,6 +39,8 @@ where
     type R2: Relation + Clone + Debug;
     type R3: Relation + Clone + Debug;
 
+    fn derive_structure(r1_structure: &Self::Structure) -> <Self::R2 as Relation>::Structure;
+
     type Reduction1: Reduction<
             F,
             Self::R1,
@@ -150,6 +152,8 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for () {
 
     type R3 = ();
 
+    fn derive_structure(_: &()) {}
+
     type Reduction1 = IdentityReduction;
 
     type Reduction2 = ();
@@ -208,6 +212,7 @@ pub mod aggregation {
         pub trait Aggregate<F: Field, C: CommitmentScheme<F>, R: Relation>:
             Reduction<F, AggregationRelation<F, C, R>, OpeningRelation<F, C>>
         {
+            fn structure(pcs: C) -> R::Structure;
         }
     }
 
@@ -286,5 +291,7 @@ pub mod aggregation {
         }
     }
 
-    impl<F: Field, C: CommitmentScheme<F>> sealed::Aggregate<F, C, ()> for UnitAggregation {}
+    impl<F: Field, C: CommitmentScheme<F>> sealed::Aggregate<F, C, ()> for UnitAggregation {
+        fn structure(_: C) {}
+    }
 }

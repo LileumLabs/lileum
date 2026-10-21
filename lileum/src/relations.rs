@@ -185,7 +185,7 @@ where
     C: CommitmentScheme<F>,
     E: Extension<F, C>,
 {
-    pub lcs_structure: LcsStructure<F, IO, S>,
+    pub lcs_structure: LcsStructure<F, IO, S, E>,
     pub pcs: C,
     pub oracle: FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>,
     pub extended: <E::R2 as Relation>::Structure,

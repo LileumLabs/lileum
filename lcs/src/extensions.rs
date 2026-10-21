@@ -6,7 +6,7 @@ use core::fmt::Debug;
 pub trait LcsExtension<F: Field>: Debug + Default {
     type Constraint;
     type StructureBuilder: Default;
-    type Structure;
+    type Structure: Clone;
     type WitnessBuilder: Default;
 
     fn process_structure(builder: Self::StructureBuilder) -> Self::Structure;
