@@ -210,11 +210,12 @@ where
     C: CommitmentScheme<F>,
     E: Extension<F, C>;
 
-impl<F, C, const IO: usize, const S: usize, const I: usize> Message<F>
-    for FlcsInstance<F, C, IO, S, I>
+impl<F, C, E, const IO: usize, const S: usize, const I: usize> Message<F>
+    for FlcsInstance<F, C, IO, S, I, E>
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
     type Params = (
         OracleParams,
@@ -225,10 +226,13 @@ where
 
     fn len(params: &Self::Params) -> usize {
         ZeroSumcheckInstance::<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>::len(params)
+            + <E::R2 as Relation>::Instance::len(&())
     }
 
     fn to_field_elements(&self, params: &Self::Params) -> Result<Vec<F>, Self::Error> {
-        self.0.to_field_elements(params)
+        let mut elems = self.0.to_field_elements(params)?;
+        elems.extend(self.1.to_field_elements(&()).unwrap());
+        Ok(elems)
     }
 }
 

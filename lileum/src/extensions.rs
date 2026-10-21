@@ -24,7 +24,7 @@ pub trait Extension<F, C>: LcsExtension<F> + Clone + Debug + 'static
 where
     F: Field,
     C: CommitmentScheme<F>,
-    <Self::R2 as Relation>::Instance: Clone + Debug + Eq,
+    <Self::R2 as Relation>::Instance: Clone + Debug + Eq + Message<F, Params = (), Error = NoError>,
     <Self::Reduction2 as Reduction<F, Self::R2, Self::R3>>::VerifierKey:
         Clone + Debug + CanonicalSerialize,
     <Self::Reduction2 as Reduction<F, Self::R2, Self::R3>>::Proof: Clone + Debug,

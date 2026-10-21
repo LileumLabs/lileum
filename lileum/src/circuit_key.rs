@@ -33,8 +33,8 @@ pub struct CircuitKey<
 > {
     _circuit: PhantomData<C>,
     to_flcs: ToFlcsVerifier<F, D, CS, I, IO, S, E>,
-    flcs_prover: Prover<F, D, FlcsRelation<F, CS, I, IO, S>, (), FlcsArgument>,
-    flcs_verifier: Verifier<F, D, FlcsRelation<F, CS, I, IO, S>, (), FlcsArgument>,
+    flcs_prover: Prover<F, D, FlcsRelation<F, CS, I, IO, S, E>, (), FlcsArgument>,
+    flcs_verifier: Verifier<F, D, FlcsRelation<F, CS, I, IO, S, E>, (), FlcsArgument>,
     folding_prover: FoldingProver<F, D, FlcsRelation<F, CS, I, IO, S>>,
     folding_verifier: FoldingVerifier<F, D, FlcsRelation<F, CS, I, IO, S>>,
     pcs: CS,
