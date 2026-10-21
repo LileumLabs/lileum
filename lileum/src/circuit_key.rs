@@ -47,6 +47,16 @@ pub enum Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
 
 pub struct FoldingProof<F: Field, C>(folding::FoldingProof<F>, PhantomData<C>);
 
+impl<F, D, C, CS, E, const I: usize, const IO: usize, const S: usize>
+    CircuitKey<F, D, C, CS, I, IO, S, E>
+where
+    F: Field,
+    D: Duplex<F>,
+    CS: CommitmentScheme<F>,
+    E: Extension<F, CS>,
+{
+}
+
 impl<F, D, C, CS, const I: usize, const IO: usize, const S: usize> CircuitKey<F, D, C, CS, I, IO, S>
 where
     F: Field,
