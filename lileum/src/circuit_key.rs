@@ -1,9 +1,10 @@
 use crate::{
+    extensions::Extension,
     reductions::{
-        FlcsArgument, FlcsFoldingScheme, ToFlcs,
+        FlcsArgument, FlcsFoldingScheme, ToFlcsVerifier,
         flcs::{self, folding},
     },
-    relations::{ClcsInstance, ClcsRelation, ClcsStructure, FlcsInstance, FlcsRelation},
+    relations::{ClcsInstance, ClcsStructure, FlcsInstance, FlcsRelation},
 };
 use ark_ff::Field;
 use commit::CommitmentScheme;
@@ -28,9 +29,10 @@ pub struct CircuitKey<
     const I: usize,
     const IO: usize = 0,
     const S: usize = 0,
+    E: Extension<F, CS> = (),
 > {
     _circuit: PhantomData<C>,
-    to_flcs: Verifier<F, D, ClcsRelation<F, CS, I, IO, S>, FlcsRelation<F, CS, I, IO, S>, ToFlcs>,
+    to_flcs: ToFlcsVerifier<F, D, CS, I, IO, S, E>,
     flcs_prover: Prover<F, D, FlcsRelation<F, CS, I, IO, S>, (), FlcsArgument>,
     flcs_verifier: Verifier<F, D, FlcsRelation<F, CS, I, IO, S>, (), FlcsArgument>,
     folding_prover: FoldingProver<F, D, FlcsRelation<F, CS, I, IO, S>>,

@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 use ark_ff::Field;
 use commit::CommitmentScheme;
 use reduction::{
-    GuardedProof, NoError, ProverOutput, Reduction, Transcript, TranscriptBuilder,
+    GuardedProof, NoError, ProverOutput, Reduction, Transcript, TranscriptBuilder, Verifier,
     VerifierTranscript,
 };
 use sponge::sponge::Duplex;
@@ -148,3 +148,6 @@ where
         Ok(FlcsInstance(instance, extended_instance))
     }
 }
+
+pub type ToFlcsVerifier<F, D, CS, const I: usize, const IO: usize, const S: usize, E> =
+    Verifier<F, D, ClcsRelation<F, CS, I, IO, S, E>, FlcsRelation<F, CS, I, IO, S, E>, ToFlcs>;

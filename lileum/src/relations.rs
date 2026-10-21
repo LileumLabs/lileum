@@ -37,18 +37,30 @@ impl<F: Field, C: CommitmentScheme<F>, const I: usize> ClcsInstance<F, C, I> {
     }
 }
 
-impl<F: Field, C: CommitmentScheme<F>, const I: usize> Message<F> for ClcsInstance<F, C, I> {
+impl<F, C, E, const I: usize> Message<F> for ClcsInstance<F, C, I, E>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    E: Extension<F, C>,
+{
     type Params = ();
 
     type Error = NoError;
 
     fn len(_: &()) -> usize {
-        C::Commitment::len(&()) + I
+        C::Commitment::len(&()) + I + E::Instance::len(&())
     }
 
     fn to_field_elements(&self, _: &()) -> Result<Vec<F>, Self::Error> {
-        let Ok(mut elems) = self.witness_commit.to_field_elements(&());
-        elems.extend(self.public_inputs.iter().cloned());
+        let Self {
+            witness_commit,
+            public_inputs,
+            extended_instance,
+        } = self;
+        let Ok(mut elems) = witness_commit.to_field_elements(&());
+        elems.extend(public_inputs.iter().cloned());
+        let Ok(extended) = extended_instance.to_field_elements(&());
+        elems.extend(extended);
         Ok(elems)
     }
 }

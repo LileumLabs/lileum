@@ -4,7 +4,9 @@ use ark_serialize::CanonicalSerialize;
 use commit::CommitmentScheme;
 use core::{fmt::Debug, marker::PhantomData};
 use lcs::extensions::LcsExtension;
-use reduction::{GuardedProof, NoError, ProverOutput, Reduction, Relation, VerifierTranscript};
+use reduction::{
+    GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, VerifierTranscript,
+};
 
 use crate::extensions::aggregation::{
     AggregationProof, AggregationVerifierKey, UnitAggregation, sealed::Aggregate,
@@ -18,8 +20,10 @@ where
 {
 }
 
-pub trait Extension<F: Field, C: CommitmentScheme<F>>: LcsExtension<F> + Clone + Debug
+pub trait Extension<F, C>: LcsExtension<F> + Clone + Debug + 'static
 where
+    F: Field,
+    C: CommitmentScheme<F>,
     <Self::R2 as Relation>::Instance: Clone + Debug + Eq,
     <Self::Reduction2 as Reduction<F, Self::R2, Self::R3>>::VerifierKey:
         Clone + Debug + CanonicalSerialize,
@@ -28,7 +32,7 @@ where
     AggregationVerifierKey<F, C, Self>: Clone + Debug,
     AggregationProof<F, C, Self>: Debug,
 {
-    type Instance: Clone;
+    type Instance: Clone + Message<F, Params = (), Error = NoError>;
     type Witness;
     type Structure;
 
