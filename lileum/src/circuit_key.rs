@@ -47,10 +47,10 @@ pub enum Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
 
 pub struct FoldingProof<F: Field, C>(folding::FoldingProof<F>, PhantomData<C>);
 
-impl<F, T, C, CS, const I: usize, const IO: usize, const S: usize> CircuitKey<F, T, C, CS, I, IO, S>
+impl<F, D, C, CS, const I: usize, const IO: usize, const S: usize> CircuitKey<F, D, C, CS, I, IO, S>
 where
     F: Field,
-    T: Duplex<F>,
+    D: Duplex<F>,
     CS: CommitmentScheme<F>,
 {
     pub fn new<const IN: usize, const OUT: usize, const PRIV_OUT: usize>() -> Self
