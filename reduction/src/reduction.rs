@@ -151,3 +151,51 @@ impl<F: Field, R1: Relation> Reduction<F, R1, R1> for () {
         Ok(instance)
     }
 }
+
+impl<F: Field> Reduction<F, FoldingRelation<()>, ()> for () {
+    type ProverKey = ();
+
+    type VerifierKey = ();
+
+    type Proof = ();
+
+    type Error = NoError;
+
+    type Params = ();
+
+    fn transcript_pattern(_: &Self::VerifierKey, builder: TranscriptBuilder) -> TranscriptBuilder {
+        builder
+    }
+
+    fn verifier_key(_: &()) -> Self::VerifierKey {}
+
+    fn key_pair(_: &()) -> (Self::VerifierKey, Self::ProverKey) {
+        ((), ())
+    }
+
+    fn params(_: &()) -> Self::Params {}
+
+    fn prove<S: Duplex<F>>(
+        _: &(),
+        _: [(); 2],
+        _: [(); 2],
+        _: &mut Transcript<F, S>,
+    ) -> ProverOutput<(), Self::Proof> {
+        ProverOutput {
+            instance: (),
+            witness: (),
+            proof: (),
+        }
+    }
+
+    fn verify<S: Duplex<F>>(
+        _: &(),
+        _: [(); 2],
+        _: GuardedProof<()>,
+        _: &mut VerifierTranscript<F, S>,
+    ) -> Result<<() as Relation>::Instance, Self::Error> {
+        Ok(())
+    }
+}
+
+impl<F: Field> FoldingScheme<F, Self> for () {}
