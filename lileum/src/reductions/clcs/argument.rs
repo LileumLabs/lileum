@@ -113,11 +113,7 @@ where
 {
     pub fn to_flcs<const I: usize>(&self) -> FlcsStructure<F, C, IO, S, I> {
         use sumcheck::oracles::partial::PartialOracle;
-        let ClcsStructure {
-            lcs_structure,
-            pcs,
-            extended: (),
-        } = self;
+        let ClcsStructure { lcs_structure, pcs } = self;
         let (lcs_structure, pcs) = (lcs_structure.clone(), pcs.clone());
 
         let gates = lcs_structure

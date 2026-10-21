@@ -71,9 +71,8 @@ where
     C: CommitmentScheme<F>,
     E: Extension<F, C>,
 {
-    pub(crate) lcs_structure: LcsStructure<F, IO, S>,
+    pub(crate) lcs_structure: LcsStructure<F, IO, S, E>,
     pub(crate) pcs: C,
-    pub(crate) extended: E::Structure,
 }
 
 impl<F, C, E, const I: usize, const IO: usize, const S: usize> Relation
@@ -101,6 +100,7 @@ where
             gates,
             trace_len: _,
             constants,
+            extended,
         } = &structure.lcs_structure;
 
         let ClcsInstance {
@@ -145,7 +145,7 @@ where
         // Checking extensions
         {
             let instance = (witness_commit.clone(), extended_instance.clone());
-            let structure = &structure.extended;
+            let structure = &extended;
             if !E::R1::check(structure, &instance, witness) {
                 return false;
             }

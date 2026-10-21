@@ -9,6 +9,8 @@ pub trait LcsExtension<F: Field>: Debug + Default {
     type Structure;
     type WitnessBuilder: Default;
 
+    fn process_structure(builder: Self::StructureBuilder) -> Self::Structure;
+
     /// Records the application of a constraint during structure
     /// generation.
     fn record_constraint<const N: usize>(
@@ -33,6 +35,8 @@ impl<F: Field> LcsExtension<F> for () {
     type StructureBuilder = ();
     type Structure = ();
     type WitnessBuilder = ();
+
+    fn process_structure(_: ()) -> Self::Structure {}
 
     fn record_constraint<const N: usize>(_: &mut (), _: [Var<WitnessIndex>; N], _: Never) {}
 

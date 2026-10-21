@@ -72,11 +72,7 @@ where
         let vars = lcs_structure.vars();
 
         let pcs = CS::new(vars);
-        let structure = ClcsStructure {
-            lcs_structure,
-            pcs,
-            extended: (),
-        };
+        let structure = ClcsStructure { lcs_structure, pcs };
         let flcs_structure = structure.to_flcs();
 
         let to_flcs = Verifier::new(&structure);

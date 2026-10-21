@@ -55,7 +55,11 @@ impl Ord for MatrixIndex {
 }
 
 #[derive(Clone, Debug)]
-pub struct LcsStructure<F, const IO: usize, const S: usize> {
+pub struct LcsStructure<F, const IO: usize, const S: usize, E = ()>
+where
+    F: Field,
+    E: LcsExtension<F>,
+{
     pub io_matrices: [Matrix; IO],
     /// Where each entry is in 0..S representing the gate to active.
     pub gate_selectors: Vec<usize>,
@@ -66,9 +70,14 @@ pub struct LcsStructure<F, const IO: usize, const S: usize> {
     pub trace_len: usize,
     /// Maps Constant constraints to their constant.
     pub constants: BTreeMap<usize, F>,
+    pub extended: E::Structure,
 }
 
-impl<F, const IO: usize, const S: usize> LcsStructure<F, IO, S> {
+impl<F, E, const IO: usize, const S: usize> LcsStructure<F, IO, S, E>
+where
+    F: Field,
+    E: LcsExtension<F>,
+{
     /// vars needed to fit the trace
     pub fn vars(&self) -> usize {
         let len_padded = self.trace_len.next_power_of_two();
@@ -190,11 +199,12 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> StructureBuilder<F, MAX_
         }
     }
 
-    pub fn build<const S: usize>(self, public_io_len: usize) -> LcsStructure<F, MAX_IO, S> {
+    pub fn build<const S: usize>(self, public_io_len: usize) -> LcsStructure<F, MAX_IO, S, E> {
         let Self {
             registry,
             constraints,
             constant_table,
+            extension_builder,
             ..
         } = self;
 
@@ -247,6 +257,8 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> StructureBuilder<F, MAX_
 
         let trace_len = self.vars.len();
         assert_eq!(trace_len, self.next);
+
+        let extended = E::process_structure(extension_builder);
         LcsStructure {
             input_len: public_io_len,
             io_matrices,
@@ -254,6 +266,7 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> StructureBuilder<F, MAX_
             gates,
             trace_len,
             constants,
+            extended,
         }
     }
 }
