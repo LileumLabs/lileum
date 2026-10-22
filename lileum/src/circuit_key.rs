@@ -1,9 +1,10 @@
 use crate::{
+    extensions::Extension,
     reductions::{
-        FlcsArgument, FlcsFoldingScheme, ToFlcs,
+        FlcsArgument, FlcsFoldingScheme, ToFlcsVerifier,
         flcs::{self, folding},
     },
-    relations::{ClcsInstance, ClcsRelation, ClcsStructure, FlcsInstance, FlcsRelation},
+    relations::{ClcsInstance, ClcsStructure, FlcsInstance, FlcsRelation},
 };
 use ark_ff::Field;
 use commit::CommitmentScheme;
@@ -28,11 +29,12 @@ pub struct CircuitKey<
     const I: usize,
     const IO: usize = 0,
     const S: usize = 0,
+    E: Extension<F, CS> = (),
 > {
     _circuit: PhantomData<C>,
-    to_flcs: Verifier<F, D, ClcsRelation<F, CS, I, IO, S>, FlcsRelation<F, CS, I, IO, S>, ToFlcs>,
-    flcs_prover: Prover<F, D, FlcsRelation<F, CS, I, IO, S>, (), FlcsArgument>,
-    flcs_verifier: Verifier<F, D, FlcsRelation<F, CS, I, IO, S>, (), FlcsArgument>,
+    to_flcs: ToFlcsVerifier<F, D, CS, I, IO, S, E>,
+    flcs_prover: Prover<F, D, FlcsRelation<F, CS, I, IO, S, E>, (), FlcsArgument>,
+    flcs_verifier: Verifier<F, D, FlcsRelation<F, CS, I, IO, S, E>, (), FlcsArgument>,
     folding_prover: FoldingProver<F, D, FlcsRelation<F, CS, I, IO, S>>,
     folding_verifier: FoldingVerifier<F, D, FlcsRelation<F, CS, I, IO, S>>,
     pcs: CS,
@@ -45,10 +47,20 @@ pub enum Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
 
 pub struct FoldingProof<F: Field, C>(folding::FoldingProof<F>, PhantomData<C>);
 
-impl<F, T, C, CS, const I: usize, const IO: usize, const S: usize> CircuitKey<F, T, C, CS, I, IO, S>
+impl<F, D, C, CS, E, const I: usize, const IO: usize, const S: usize>
+    CircuitKey<F, D, C, CS, I, IO, S, E>
 where
     F: Field,
-    T: Duplex<F>,
+    D: Duplex<F>,
+    CS: CommitmentScheme<F>,
+    E: Extension<F, CS>,
+{
+}
+
+impl<F, D, C, CS, const I: usize, const IO: usize, const S: usize> CircuitKey<F, D, C, CS, I, IO, S>
+where
+    F: Field,
+    D: Duplex<F>,
     CS: CommitmentScheme<F>,
 {
     pub fn new<const IN: usize, const OUT: usize, const PRIV_OUT: usize>() -> Self
@@ -100,7 +112,7 @@ where
             instance: (),
             witness: (),
             proof,
-        } = self.flcs_prover.prove(instance, witness.0);
+        } = self.flcs_prover.prove(instance, (witness.0, ()));
 
         Proof::Flcs(proof)
     }
@@ -144,9 +156,15 @@ where
             instance,
             witness,
             proof,
-        } = self.folding_prover.prove(instances, witnesses.map(|w| w.0));
+        } = self
+            .folding_prover
+            .prove(instances, witnesses.map(|w| (w.0, ())));
 
-        (instance, Witness(witness), FoldingProof(proof, PhantomData))
+        (
+            instance,
+            Witness(witness.0),
+            FoldingProof(proof, PhantomData),
+        )
     }
 
     pub fn fold_verify(
@@ -187,6 +205,7 @@ where
         let instance: ClcsInstance<F, CS, I> = ClcsInstance {
             witness_commit,
             public_inputs,
+            extended_instance: (),
         };
 
         (instance, witness, output)

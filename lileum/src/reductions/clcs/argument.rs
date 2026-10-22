@@ -1,4 +1,5 @@
 use crate::{
+    extensions::{Extension, aggregation::sealed::Aggregate},
     oracles::MatrixProductOracle,
     reductions::{
         FlcsArgument, ToFlcs,
@@ -12,7 +13,7 @@ use crate::{
 use alloc::{rc::Rc, vec::Vec};
 use ark_ff::Field;
 use commit::{CommitmentScheme, oracle::CommittedOracle};
-use lcs::structure::LcsStructure;
+use lcs::{extensions::LcsExtension, structure::LcsStructure};
 use reduction::{
     Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
     VerifierTranscript,
@@ -76,7 +77,7 @@ where
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
         instance: ClcsInstance<F, C, I>,
-        witness: Vec<F>,
+        witness: (Vec<F>, ()),
         transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<(), Self::Proof> {
         let ProverOutput {
@@ -106,12 +107,13 @@ where
 {
 }
 
-impl<F, C, const IO: usize, const S: usize> ClcsStructure<F, C, IO, S>
+impl<F, C, E, const IO: usize, const S: usize> ClcsStructure<F, C, IO, S, E>
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
-    pub fn to_flcs<const I: usize>(&self) -> FlcsStructure<F, C, IO, S, I> {
+    pub fn to_flcs<const I: usize>(&self) -> FlcsStructure<F, C, IO, S, I, E> {
         use sumcheck::oracles::partial::PartialOracle;
         let ClcsStructure { lcs_structure, pcs } = self;
         let (lcs_structure, pcs) = (lcs_structure.clone(), pcs.clone());
@@ -144,16 +146,21 @@ where
         );
         let oracle = CompositeOracle::new(data, mles, builder1, builder2);
 
+        let extended = E::derive_structure(&lcs_structure.extended);
+        let aggregation = E::AgregationScheme::structure(pcs.clone());
+
         FlcsStructure {
             lcs_structure,
             pcs,
             oracle,
+            extended,
+            aggregation,
         }
     }
 }
 
-fn structure<F: Field, const IO: usize, const S: usize, const I: usize>(
-    lcs_structure: LcsStructure<F, IO, S>,
+fn structure<F: Field, E: LcsExtension<F>, const IO: usize, const S: usize, const I: usize>(
+    lcs_structure: LcsStructure<F, IO, S, E>,
 ) -> Vec<FlcsEvals<F, IO, S, I>> {
     let mut mles = Vec::with_capacity(1 << lcs_structure.vars());
     let len = lcs_structure

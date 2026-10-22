@@ -120,7 +120,7 @@ where
     where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
     {
-        <C as BuildStructure<F, IN, OUT, PRIV_OUT, IO>>::profile()
+        <C as BuildStructure<F, (), IN, OUT, PRIV_OUT, IO>>::profile()
     }
 }
 

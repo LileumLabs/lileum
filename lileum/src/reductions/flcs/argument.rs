@@ -1,9 +1,10 @@
 use crate::{
+    extensions::Extension,
     reductions::{FlcsReduction, flcs::reduction},
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
 };
 use ::reduction::{
-    Argument, GuardedProof, ProverOutput, Reduction, Transcript, TranscriptBuilder,
+    Argument, GuardedProof, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
     VerifierTranscript,
 };
 use alloc::vec::Vec;
@@ -17,10 +18,11 @@ use sumcheck::oracles::partial::OracleParams;
 pub struct FlcsArgument;
 
 #[derive(Clone, Debug)]
-pub struct Proof<F, C, const IO: usize>(reduction::Proof<F, C, IO>, C::Proof)
+pub struct Proof<F, C, const IO: usize, E = ()>(reduction::Proof<F, C, IO, E>, C::Proof)
 where
     F: Field,
-    C: CommitmentScheme<F>;
+    C: CommitmentScheme<F>,
+    E: Extension<F, C>;
 
 #[derive(Clone, Debug)]
 pub enum Error<F: Field, C: CommitmentScheme<F>> {
@@ -28,17 +30,18 @@ pub enum Error<F: Field, C: CommitmentScheme<F>> {
     Pcs(C::Error),
 }
 
-impl<F, C, const I: usize, const IO: usize, const S: usize>
-    Reduction<F, FlcsRelation<F, C, I, IO, S>, ()> for FlcsArgument
+impl<F, C, E, const I: usize, const IO: usize, const S: usize>
+    Reduction<F, FlcsRelation<F, C, I, IO, S, E>, ()> for FlcsArgument
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
-    type ProverKey = (reduction::ProverKey<F, C, IO, S, I>, C::ProverKey);
+    type ProverKey = (reduction::ProverKey<F, C, IO, S, I, E>, C::ProverKey);
 
-    type VerifierKey = (reduction::VerifierKey<F, C, IO, S, I>, C::VerifierKey);
+    type VerifierKey = (reduction::VerifierKey<F, C, IO, S, I, E>, C::VerifierKey);
 
-    type Proof = Proof<F, C, IO>;
+    type Proof = Proof<F, C, IO, E>;
 
     type Error = Error<F, C>;
 
@@ -53,7 +56,7 @@ where
             .subprotocol::<C, _, _, _>(&key.1)
     }
 
-    fn verifier_key(structure: &FlcsStructure<F, C, IO, S, I>) -> Self::VerifierKey {
+    fn verifier_key(structure: &FlcsStructure<F, C, IO, S, I, E>) -> Self::VerifierKey {
         let pcs = &structure.pcs;
         let reduction_key = FlcsReduction::verifier_key(structure);
         let opening_key = C::verifier_key(pcs);
@@ -61,7 +64,9 @@ where
         (reduction_key, opening_key)
     }
 
-    fn key_pair(structure: &FlcsStructure<F, C, IO, S, I>) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(
+        structure: &FlcsStructure<F, C, IO, S, I, E>,
+    ) -> (Self::VerifierKey, Self::ProverKey) {
         let pcs = &structure.pcs;
         let reduction_keys = FlcsReduction::key_pair(structure);
         let opening_keys = C::key_pair(pcs);
@@ -77,8 +82,8 @@ where
 
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
-        instance: FlcsInstance<F, C, IO, S, I>,
-        witness: Vec<F>,
+        instance: FlcsInstance<F, C, IO, S, I, E>,
+        witness: (Vec<F>, <E::R2 as Relation>::Witness),
         transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<(), Self::Proof> {
         let ProverOutput {
@@ -104,7 +109,7 @@ where
 
     fn verify<D: Duplex<F>>(
         key: &Self::VerifierKey,
-        instance: FlcsInstance<F, C, IO, S, I>,
+        instance: FlcsInstance<F, C, IO, S, I, E>,
         proof: GuardedProof<Self::Proof>,
         transcript: &mut VerifierTranscript<F, D>,
     ) -> Result<(), Self::Error> {

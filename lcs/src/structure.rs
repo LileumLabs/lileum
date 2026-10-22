@@ -2,6 +2,7 @@ pub use crate::matrix::Matrix;
 use crate::{
     circuit::Var,
     constraint_system::{ConstraintSystem, Constraints, Gate, GateRegistry, Val, WitnessReader},
+    extensions::LcsExtension,
     gates::{Constant, Equality},
 };
 use alloc::{boxed::Box, collections::BTreeMap, vec::Vec};
@@ -54,7 +55,11 @@ impl Ord for MatrixIndex {
 }
 
 #[derive(Clone, Debug)]
-pub struct LcsStructure<F, const IO: usize, const S: usize> {
+pub struct LcsStructure<F, const IO: usize, const S: usize, E = ()>
+where
+    F: Field,
+    E: LcsExtension<F>,
+{
     pub io_matrices: [Matrix; IO],
     /// Where each entry is in 0..S representing the gate to active.
     pub gate_selectors: Vec<usize>,
@@ -65,9 +70,14 @@ pub struct LcsStructure<F, const IO: usize, const S: usize> {
     pub trace_len: usize,
     /// Maps Constant constraints to their constant.
     pub constants: BTreeMap<usize, F>,
+    pub extended: E::Structure,
 }
 
-impl<F, const IO: usize, const S: usize> LcsStructure<F, IO, S> {
+impl<F, E, const IO: usize, const S: usize> LcsStructure<F, IO, S, E>
+where
+    F: Field,
+    E: LcsExtension<F>,
+{
     /// vars needed to fit the trace
     pub fn vars(&self) -> usize {
         let len_padded = self.trace_len.next_power_of_two();
@@ -87,12 +97,13 @@ struct Constraint<T, const IO: usize> {
 
 /// Builder creates the structure for a circuit through symbolic variables.
 #[derive(Debug, Default)]
-pub struct StructureBuilder<F: Field, const IO: usize> {
+pub struct StructureBuilder<F: Field, const IO: usize, E: LcsExtension<F> = ()> {
     next: usize,
     vars: Vec<usize>,
     registry: GateRegistry,
     constraints: Vec<Constraint<WitnessIndex, IO>>,
     constant_table: BTreeMap<F, WitnessIndex>,
+    extension_builder: E::StructureBuilder,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -134,7 +145,7 @@ impl Mul for WitnessIndex {
 
 impl Val for WitnessIndex {}
 
-impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
+impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> StructureBuilder<F, MAX_IO, E> {
     pub(crate) fn vars(&self) -> &[usize] {
         &self.vars
     }
@@ -181,18 +192,19 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
     pub fn link_outputs<const I: usize, const O: usize>(&mut self, outputs: [WitnessIndex; O]) {
         for (i, b) in outputs.into_iter().enumerate() {
             let a = WitnessIndex(i + I);
-            <Self as ConstraintSystem<F, WitnessIndex>>::execute::<Equality, 2, 2, 0>(
+            <Self as ConstraintSystem<F, WitnessIndex, E>>::execute::<Equality, 2, 2, 0>(
                 self,
                 [a, b].map(Var),
             );
         }
     }
 
-    pub fn build<const S: usize>(self, public_io_len: usize) -> LcsStructure<F, MAX_IO, S> {
+    pub fn build<const S: usize>(self, public_io_len: usize) -> LcsStructure<F, MAX_IO, S, E> {
         let Self {
             registry,
             constraints,
             constant_table,
+            extension_builder,
             ..
         } = self;
 
@@ -245,6 +257,8 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
 
         let trace_len = self.vars.len();
         assert_eq!(trace_len, self.next);
+
+        let extended = E::process_structure(extension_builder);
         LcsStructure {
             input_len: public_io_len,
             io_matrices,
@@ -252,12 +266,13 @@ impl<F: Field, const MAX_IO: usize> StructureBuilder<F, MAX_IO> {
             gates,
             trace_len,
             constants,
+            extended,
         }
     }
 }
 
-impl<F: Field, const MAX_IO: usize> ConstraintSystem<F, WitnessIndex>
-    for StructureBuilder<F, MAX_IO>
+impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> ConstraintSystem<F, WitnessIndex, E>
+    for StructureBuilder<F, MAX_IO, E>
 {
     fn execute<G, const IO: usize, const I: usize, const O: usize>(
         &mut self,
@@ -305,6 +320,14 @@ impl<F: Field, const MAX_IO: usize> ConstraintSystem<F, WitnessIndex>
                 Var(var)
             }
         }
+    }
+
+    fn apply_ex_constraint<const N: usize>(
+        &mut self,
+        vars: [Var<WitnessIndex>; N],
+        constraint: E::Constraint,
+    ) {
+        E::record_constraint(&mut self.extension_builder, vars, constraint);
     }
 }
 

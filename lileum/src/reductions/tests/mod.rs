@@ -31,6 +31,7 @@ where
     let instance: ClcsInstance<F, C, 2> = ClcsInstance {
         witness_commit,
         public_inputs,
+        extended_instance: (),
     };
 
     (instance, witness.0)

@@ -90,7 +90,7 @@ where
     fn prove<D: Duplex<F>>(
         key: &Self::ProverKey,
         instance: [FlcsInstance<F, C, IO, S, I>; 2],
-        witness: [Vec<F>; 2],
+        witness: [(Vec<F>, ()); 2],
         transcript: &mut Transcript<F, D>,
     ) -> ProverOutput<FlcsRelation<F, C, I, IO, S>, Self::Proof> {
         let instances = instance.map(|instance| instance.0);
@@ -98,7 +98,7 @@ where
             .each_ref()
             .map(|instance| &instance.oracle_instance().oracle1_instance);
 
-        let [w1, w2] = witness;
+        let [w1, w2] = witness.map(|w| w.0);
         let [c1, c2] = core_instances;
 
         let witnesses = [(w1, c1), (w2, c2)].map(|(witness, core_instance)| {
@@ -107,9 +107,10 @@ where
 
         ZeroFold::prove(&key.zerofold, instances, witnesses, transcript)
             .map_proof(FoldingProof)
-            .map_rel::<FlcsRelation<F, C, I, IO, S>, _, _>(FlcsInstance, |witness| {
-                witness.into_iter().map(|witness| witness.w()).collect()
-            })
+            .map_rel::<FlcsRelation<F, C, I, IO, S>, _, _>(
+                |instance| FlcsInstance(instance, ()),
+                |witness| (witness.into_iter().map(|witness| witness.w()).collect(), ()),
+            )
     }
 
     fn verify<D: Duplex<F>>(
@@ -121,6 +122,6 @@ where
         let instances = instance.map(|instance| instance.0);
         let instance = ZeroFold::verify(key, instances, proof.map(|proof| proof.0), transcript)
             .map_err(FoldingError)?;
-        Ok(FlcsInstance(instance))
+        Ok(FlcsInstance(instance, ()))
     }
 }
