@@ -63,7 +63,7 @@ where
     ) -> (
         FlcsInstance<F, CS, IO, S, I>,
         Witness<F>,
-        FoldingProof<F, C>,
+        FoldingProof<F, CS, C>,
     ) {
         self.inner.fold_prove(instance1, instance2, witnesses)
     }
@@ -74,7 +74,7 @@ where
         &self,
         instance1: impl Into<Instance<F, CS, IO, S, I>>,
         instance2: impl Into<Instance<F, CS, IO, S, I>>,
-        proof: FoldingProof<F, C>,
+        proof: FoldingProof<F, CS, C>,
     ) -> FlcsInstance<F, CS, IO, S, I> {
         //TODO: should leave panic to the caller.
         self.inner.fold_verify(instance1, instance2, proof).unwrap()

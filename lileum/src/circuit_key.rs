@@ -45,7 +45,10 @@ pub enum Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
     Flcs(flcs::argument::Proof<F, C, IO>),
 }
 
-pub struct FoldingProof<F: Field, C>(folding::FoldingProof<F>, PhantomData<C>);
+pub struct FoldingProof<F, CS, C>(folding::FoldingProof<F, CS>, PhantomData<C>)
+where
+    F: Field,
+    CS: CommitmentScheme<F>;
 
 impl<F, D, C, CS, E, const I: usize, const IO: usize, const S: usize>
     CircuitKey<F, D, C, CS, I, IO, S, E>
@@ -143,7 +146,7 @@ where
     ) -> (
         FlcsInstance<F, CS, IO, S, I>,
         Witness<F>,
-        FoldingProof<F, C>,
+        FoldingProof<F, CS, C>,
     ) {
         let instances = [instance1.into(), instance2.into()].map(|instance| match instance {
             Instance::Lcs(instance) => {
@@ -171,7 +174,7 @@ where
         &self,
         instance1: impl Into<Instance<F, CS, IO, S, I>>,
         instance2: impl Into<Instance<F, CS, IO, S, I>>,
-        proof: FoldingProof<F, C>,
+        proof: FoldingProof<F, CS, C>,
     ) -> Option<FlcsInstance<F, CS, IO, S, I>> {
         let instances = [instance1.into(), instance2.into()].map(|instance| match instance {
             Instance::Lcs(instance) => {

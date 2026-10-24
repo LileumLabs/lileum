@@ -5,7 +5,8 @@ use commit::CommitmentScheme;
 use core::{fmt::Debug, marker::PhantomData};
 use lcs::extensions::LcsExtension;
 use reduction::{
-    GuardedProof, Message, NoError, ProverOutput, Reduction, Relation, VerifierTranscript,
+    FoldingRelation, FoldingScheme, GuardedProof, Message, NoError, ProverOutput, Reduction,
+    Relation, VerifierTranscript,
 };
 
 use crate::extensions::aggregation::{
@@ -59,6 +60,18 @@ where
     // Generally, the intension is to support instances isomorphic
     // to [OpenInstance; N].
     type AgregationScheme: Aggregate<F, C, Self::R3>;
+}
+
+pub trait FoldableExtension<F, C>: Extension<F, C>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    <Self::FoldingScheme as Reduction<F, FoldingRelation<Self::R2>, Self::R2>>::Proof:
+        Debug + Clone,
+    <Self::FoldingScheme as Reduction<F, FoldingRelation<Self::R2>, Self::R2>>::VerifierKey:
+        Debug + Clone + CanonicalSerialize,
+{
+    type FoldingScheme: FoldingScheme<F, Self::R2>;
 }
 
 pub struct IdentityRelation<F, C>(PhantomData<(F, C)>);
@@ -159,6 +172,10 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for () {
     type Reduction2 = ();
 
     type AgregationScheme = UnitAggregation;
+}
+
+impl<F: Field, C: CommitmentScheme<F>> FoldableExtension<F, C> for () {
+    type FoldingScheme = ();
 }
 
 pub mod aggregation {
