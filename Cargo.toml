@@ -13,7 +13,8 @@ members = [
     "hash-to-curve",
     "shout",
     "common",
-    "spreadsheet"]
+    "spreadsheet",
+    "zkfol"]
 
 resolver = "2"
 
