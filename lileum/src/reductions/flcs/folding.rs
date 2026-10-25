@@ -1,5 +1,5 @@
 use crate::{
-    extensions::FoldableExtension,
+    extensions::Extension,
     oracles::FlcsOracle,
     reductions::flcs::{FlcsEvals, compute_sumcheck_witness},
     relations::{FlcsInstance, FlcsRelation, FlcsStructure},
@@ -28,7 +28,7 @@ pub struct ProverKey<F, C, const IO: usize, const S: usize, const I: usize, E = 
 where
     F: Field,
     C: CommitmentScheme<F>,
-    E: FoldableExtension<F, C>,
+    E: Extension<F, C>,
 {
     structure: Rc<Vec<FlcsEvals<F, IO, S, I>>>,
     matrices: [Rc<Matrix>; IO],
@@ -41,7 +41,7 @@ pub struct VerifierKey<F, C, const IO: usize, const S: usize, const I: usize, E 
 where
     F: Field,
     C: CommitmentScheme<F>,
-    E: FoldableExtension<F, C>,
+    E: Extension<F, C>,
 {
     folding: ZeroFoldKey<F, FlcsOracle<F, C, FlcsEvals<(), IO, S, I>, IO>>,
     extension: <E::FoldingScheme as Reduction<F, FoldingRelation<E::R2>, E::R2>>::VerifierKey,
@@ -55,13 +55,13 @@ pub struct FoldingProof<F, C, E = ()>(
 where
     F: Field,
     C: CommitmentScheme<F>,
-    E: FoldableExtension<F, C>;
+    E: Extension<F, C>;
 
 impl<F: Clone, C: Clone, E: Clone> Clone for FoldingProof<F, C, E>
 where
     F: Field,
     C: CommitmentScheme<F>,
-    E: FoldableExtension<F, C>,
+    E: Extension<F, C>,
     E::R2: Clone,
 {
     fn clone(&self) -> Self {
@@ -78,7 +78,7 @@ impl<F, C, E, const I: usize, const IO: usize, const S: usize>
 where
     F: Field,
     C: CommitmentScheme<F>,
-    E: FoldableExtension<F, C>,
+    E: Extension<F, C>,
 {
     type ProverKey = ProverKey<F, C, IO, S, I, E>;
 

@@ -3,10 +3,10 @@ use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::CommitmentScheme;
 use core::{fmt::Debug, marker::PhantomData};
-use lcs::extensions::LcsExtension;
+use lcs::extensions::{LcsExtension, Never};
 use reduction::{
     FoldingRelation, FoldingScheme, GuardedProof, Message, NoError, ProverOutput, Reduction,
-    Relation, VerifierTranscript,
+    Relation, TranscriptBuilder, VerifierTranscript,
 };
 
 use crate::extensions::aggregation::{
@@ -60,18 +60,72 @@ where
     // Generally, the intension is to support instances isomorphic
     // to [OpenInstance; N].
     type AgregationScheme: Aggregate<F, C, Self::R3>;
+
+    /// The type `NoFolding` can be used when the extension doesn't support
+    /// folding.
+    type FoldingScheme: FoldingScheme<
+            F,
+            Self::R2,
+            Proof: Debug + Clone,
+            VerifierKey: Debug + Clone + CanonicalSerialize,
+        >;
 }
 
 pub trait FoldableExtension<F, C>: Extension<F, C>
 where
     F: Field,
     C: CommitmentScheme<F>,
-    <Self::FoldingScheme as Reduction<F, FoldingRelation<Self::R2>, Self::R2>>::Proof:
-        Debug + Clone,
-    <Self::FoldingScheme as Reduction<F, FoldingRelation<Self::R2>, Self::R2>>::VerifierKey:
-        Debug + Clone + CanonicalSerialize,
 {
-    type FoldingScheme: FoldingScheme<F, Self::R2>;
+}
+
+/// A placeholder implementation of FoldingScheme, which works for any relation
+/// but can't be instanciated.
+pub struct NoFolding;
+
+impl<F: Field, R: Relation> Reduction<F, FoldingRelation<R>, R> for NoFolding {
+    type ProverKey = Never;
+
+    type VerifierKey = Never;
+
+    type Proof = Never;
+
+    type Error = Never;
+
+    type Params = Never;
+
+    fn transcript_pattern(key: &Self::VerifierKey, _: TranscriptBuilder) -> TranscriptBuilder {
+        match *key {}
+    }
+
+    fn verifier_key(_: &R::Structure) -> Self::VerifierKey {
+        panic!("This Reduction is a placeholder, it shouldn't be instanciated");
+    }
+
+    fn key_pair(_: &R::Structure) -> (Self::VerifierKey, Self::ProverKey) {
+        panic!("This Reduction is a placeholder, it shouldn't be instanciated");
+    }
+
+    fn params(key: &Never) -> Self::Params {
+        match *key {}
+    }
+
+    fn prove<S: sponge::sponge::Duplex<F>>(
+        key: &Self::ProverKey,
+        _: [R::Instance; 2],
+        _: [R::Witness; 2],
+        _: &mut reduction::Transcript<F, S>,
+    ) -> ProverOutput<R, Self::Proof> {
+        match *key {}
+    }
+
+    fn verify<S: sponge::sponge::Duplex<F>>(
+        key: &Self::VerifierKey,
+        _: [R::Instance; 2],
+        _: GuardedProof<Self::Proof>,
+        _: &mut VerifierTranscript<F, S>,
+    ) -> Result<<R as Relation>::Instance, Self::Error> {
+        match *key {}
+    }
 }
 
 pub struct IdentityRelation<F, C>(PhantomData<(F, C)>);
@@ -116,10 +170,7 @@ where
 
     type Params = ();
 
-    fn transcript_pattern(
-        _: &Self::VerifierKey,
-        builder: reduction::TranscriptBuilder,
-    ) -> reduction::TranscriptBuilder {
+    fn transcript_pattern(_: &Self::VerifierKey, builder: TranscriptBuilder) -> TranscriptBuilder {
         builder
     }
 
@@ -172,11 +223,11 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for () {
     type Reduction2 = ();
 
     type AgregationScheme = UnitAggregation;
-}
 
-impl<F: Field, C: CommitmentScheme<F>> FoldableExtension<F, C> for () {
     type FoldingScheme = ();
 }
+
+impl<F: Field, C: CommitmentScheme<F>> FoldableExtension<F, C> for () {}
 
 pub mod aggregation {
     use crate::extensions::Extension;

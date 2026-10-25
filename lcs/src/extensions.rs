@@ -1,4 +1,5 @@
 use ark_ff::Field;
+use ark_serialize::CanonicalSerialize;
 
 use crate::{circuit::Var, structure::WitnessIndex};
 use core::fmt::Debug;
@@ -28,7 +29,22 @@ pub trait LcsExtension<F: Field>: Debug + Default {
     );
 }
 
+#[derive(Clone, Copy, Debug)]
 pub enum Never {}
+
+impl CanonicalSerialize for Never {
+    fn serialize_with_mode<W: ark_serialize::Write>(
+        &self,
+        _: W,
+        _: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        match *self {}
+    }
+
+    fn serialized_size(&self, _: ark_serialize::Compress) -> usize {
+        match *self {}
+    }
+}
 
 impl<F: Field> LcsExtension<F> for () {
     type Constraint = Never;
