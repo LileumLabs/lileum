@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 reduction = { workspace = true }
+ark-ff = { version = "0.4", default-features = false }
+sponge = { workspace = true }
