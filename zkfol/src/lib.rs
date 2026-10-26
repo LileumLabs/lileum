@@ -68,8 +68,12 @@ pub struct ZkFolStructure<const ROWS: usize = 100> {
 impl<const ROWS: usize> Relation for ZkFol<ROWS> {
     type Structure = ZkFolStructure<ROWS>;
 
+    // For a more concrete implementation this will likely
+    // have at least a commitment to the witness.
     type Instance = ();
 
+    // Using i64 for simplicity, but we will likely want
+    // some arbitrary precision integer or some Q-like type.
     type Witness = Vec<[i64; ROWS]>;
 
     fn check(
@@ -166,4 +170,7 @@ where
             panic!("Failed to verify with error");
         }
     }
+
+    // The same prover and verifier can be used to prove other instance-witness
+    // pairs that share the same structure.
 }
