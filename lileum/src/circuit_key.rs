@@ -41,8 +41,11 @@ pub struct CircuitKey<
 }
 
 #[derive(Clone)]
-pub enum Proof<F: Field, C: CommitmentScheme<F>, const IO: usize> {
-    Flcs(flcs::argument::Proof<F, C, IO>),
+pub enum Proof<F: Field, C: CommitmentScheme<F>, const IO: usize, E = ()>
+where
+    E: Extension<F, C>,
+{
+    Flcs(flcs::argument::Proof<F, C, IO, E>),
 }
 
 pub struct FoldingProof<F, CS, C>(folding::FoldingProof<F, CS>, PhantomData<C>)
@@ -90,6 +93,24 @@ where
             _circuit: PhantomData,
         }
     }
+
+    pub fn verify(
+        &self,
+        instance: impl Into<Instance<F, CS, IO, S, I, E>>,
+        proof: Proof<F, CS, IO, E>,
+    ) -> bool {
+        let instance = match instance.into() {
+            Instance::Lcs(lcs_instance) => {
+                let Ok(instance) = self.to_flcs.verify(lcs_instance, ());
+                instance
+            }
+            Instance::Flcs(flcs_instance) => flcs_instance,
+        };
+
+        let Proof::Flcs(proof) = proof;
+
+        self.flcs_verifier.verify(instance, proof).is_ok()
+    }
 }
 
 impl<F, D, C, CS, const I: usize, const IO: usize, const S: usize> CircuitKey<F, D, C, CS, I, IO, S>
@@ -117,24 +138,6 @@ where
         } = self.flcs_prover.prove(instance, (witness.0, ()));
 
         Proof::Flcs(proof)
-    }
-
-    pub fn verify(
-        &self,
-        instance: impl Into<Instance<F, CS, IO, S, I>>,
-        proof: Proof<F, CS, IO>,
-    ) -> bool {
-        let instance = match instance.into() {
-            Instance::Lcs(lcs_instance) => {
-                let Ok(instance) = self.to_flcs.verify(lcs_instance, ());
-                instance
-            }
-            Instance::Flcs(flcs_instance) => flcs_instance,
-        };
-
-        let Proof::Flcs(proof) = proof;
-
-        self.flcs_verifier.verify(instance, proof).is_ok()
     }
 
     pub fn fold_prove(
@@ -230,13 +233,14 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub enum Instance<F, C, const IO: usize, const S: usize, const I: usize>
+pub enum Instance<F, C, const IO: usize, const S: usize, const I: usize, E = ()>
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
-    Lcs(ClcsInstance<F, C, I>),
-    Flcs(FlcsInstance<F, C, IO, S, I>),
+    Lcs(ClcsInstance<F, C, I, E>),
+    Flcs(FlcsInstance<F, C, IO, S, I, E>),
 }
 
 impl<F, C, const IO: usize, const S: usize, const I: usize> From<ClcsInstance<F, C, I>>
