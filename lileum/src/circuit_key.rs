@@ -35,8 +35,8 @@ pub struct CircuitKey<
     to_flcs: ToFlcsVerifier<F, D, CS, I, IO, S, E>,
     flcs_prover: Prover<F, D, FlcsRelation<F, CS, I, IO, S, E>, (), FlcsArgument>,
     flcs_verifier: Verifier<F, D, FlcsRelation<F, CS, I, IO, S, E>, (), FlcsArgument>,
-    folding_prover: FoldingProver<F, D, FlcsRelation<F, CS, I, IO, S>>,
-    folding_verifier: FoldingVerifier<F, D, FlcsRelation<F, CS, I, IO, S>>,
+    folding_prover: FoldingProver<F, D, FlcsRelation<F, CS, I, IO, S, E>>,
+    folding_verifier: FoldingVerifier<F, D, FlcsRelation<F, CS, I, IO, S, E>>,
     pcs: CS,
 }
 
@@ -58,20 +58,12 @@ where
     CS: CommitmentScheme<F>,
     E: Extension<F, CS>,
 {
-}
-
-impl<F, D, C, CS, const I: usize, const IO: usize, const S: usize> CircuitKey<F, D, C, CS, I, IO, S>
-where
-    F: Field,
-    D: Duplex<F>,
-    CS: CommitmentScheme<F>,
-{
     pub fn new<const IN: usize, const OUT: usize, const PRIV_OUT: usize>() -> Self
     where
-        C: Circuit<F, IN, OUT, PRIV_OUT>,
+        C: Circuit<F, IN, OUT, PRIV_OUT, E>,
         CS: 'static,
     {
-        let lcs_structure: LcsStructure<F, IO, S> = C::structure();
+        let lcs_structure: LcsStructure<F, IO, S, E> = C::structure();
         let vars = lcs_structure.vars();
 
         let pcs = CS::new(vars);
@@ -98,7 +90,14 @@ where
             _circuit: PhantomData,
         }
     }
+}
 
+impl<F, D, C, CS, const I: usize, const IO: usize, const S: usize> CircuitKey<F, D, C, CS, I, IO, S>
+where
+    F: Field,
+    D: Duplex<F>,
+    CS: CommitmentScheme<F>,
+{
     pub fn prove(
         &self,
         instance: impl Into<Instance<F, CS, IO, S, I>>,
