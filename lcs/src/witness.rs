@@ -46,7 +46,7 @@ pub struct WitnessGenerator<F: Field, const IO: usize, E: LcsExtension<F> = ()> 
 }
 
 #[derive(Clone, Debug)]
-pub struct Witness<F: Field>(pub Vec<F>);
+pub struct Witness<F: Field, E: LcsExtension<F> = ()>(pub Vec<F>, pub E::Witness);
 
 impl<F: Field> Witness<F> {
     /// Pad with 0s to the next power of 2.
@@ -158,8 +158,9 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> WitnessGenerator<F, MAX_
         }
     }
 
-    pub fn witness(self) -> Witness<F> {
-        Witness(self.witness.into_iter().map(|x| x.0).collect())
+    pub fn witness(self) -> Witness<F, E> {
+        let wit_ext = E::process_witness(self.extended_witness);
+        Witness(self.witness.into_iter().map(|x| x.0).collect(), wit_ext)
     }
 }
 

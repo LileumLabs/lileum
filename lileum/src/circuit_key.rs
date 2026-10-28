@@ -94,6 +94,28 @@ where
         }
     }
 
+    pub fn prove(
+        &self,
+        instance: impl Into<Instance<F, CS, IO, S, I, E>>,
+        witness: Witness<F, E>,
+    ) -> Proof<F, CS, IO, E> {
+        let instance = match instance.into() {
+            Instance::Lcs(lcs_instance) => {
+                let Ok(instance) = self.to_flcs.verify(lcs_instance, ());
+                instance
+            }
+            Instance::Flcs(flcs_instance) => flcs_instance,
+        };
+        let Witness(w, w_ext) = witness;
+        let ProverOutput {
+            instance: (),
+            witness: (),
+            proof,
+        } = self.flcs_prover.prove(instance, (w, w_ext));
+
+        Proof::Flcs(proof)
+    }
+
     pub fn verify(
         &self,
         instance: impl Into<Instance<F, CS, IO, S, I, E>>,
@@ -119,27 +141,6 @@ where
     D: Duplex<F>,
     CS: CommitmentScheme<F>,
 {
-    pub fn prove(
-        &self,
-        instance: impl Into<Instance<F, CS, IO, S, I>>,
-        witness: Witness<F>,
-    ) -> Proof<F, CS, IO> {
-        let instance = match instance.into() {
-            Instance::Lcs(lcs_instance) => {
-                let Ok(instance) = self.to_flcs.verify(lcs_instance, ());
-                instance
-            }
-            Instance::Flcs(flcs_instance) => flcs_instance,
-        };
-        let ProverOutput {
-            instance: (),
-            witness: (),
-            proof,
-        } = self.flcs_prover.prove(instance, (witness.0, ()));
-
-        Proof::Flcs(proof)
-    }
-
     pub fn fold_prove(
         &self,
         instance1: impl Into<Instance<F, CS, IO, S, I>>,
@@ -167,7 +168,7 @@ where
 
         (
             instance,
-            Witness(witness.0),
+            Witness(witness.0, ()),
             FoldingProof(proof, PhantomData),
         )
     }

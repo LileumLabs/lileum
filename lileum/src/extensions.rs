@@ -34,10 +34,9 @@ where
     AggregationProof<F, C, Self>: Debug,
 {
     type Instance: Clone + Message<F, Params = (), Error = NoError>;
-    type Witness;
 
     type R1: ExtensionRelation<F, C, Self::Instance, Self::Witness, Self::Structure>;
-    type R2: Relation + Clone + Debug;
+    type R2: Relation<Witness = Self::Witness> + Clone + Debug;
     type R3: Relation + Clone + Debug;
 
     fn derive_structure(r1_structure: &Self::Structure) -> <Self::R2 as Relation>::Structure;
@@ -207,8 +206,6 @@ where
 
 impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for () {
     type Instance = ();
-
-    type Witness = ();
 
     type R1 = IdentityRelation<F, C>;
 

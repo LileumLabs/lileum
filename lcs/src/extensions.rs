@@ -7,10 +7,13 @@ use core::fmt::Debug;
 pub trait LcsExtension<F: Field>: Debug + Default {
     type Constraint;
     type StructureBuilder: Default;
-    type Structure: Clone;
     type WitnessBuilder: Default;
 
+    type Structure: Clone;
+    type Witness;
+
     fn process_structure(builder: Self::StructureBuilder) -> Self::Structure;
+    fn process_witness(builder: Self::WitnessBuilder) -> Self::Witness;
 
     /// Records the application of a constraint during structure
     /// generation.
@@ -50,9 +53,12 @@ impl<F: Field> LcsExtension<F> for () {
     type Constraint = Never;
     type StructureBuilder = ();
     type Structure = ();
+    type Witness = ();
     type WitnessBuilder = ();
 
     fn process_structure(_: ()) -> Self::Structure {}
+
+    fn process_witness(_: ()) -> Self::Witness {}
 
     fn record_constraint<const N: usize>(_: &mut (), _: [Var<WitnessIndex>; N], _: Never) {}
 
