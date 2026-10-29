@@ -100,11 +100,18 @@ where
 {
 }
 
-pub trait Prove<F: Field, const IN: usize, const OUT: usize, const PRIV_OUT: usize, const IO: usize>:
-    Circuit<F, IN, OUT, PRIV_OUT>
+pub trait Prove<
+    F: Field,
+    const IN: usize,
+    const OUT: usize,
+    const PRIV_OUT: usize,
+    const IO: usize,
+    E: LcsExtension<F> = (),
+>: Circuit<F, IN, OUT, PRIV_OUT, E>
 {
-    fn witness(inputs: [F; IN], check: bool) -> (Witness<F>, Self::PrivateOutput) {
-        let (mut cs, public_input) = WitnessGenerator::<F, IO>::with_io::<IN, OUT>(check, inputs);
+    fn witness(inputs: [F; IN], check: bool) -> (Witness<F, E>, Self::PrivateOutput) {
+        let (mut cs, public_input) =
+            WitnessGenerator::<F, IO, E>::with_io::<IN, OUT>(check, inputs);
         let (public_out, private_out) = Self::circuit(&mut cs, public_input.map(Var));
         let private_out = unwrap_output(private_out.map(Var::unwrap));
 
@@ -113,9 +120,16 @@ pub trait Prove<F: Field, const IN: usize, const OUT: usize, const PRIV_OUT: usi
     }
 }
 
-impl<T, F: Field, const IN: usize, const OUT: usize, const PRIV_OUT: usize, const IO: usize>
-    Prove<F, IN, OUT, PRIV_OUT, IO> for T
+impl<
+    T,
+    F: Field,
+    E: LcsExtension<F>,
+    const IN: usize,
+    const OUT: usize,
+    const PRIV_OUT: usize,
+    const IO: usize,
+> Prove<F, IN, OUT, PRIV_OUT, IO, E> for T
 where
-    T: Circuit<F, IN, OUT, PRIV_OUT>,
+    T: Circuit<F, IN, OUT, PRIV_OUT, E>,
 {
 }

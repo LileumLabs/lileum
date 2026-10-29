@@ -48,7 +48,7 @@ pub struct WitnessGenerator<F: Field, const IO: usize, E: LcsExtension<F> = ()> 
 #[derive(Clone, Debug)]
 pub struct Witness<F: Field, E: LcsExtension<F> = ()>(pub Vec<F>, pub E::Witness);
 
-impl<F: Field> Witness<F> {
+impl<F: Field, E: LcsExtension<F>> Witness<F, E> {
     /// Pad with 0s to the next power of 2.
     pub fn pad_to_power(&mut self) {
         let len = self.0.len().next_power_of_two();

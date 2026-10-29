@@ -133,6 +133,57 @@ where
 
         self.flcs_verifier.verify(instance, proof).is_ok()
     }
+
+    /// From just the public inputs, it runs the circuit to compute the witness, and
+    /// commits to it to create an instance.
+    /// Returns the instance-witness pair and the private output if required.
+    pub fn commit_witness<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
+        &self,
+        inputs: [F; IN],
+    ) -> (ClcsInstance<F, CS, I, E>, Witness<F, E>, C::PrivateOutput)
+    where
+        C: Circuit<F, IN, OUT, PRIV_OUT, E>,
+    {
+        assert_eq!(I, IN + OUT);
+        let (mut witness, output) =
+            <C as Prove<F, IN, OUT, PRIV_OUT, IO, E>>::witness(inputs, true);
+        witness.pad_to_power();
+        let witness_commit = self.pcs.commit_mle(&witness.0);
+
+        let mut public_inputs = [F::zero(); I];
+        assert!(witness.0.len() >= I);
+        public_inputs.copy_from_slice(&witness.0[0..I]);
+
+        let extended_instance = E::commit_witness(&self.pcs, &witness.1);
+
+        let instance: ClcsInstance<F, CS, I, E> = ClcsInstance {
+            witness_commit,
+            public_inputs,
+            extended_instance,
+        };
+
+        (instance, witness, output)
+    }
+
+    #[allow(clippy::complexity)]
+    /// Calls Self::commit_witness(..) with the inputs, and calls Self::prove(..) with
+    /// the returned instance-witness pair.
+    pub fn prove_from_inputs<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
+        &self,
+        inputs: [F; IN],
+    ) -> (
+        ClcsInstance<F, CS, I, E>,
+        Proof<F, CS, IO, E>,
+        C::PrivateOutput,
+    )
+    where
+        C: Circuit<F, IN, OUT, PRIV_OUT, E>,
+    {
+        let (instance, witness, output) = self.commit_witness(inputs);
+
+        let proof = self.prove(instance.clone(), witness);
+        (instance, proof, output)
+    }
 }
 
 impl<F, D, C, CS, const I: usize, const IO: usize, const S: usize> CircuitKey<F, D, C, CS, I, IO, S>
@@ -188,49 +239,6 @@ where
         });
         self.folding_verifier.verify(instances, proof.0).ok()
     }
-
-    /// From just the public inputs, it runs the circuit to compute the witness, and
-    /// commits to it to create an instance.
-    /// Returns the instance-witness pair and the private output if required.
-    pub fn commit_witness<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
-        &self,
-        inputs: [F; IN],
-    ) -> (ClcsInstance<F, CS, I>, Witness<F>, C::PrivateOutput)
-    where
-        C: Circuit<F, IN, OUT, PRIV_OUT>,
-    {
-        assert_eq!(I, IN + OUT);
-        let (mut witness, output) = <C as Prove<_, IN, OUT, PRIV_OUT, IO>>::witness(inputs, true);
-        witness.pad_to_power();
-        let witness_commit = self.pcs.commit_mle(&witness.0);
-
-        let mut public_inputs = [F::zero(); I];
-        assert!(witness.0.len() >= I);
-        public_inputs.copy_from_slice(&witness.0[0..I]);
-
-        let instance: ClcsInstance<F, CS, I> = ClcsInstance {
-            witness_commit,
-            public_inputs,
-            extended_instance: (),
-        };
-
-        (instance, witness, output)
-    }
-
-    /// Calls Self::commit_witness(..) with the inputs, and calls Self::prove(..) with
-    /// the returned instance-witness pair.
-    pub fn prove_from_inputs<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
-        &self,
-        inputs: [F; IN],
-    ) -> (ClcsInstance<F, CS, I>, Proof<F, CS, IO>, C::PrivateOutput)
-    where
-        C: Circuit<F, IN, OUT, PRIV_OUT>,
-    {
-        let (instance, witness, output) = self.commit_witness(inputs);
-
-        let proof = self.prove(instance.clone(), witness);
-        (instance, proof, output)
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -244,13 +252,14 @@ where
     Flcs(FlcsInstance<F, C, IO, S, I, E>),
 }
 
-impl<F, C, const IO: usize, const S: usize, const I: usize> From<ClcsInstance<F, C, I>>
-    for Instance<F, C, IO, S, I>
+impl<F, C, E, const IO: usize, const S: usize, const I: usize> From<ClcsInstance<F, C, I, E>>
+    for Instance<F, C, IO, S, I, E>
 where
     F: Field,
     C: CommitmentScheme<F>,
+    E: Extension<F, C>,
 {
-    fn from(value: ClcsInstance<F, C, I>) -> Self {
+    fn from(value: ClcsInstance<F, C, I, E>) -> Self {
         Self::Lcs(value)
     }
 }

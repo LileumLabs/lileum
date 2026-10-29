@@ -41,6 +41,8 @@ where
 
     fn derive_structure(r1_structure: &Self::Structure) -> <Self::R2 as Relation>::Structure;
 
+    fn commit_witness(pcs: &C, witness: &Self::Witness) -> Self::Instance;
+
     type Reduction1: Reduction<
             F,
             Self::R1,
@@ -214,6 +216,8 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for () {
     type R3 = ();
 
     fn derive_structure(_: &()) {}
+
+    fn commit_witness(_: &C, _: &()) {}
 
     type Reduction1 = IdentityReduction;
 
