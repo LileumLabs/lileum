@@ -1,5 +1,5 @@
 use crate::{
-    extensions::Extension,
+    extensions::{Extension, FoldableExtension},
     reductions::{
         FlcsArgument, FlcsFoldingScheme, ToFlcsVerifier,
         flcs::{self, folding},
@@ -48,10 +48,11 @@ where
     Flcs(flcs::argument::Proof<F, C, IO, E>),
 }
 
-pub struct FoldingProof<F, CS, C>(folding::FoldingProof<F, CS>, PhantomData<C>)
+pub struct FoldingProof<F, CS, C, E = ()>(folding::FoldingProof<F, CS, E>, PhantomData<C>)
 where
     F: Field,
-    CS: CommitmentScheme<F>;
+    CS: CommitmentScheme<F>,
+    E: FoldableExtension<F, CS>;
 
 impl<F, D, C, CS, E, const I: usize, const IO: usize, const S: usize>
     CircuitKey<F, D, C, CS, I, IO, S, E>
@@ -186,21 +187,24 @@ where
     }
 }
 
-impl<F, D, C, CS, const I: usize, const IO: usize, const S: usize> CircuitKey<F, D, C, CS, I, IO, S>
+impl<F, D, C, CS, E, const I: usize, const IO: usize, const S: usize>
+    CircuitKey<F, D, C, CS, I, IO, S, E>
 where
     F: Field,
     D: Duplex<F>,
     CS: CommitmentScheme<F>,
+    E: FoldableExtension<F, CS>,
 {
+    #[allow(clippy::complexity)]
     pub fn fold_prove(
         &self,
-        instance1: impl Into<Instance<F, CS, IO, S, I>>,
-        instance2: impl Into<Instance<F, CS, IO, S, I>>,
-        witnesses: [Witness<F>; 2],
+        instance1: impl Into<Instance<F, CS, IO, S, I, E>>,
+        instance2: impl Into<Instance<F, CS, IO, S, I, E>>,
+        witnesses: [Witness<F, E>; 2],
     ) -> (
-        FlcsInstance<F, CS, IO, S, I>,
-        Witness<F>,
-        FoldingProof<F, CS, C>,
+        FlcsInstance<F, CS, IO, S, I, E>,
+        Witness<F, E>,
+        FoldingProof<F, CS, C, E>,
     ) {
         let instances = [instance1.into(), instance2.into()].map(|instance| match instance {
             Instance::Lcs(instance) => {
@@ -215,21 +219,21 @@ where
             proof,
         } = self
             .folding_prover
-            .prove(instances, witnesses.map(|w| (w.0, ())));
+            .prove(instances, witnesses.map(|w| (w.0, w.1)));
 
         (
             instance,
-            Witness(witness.0, ()),
+            Witness(witness.0, witness.1),
             FoldingProof(proof, PhantomData),
         )
     }
 
     pub fn fold_verify(
         &self,
-        instance1: impl Into<Instance<F, CS, IO, S, I>>,
-        instance2: impl Into<Instance<F, CS, IO, S, I>>,
-        proof: FoldingProof<F, CS, C>,
-    ) -> Option<FlcsInstance<F, CS, IO, S, I>> {
+        instance1: impl Into<Instance<F, CS, IO, S, I, E>>,
+        instance2: impl Into<Instance<F, CS, IO, S, I, E>>,
+        proof: FoldingProof<F, CS, C, E>,
+    ) -> Option<FlcsInstance<F, CS, IO, S, I, E>> {
         let instances = [instance1.into(), instance2.into()].map(|instance| match instance {
             Instance::Lcs(instance) => {
                 let Ok(instance) = self.to_flcs.verify(instance, ());
