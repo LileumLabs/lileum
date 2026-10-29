@@ -51,12 +51,17 @@ impl<const ROWS: usize> Index<ROWS> {
     }
 }
 
-/// An equality assertion between a cell in the current column
-/// and another cell in the next column
+#[derive(Clone, Debug, Default)]
+pub struct Cell<const ROWS: usize> {
+    row: Index<ROWS>,
+    column: usize,
+}
+
+/// An equality assertion between 2 arbitrary cells.
 #[derive(Clone, Debug, Default)]
 pub struct CopyConstraint<const ROWS: usize> {
-    pub current: Index<ROWS>,
-    pub next: Index<ROWS>,
+    pub from: Cell<ROWS>,
+    pub to: Cell<ROWS>,
 }
 
 #[derive(Clone, Debug)]
@@ -98,15 +103,14 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
             }
         }
 
-        // Enforce copy constrait between each column and its next column,
-        // expect for the last one, which doesn't have a next.
-        for [current, next] in witness.array_windows::<2>() {
-            for constraint in copy_constraints {
-                let current = current[constraint.current.0];
-                let next = next[constraint.next.0];
-                if current != next {
-                    return false;
-                }
+        // Enforce copy constraits between cells.
+        for constraint in copy_constraints {
+            let CopyConstraint { from, to } = constraint;
+            let from = witness[from.column][from.row.0];
+            let to = witness[to.column][to.row.0];
+
+            if from != to {
+                return false;
             }
         }
 
@@ -141,8 +145,14 @@ where
     let structure: ZkFolStructure = ZkFolStructure {
         arithmetic_constraints: vec![constraint.map(&|i| Index::new(*i))],
         copy_constraints: vec![CopyConstraint {
-            current: Index::new(2),
-            next: Index::new(0),
+            from: Cell {
+                row: Index::new(0),
+                column: 0,
+            },
+            to: Cell {
+                row: Index::new(2),
+                column: 1,
+            },
         }],
     };
 
