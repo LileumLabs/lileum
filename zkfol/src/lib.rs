@@ -68,6 +68,7 @@ pub struct CopyConstraint<const ROWS: usize> {
 pub struct ZkFolStructure<const ROWS: usize = 100> {
     pub arithmetic_constraints: Vec<Exp<Index<ROWS>>>,
     pub copy_constraints: Vec<CopyConstraint<ROWS>>,
+    pub columns: usize,
 }
 
 impl<const ROWS: usize> Relation for ZkFol<ROWS> {
@@ -89,7 +90,13 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
         let ZkFolStructure {
             arithmetic_constraints,
             copy_constraints,
+            columns,
         } = structure;
+
+        // Check that the witness has the expected number of columns.
+        if witness.len() <= *columns {
+            return false;
+        }
 
         // Enforce arithmetic constraints on each column.
         for column in witness {
@@ -106,10 +113,17 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
         // Enforce copy constraits between cells.
         for constraint in copy_constraints {
             let CopyConstraint { from, to } = constraint;
+            let bound1 = &from.column < columns;
+            let bound2 = &to.column < columns;
             let from = witness[from.column][from.row.0];
             let to = witness[to.column][to.row.0];
 
             if from != to {
+                return false;
+            }
+
+            if let (true, true) = (bound1, bound2) {
+            } else {
                 return false;
             }
         }
@@ -154,6 +168,7 @@ where
                 column: 1,
             },
         }],
+        columns: 3,
     };
 
     // We can now instanciate a prover and verifier for this structure.
@@ -166,6 +181,8 @@ where
 
     // Now, if we have a witness.
     let witness: Vec<[i64; 100]> = Vec::default();
+    //NOTE: As we don't have a valid instance-witness pair, we expect
+    //this example to either panic on prove() or return an error on verify().
 
     // We can prove an instance-witness pair, with the instance being just ()
     // in this case.
