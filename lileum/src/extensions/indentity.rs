@@ -1,4 +1,13 @@
-use super::*;
+use crate::extensions::{
+    Extension, ExtensionRelation, FoldableExtension, aggregation::UnitAggregation,
+};
+use alloc::vec::Vec;
+use ark_ff::Field;
+use commit::CommitmentScheme;
+use core::marker::PhantomData;
+use reduction::{
+    GuardedProof, NoError, ProverOutput, Reduction, Relation, TranscriptBuilder, VerifierTranscript,
+};
 
 pub struct IdentityRelation<F, C>(PhantomData<(F, C)>);
 

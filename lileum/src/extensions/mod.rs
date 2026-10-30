@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
 use commit::CommitmentScheme;
-use core::{fmt::Debug, marker::PhantomData};
+use core::fmt::Debug;
 use lcs::extensions::{LcsExtension, Never};
 use reduction::{
     FoldingRelation, FoldingScheme, GuardedProof, Message, NoError, ProverOutput, Reduction,
@@ -12,9 +12,7 @@ use reduction::{
 pub mod aggregation;
 mod indentity;
 
-use crate::extensions::aggregation::{
-    AggregationProof, AggregationVerifierKey, UnitAggregation, sealed::Aggregate,
-};
+use crate::extensions::aggregation::{AggregationProof, AggregationVerifierKey, sealed::Aggregate};
 
 pub trait ExtensionRelation<F, C, I = (), W = (), S = ()>:
     Relation<Instance = (C::Commitment, I), Witness = (Vec<F>, W), Structure = S>
