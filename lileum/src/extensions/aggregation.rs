@@ -1,7 +1,10 @@
 use crate::extensions::Extension;
 use alloc::vec::Vec;
 use ark_ff::Field;
-use commit::{CommitmentScheme, OpenInstance, OpeningRelation};
+use commit::{
+    CommitmentScheme, OpenInstance, OpeningRelation,
+    multipoint::{self, MultipointBatching},
+};
 use core::marker::PhantomData;
 use reduction::{
     GuardedProof, NoError, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
@@ -128,4 +131,78 @@ impl<F: Field, C: CommitmentScheme<F>>
 
 impl<F: Field, C: CommitmentScheme<F>> sealed::Aggregate<F, C, ()> for UnitAggregation {
     fn structure(_: C) {}
+}
+
+pub struct SingleCommitAggregation;
+
+impl<F: Field, C: CommitmentScheme<F>>
+    Reduction<F, AggregationRelation<F, C, OpeningRelation<F, C>>, OpeningRelation<F, C>>
+    for SingleCommitAggregation
+{
+    type ProverKey = multipoint::ProverKey<F, C, 2>;
+
+    type VerifierKey = multipoint::VerifierKey<F, C, 2>;
+
+    type Proof = multipoint::Proof<F>;
+
+    type Error = multipoint::Error;
+
+    type Params = ();
+
+    fn transcript_pattern(
+        key: &Self::VerifierKey,
+        builder: TranscriptBuilder,
+    ) -> TranscriptBuilder {
+        MultipointBatching::transcript_pattern(key, builder)
+    }
+
+    fn verifier_key(structure: &(C, C)) -> Self::VerifierKey {
+        let (pcs, _) = structure;
+        //TODO:
+        let vars = 3;
+        MultipointBatching::verifier_key(&(pcs.clone(), vars))
+    }
+
+    fn key_pair(structure: &(C, C)) -> (Self::VerifierKey, Self::ProverKey) {
+        let (pcs, _) = structure;
+        //TODO:
+        let vars = 3;
+        MultipointBatching::key_pair(&(pcs.clone(), vars))
+    }
+
+    fn params(_key: &Self::VerifierKey) -> Self::Params {}
+
+    fn prove<S: Duplex<F>>(
+        key: &Self::ProverKey,
+        instance: (OpenInstance<F, C>, OpenInstance<F, C>),
+        witness: (Vec<F>, Vec<F>),
+        transcript: &mut Transcript<F, S>,
+    ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
+        let (a, b) = instance;
+        let instance = [a, b];
+        let (a, b) = witness;
+        let witness = [a, b];
+        MultipointBatching::prove(key, instance, witness, transcript)
+    }
+
+    fn verify<S: Duplex<F>>(
+        key: &Self::VerifierKey,
+        instance: (OpenInstance<F, C>, OpenInstance<F, C>),
+        proof: GuardedProof<Self::Proof>,
+        transcript: &mut VerifierTranscript<F, S>,
+    ) -> Result<OpenInstance<F, C>, Self::Error> {
+        let (a, b) = instance;
+        let instance = [a, b];
+        MultipointBatching::verify(key, instance, proof, transcript)
+    }
+}
+
+impl<F, C> sealed::Aggregate<F, C, OpeningRelation<F, C>> for SingleCommitAggregation
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    fn structure(pcs: C) -> C {
+        pcs
+    }
 }

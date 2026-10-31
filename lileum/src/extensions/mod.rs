@@ -131,3 +131,5 @@ impl<F: Field, R: Relation> Reduction<F, FoldingRelation<R>, R> for NoFolding {
         match *key {}
     }
 }
+
+impl<F: Field, R: Relation> FoldingScheme<F, R> for NoFolding {}
