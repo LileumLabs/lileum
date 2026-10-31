@@ -4,7 +4,7 @@ pub(crate) mod matrix_product;
 #[cfg(test)]
 mod tests;
 
-pub use clcs::{ClcsArgument, ToFlcs};
+pub use clcs::{ClcsArgument, ToFlcs, ToFlcsVerifier};
 pub use flcs::{FlcsArgument, FlcsFoldingScheme, FlcsReduction};
 
 // NOTE: Papers:
