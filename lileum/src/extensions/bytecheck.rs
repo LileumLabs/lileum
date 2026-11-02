@@ -1,9 +1,21 @@
 use crate::extensions::{
-    Extension, ExtensionRelation, NoFolding, aggregation::SingleCommitAggregation,
+    Extension, ExtensionRelation, NoFolding,
+    aggregation::SingleCommitAggregation,
+    bytecheck::sumcheck::{
+        BytecheckEvals, BytecheckOracle, committed_oracle_instance, core_oracle_instance,
+    },
+};
+use ::sumcheck::{
+    MultiPoint, SumcheckInstance, SumcheckReduction,
+    oracles::{
+        composite::{CompositeOracle, CompositeOracleInstance, ProverEvals},
+        core::CoreOracle,
+    },
 };
 use alloc::vec::Vec;
 use ark_ff::{BigInteger, Field, PrimeField};
-use commit::{CommitmentScheme, OpenInstance, OpeningRelation};
+use ark_serialize::CanonicalSerialize;
+use commit::{CommitmentScheme, OpenInstance, OpeningRelation, oracle::CommittedOracle};
 use core::marker::PhantomData;
 use lcs::{circuit::Var, extensions::LcsExtension, structure::WitnessIndex};
 use reduction::{
@@ -160,6 +172,212 @@ where
 #[derive(Clone, Copy, Debug)]
 pub struct BytecheckReduction2;
 
+mod sumcheck {
+    use alloc::vec;
+    use alloc::vec::{IntoIter, Vec};
+    use ark_ff::Field;
+    use ark_serialize::CanonicalSerialize;
+    use commit::CommitmentScheme;
+    use commit::oracle::{CommittedNature, CommittedOracle, CommittedOracleInstance};
+    use core::fmt::Debug;
+    use sumcheck::SumcheckMessage;
+    use sumcheck::oracles::composite::CompositeReductionKey;
+    use sumcheck::oracles::core::SmallFunctions;
+    use sumcheck::{
+        MultiPoint, Var,
+        evals::{Evals, EvalsCore},
+        oracles::{
+            SumcheckFunction,
+            composite::{CompositeOracle, Either},
+            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
+        },
+    };
+    use sumcheck_derive::EvalsCore;
+
+    #[derive(Debug, Clone, Default, EvalsCore)]
+    pub struct BytecheckEvals<V: Debug + Clone> {
+        lookup: V,
+        table: V,
+        counts: V,
+        lookup_challenge: V,
+        /// To combine the different sumcheck claims.
+        sumcheck_challenge: V,
+        inverse_left: V,
+        inverse_right: V,
+        z_eq: V,
+    }
+
+    impl<V: Debug + Clone + CanonicalSerialize> CanonicalSerialize for BytecheckEvals<V> {
+        fn serialize_with_mode<W: ark_serialize::Write>(
+            &self,
+            mut writer: W,
+            compress: ark_serialize::Compress,
+        ) -> Result<(), ark_serialize::SerializationError> {
+            let Self {
+                lookup,
+                table,
+                counts,
+                lookup_challenge,
+                sumcheck_challenge,
+                inverse_left,
+                inverse_right,
+                z_eq,
+            } = self;
+            lookup.serialize_with_mode(&mut writer, compress)?;
+            table.serialize_with_mode(&mut writer, compress)?;
+            counts.serialize_with_mode(&mut writer, compress)?;
+            lookup_challenge.serialize_with_mode(&mut writer, compress)?;
+            sumcheck_challenge.serialize_with_mode(&mut writer, compress)?;
+            inverse_left.serialize_with_mode(&mut writer, compress)?;
+            inverse_right.serialize_with_mode(&mut writer, compress)?;
+            z_eq.serialize_with_mode(writer, compress)
+        }
+
+        fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+            let Self {
+                lookup,
+                table,
+                counts,
+                lookup_challenge,
+                sumcheck_challenge,
+                inverse_left,
+                inverse_right,
+                z_eq,
+            } = self;
+            lookup.serialized_size(compress)
+                + table.serialized_size(compress)
+                + counts.serialized_size(compress)
+                + lookup_challenge.serialized_size(compress)
+                + sumcheck_challenge.serialized_size(compress)
+                + inverse_left.serialized_size(compress)
+                + inverse_right.serialized_size(compress)
+                + z_eq.serialized_size(compress)
+        }
+    }
+
+    impl<F: Field> SumcheckFunction<F> for BytecheckEvals<()> {
+        type Natures = Either<CoreNature, CommittedNature>;
+
+        type Data = ();
+
+        fn natures() -> Self::Mles<Self::Natures> {
+            let chall = Either::Left(CoreNature::Challenge);
+            let committed = Either::Right(CommittedNature::Witness);
+            BytecheckEvals {
+                lookup: committed,
+                table: Either::Left(CoreNature::SmallStructure),
+                counts: committed,
+                lookup_challenge: chall,
+                sumcheck_challenge: chall,
+                inverse_left: committed,
+                inverse_right: committed,
+                // eq(x,r) for r a random point for zerocheck.
+                z_eq: Either::Left(CoreNature::SmallInstance(Coeffs::PerVariable)),
+            }
+        }
+
+        fn function<V: Var<F> + Debug>(_: &(), evals: &Self::Mles<V>) -> V {
+            // inv_l == m / (table + chall)  === inv_l * (table + chall) == m
+            // inv_r == 1 / (lookup + chall) === inv_r * (lookup + chall) == 1
+            // sum inv_l == sum inv_r
+            let BytecheckEvals {
+                lookup,
+                table,
+                counts,
+                lookup_challenge,
+                sumcheck_challenge,
+                inverse_left,
+                inverse_right,
+                z_eq,
+            } = evals.clone();
+            // inv_l * (table + chall) - m = 0
+            let check1 = inverse_left.clone() * (table + &lookup_challenge) - counts;
+            // inv_r * (lookup + chall) - 1 == 0
+            let check2 = inverse_right.clone() * (lookup + &lookup_challenge) - F::one();
+
+            // sum inv_l == sum inv_r
+            let check3 = inverse_left - inverse_right;
+
+            // 1 and 2 are zerocheck, 3 is just a sum.
+
+            let batched = check1 * &z_eq;
+            let batched = batched * &sumcheck_challenge + check2 * z_eq;
+            batched * sumcheck_challenge + check3
+        }
+    }
+
+    impl<F: Field> SmallFunctions<F> for BytecheckEvals<()> {
+        fn small_functions() -> Self::Mles<Option<sumcheck::oracles::core::Func<F>>> {
+            todo!()
+        }
+    }
+
+    pub type BytecheckOracle<F, C, SF = BytecheckEvals<()>> =
+        CompositeOracle<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;
+
+    pub type VerifierKey<F, C> = sumcheck::SumcheckVerifierKey<F, BytecheckOracle<F, C>>;
+    // pub type ProverKey<F, C> = sumcheck::SumcheckVerifierKey<F, BytecheckOracle<F, C>>;
+    pub type Proof<F> = Vec<SumcheckMessage<F>>;
+
+    pub type CompositeVerifierKey<F, C, SF = BytecheckEvals<()>> =
+        CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;
+
+    pub fn core_oracle_instance<F: Field>(
+        vars: usize,
+        chall1: F,
+        chall2: F,
+        chall3: MultiPoint<F>,
+    ) -> CoreOracleInstance<F, BytecheckEvals<()>> {
+        assert_eq!(chall3.vars(), vars);
+        let coefficients = BytecheckEvals {
+            lookup_challenge: vec![chall1],
+            sumcheck_challenge: vec![chall2],
+            z_eq: chall3.inner(),
+            ..Default::default()
+        };
+        CoreOracleInstance::new(&coefficients, vars)
+    }
+
+    pub fn committed_oracle_instance<F, C>(
+        lookup: C::Commitment,
+        counts: C::Commitment,
+        inverses: [C::Commitment; 2],
+    ) -> CommittedOracleInstance<F, C, BytecheckEvals<()>>
+    where
+        F: Field,
+        C: CommitmentScheme<F>,
+    {
+        let [inverse_left, inverse_right] = inverses.map(Some);
+        let commits = BytecheckEvals {
+            lookup: lookup.into(),
+            table: None,
+            counts: counts.into(),
+            lookup_challenge: None,
+            sumcheck_challenge: None,
+            inverse_left,
+            inverse_right,
+            z_eq: None,
+        };
+
+        CommittedOracleInstance::new(commits)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Proof<F: Field, C: CommitmentScheme<F>> {
+    counts_commit: C::Commitment,
+    left_inverse: C::Commitment,
+    right_inverse: C::Commitment,
+    sumcheck: sumcheck::Proof<F>,
+    composite: ProverEvals<F>,
+}
+
+#[derive(Clone, Debug, CanonicalSerialize)]
+pub struct VerifierKey<F: Field, C: CommitmentScheme<F>> {
+    sumcheck: sumcheck::VerifierKey<F, C>,
+    composite: sumcheck::CompositeVerifierKey<F, C>,
+}
+
 impl<F, C> Reduction<F, ByteCheckRel2<F, C>, OpeningRelation<F, C>> for BytecheckReduction2
 where
     F: Field,
@@ -167,22 +385,38 @@ where
 {
     type ProverKey = ();
 
-    type VerifierKey = ();
+    type VerifierKey = VerifierKey<F, C>;
 
-    type Proof = ();
+    type Proof = Proof<F, C>;
 
     type Error = NoError;
 
     type Params = ();
 
-    fn transcript_pattern(_key: &(), builder: TranscriptBuilder) -> TranscriptBuilder {
+    fn transcript_pattern(
+        key: &Self::VerifierKey,
+        builder: TranscriptBuilder,
+    ) -> TranscriptBuilder {
+        //TODO:
+        let vars = 3;
         builder
+            .round::<F, C::Commitment, 1>(&())
+            .round::<F, [C::Commitment; 2], 1>(&())
+            .point::<F>(vars)
+            .subprotocol::<SumcheckReduction<F, BytecheckOracle<F, C>>, F, _, _>(&key.sumcheck)
+            .subprotocol::<CompositeOracle<F, _, _, _>, _, _, _>(&key.composite)
+            .subprotocol::<CoreOracle<F, BytecheckEvals<()>>, _, _, _>(key.composite.p1_key())
+            .subprotocol::<CommittedOracle<F, C, BytecheckEvals<()>>, _, _, _>(
+                key.composite.p2_key(),
+            )
     }
 
-    fn verifier_key(_structure: &Vec<bool>) -> Self::VerifierKey {}
+    fn verifier_key(_structure: &Vec<bool>) -> Self::VerifierKey {
+        todo!()
+    }
 
     fn key_pair(_structure: &Vec<bool>) -> (Self::VerifierKey, Self::ProverKey) {
-        ((), ())
+        todo!()
     }
 
     fn params(_key: &Self::VerifierKey) -> Self::Params {}
@@ -197,12 +431,93 @@ where
     }
 
     fn verify<S: Duplex<F>>(
-        _key: &Self::VerifierKey,
-        _instance: C::Commitment,
-        _proof: GuardedProof<Self::Proof>,
-        _transcript: &mut VerifierTranscript<F, S>,
+        key: &Self::VerifierKey,
+        instance: C::Commitment,
+        proof: GuardedProof<Self::Proof>,
+        transcript: &mut VerifierTranscript<F, S>,
     ) -> Result<OpenInstance<F, C>, Self::Error> {
-        todo!()
+        // inv_l == m / (table + chall)  === inv_l * (table + chall) == m
+        // inv_r == 1 / (lookup + chall) === inv_r * (lookup + chall) == 1
+
+        // let table be committed as structure, with values i for in 0..256,
+        // and 0s anywhere else.
+        // <- commit to counts
+        // -> sample challenge chall
+        // <- commit to inv_l = counts / (table + chall)
+        // <- commit to inv_r = 1 / (lookup + chall)
+        // -> sample sumcheck challenge chall2
+        // -> sample point challenge chall3 for zerocheck
+        // assert sum f' == sum count / (table + chall )
+        // assert f' * (lookup + chall) == 1
+
+        //TODO:
+        let vars = 3;
+        //TODO:
+        let (counts, [lookup_challenge]) = transcript
+            .receive_message(|proof| proof.counts_commit.clone(), &proof, &())
+            .unwrap();
+
+        //TODO:
+        let (inverses, [sumcheck_challenge]) = transcript
+            .receive_message(
+                |proof| [proof.left_inverse.clone(), proof.right_inverse.clone()],
+                &proof,
+                &(),
+            )
+            .unwrap();
+
+        let sumcheck_instance: SumcheckInstance<F, BytecheckOracle<F, C>> = {
+            let zerocheck_point = MultiPoint::new(transcript.point());
+            let core_instance =
+                core_oracle_instance(vars, lookup_challenge, sumcheck_challenge, zerocheck_point);
+            let committed_instance = committed_oracle_instance::<F, C>(instance, counts, inverses);
+            // let committed_instance
+            // let coefficients = coreor
+            // let core_oracle_isntance = CoreOracleInstance::new(coefficients, vars);
+            let oracle_instance = CompositeOracleInstance {
+                oracle1_instance: core_instance,
+                oracle2_instance: committed_instance,
+            };
+            SumcheckInstance::new(F::zero(), oracle_instance)
+        };
+
+        //TODO:
+        let instance = SumcheckReduction::verify(
+            &key.sumcheck,
+            sumcheck_instance,
+            proof.clone().map(|proof| proof.sumcheck),
+            transcript,
+        )
+        .unwrap();
+
+        //TODO:
+        let (core_instance, committed_instance) = CompositeOracle::verify(
+            &key.composite,
+            instance,
+            proof.map(|proof| proof.composite),
+            transcript,
+        )
+        .unwrap();
+
+        //TODO:
+        CoreOracle::verify(
+            key.composite.p1_key(),
+            core_instance,
+            GuardedProof::empty(),
+            transcript,
+        )
+        .unwrap();
+
+        //TODO:
+        let instance = CommittedOracle::verify(
+            key.composite.p2_key(),
+            committed_instance,
+            GuardedProof::empty(),
+            transcript,
+        )
+        .unwrap();
+
+        Ok(instance)
     }
 }
 
