@@ -57,9 +57,30 @@ pub struct Cell<const ROWS: usize> {
     column: usize,
 }
 
+impl<const ROWS: usize> Cell<ROWS> {
+    fn unflatten(i: i64) -> Self {
+        let i = i as usize;
+        Cell {
+            row: Index::new(i % ROWS),
+            column: i / ROWS,
+        }
+    }
+}
+
 /// An equality assertion between 2 arbitrary cells.
 #[derive(Clone, Debug, Default)]
 pub struct CopyConstraint<const ROWS: usize> {
+    pub from: Cell<ROWS>,
+    pub to: Cell<ROWS>,
+}
+
+/// A dynamic address read lookup, similar to
+/// CopyConstraint but 1 address is taken from
+/// the witness instead of being fixed.
+// to == witness[from]
+#[derive(Clone, Debug, Default)]
+pub struct ReadLookup<const ROWS: usize> {
+    // This is the address of the address.
     pub from: Cell<ROWS>,
     pub to: Cell<ROWS>,
 }
@@ -68,6 +89,7 @@ pub struct CopyConstraint<const ROWS: usize> {
 pub struct ZkFolStructure<const ROWS: usize = 100> {
     pub arithmetic_constraints: Vec<Exp<Index<ROWS>>>,
     pub copy_constraints: Vec<CopyConstraint<ROWS>>,
+    pub reads: Vec<ReadLookup<ROWS>>,
     pub columns: usize,
 }
 
@@ -91,6 +113,7 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
             arithmetic_constraints,
             copy_constraints,
             columns,
+            reads,
         } = structure;
 
         // Check that the witness has the expected number of columns.
@@ -117,6 +140,33 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
             let bound2 = &to.column < columns;
             let from = witness[from.column][from.row.0];
             let to = witness[to.column][to.row.0];
+
+            if from != to {
+                return false;
+            }
+
+            if let (true, true) = (bound1, bound2) {
+            } else {
+                return false;
+            }
+        }
+
+        // Enforce read lookups.
+        for constraint in reads {
+            let ReadLookup { from, to } = constraint;
+
+            let bound1 = &from.column < columns;
+            let bound2 = &to.column < columns;
+            let addr = witness[from.column][from.row.0];
+            let to = witness[to.column][to.row.0];
+
+            // Later on we will ideally just flatten the matrix, so that
+            // a witness value can be directly used to index the witness.
+            // For now we use this unflatten function which just vaguely
+            // behaves as expected.
+            let addr = Cell::<ROWS>::unflatten(addr);
+
+            let from = witness[addr.column][addr.row.0];
 
             if from != to {
                 return false;
@@ -168,6 +218,7 @@ where
                 column: 1,
             },
         }],
+        reads: vec![],
         columns: 3,
     };
 
