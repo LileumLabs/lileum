@@ -442,6 +442,14 @@ pub struct ProverKey<F: Field, C: CommitmentScheme<F>> {
     committed: commit::oracle::ProverKey<F, BytecheckEvals<()>, C>,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub enum BytecheckError {
+    Sumcheck,
+    Composite,
+    Core,
+    Committed,
+}
+
 impl<F, C> Reduction<F, ByteCheckRel2<F, C>, OpeningRelation<F, C>> for BytecheckReduction2
 where
     F: Field,
@@ -453,7 +461,7 @@ where
 
     type Proof = Proof<F, C>;
 
-    type Error = NoError;
+    type Error = BytecheckError;
 
     type Params = ();
 
@@ -461,7 +469,6 @@ where
         key: &Self::VerifierKey,
         builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
-        //TODO:
         builder
             .round::<F, C::Commitment, 1>(&())
             .round::<F, [C::Commitment; 2], 1>(&())
@@ -674,19 +681,14 @@ where
         // assert f' * (lookup + chall) == 1
 
         let vars = key.vars;
-        //TODO:
-        let (counts, [lookup_challenge]) = transcript
-            .receive_message(|proof| proof.counts_commit.clone(), &proof, &())
-            .unwrap();
+        let Ok((counts, [lookup_challenge])) =
+            transcript.receive_message(|proof| proof.counts_commit.clone(), &proof, &());
 
-        //TODO:
-        let (inverses, [sumcheck_challenge]) = transcript
-            .receive_message(
-                |proof| [proof.left_inverse.clone(), proof.right_inverse.clone()],
-                &proof,
-                &(),
-            )
-            .unwrap();
+        let Ok((inverses, [sumcheck_challenge])) = transcript.receive_message(
+            |proof| [proof.left_inverse.clone(), proof.right_inverse.clone()],
+            &proof,
+            &(),
+        );
 
         let sumcheck_instance: SumcheckInstance<F, BytecheckOracle<F, C>> = {
             let zerocheck_point = MultiPoint::new(transcript.point());
@@ -703,41 +705,36 @@ where
             SumcheckInstance::new(F::zero(), oracle_instance)
         };
 
-        //TODO:
         let instance = SumcheckReduction::verify(
             &key.sumcheck,
             sumcheck_instance,
             proof.clone().map(|proof| proof.sumcheck),
             transcript,
         )
-        .unwrap();
+        .map_err(|_| BytecheckError::Sumcheck)?;
 
-        //TODO:
         let (core_instance, committed_instance) = CompositeOracle::verify(
             &key.composite,
             instance,
             proof.map(|proof| proof.composite),
             transcript,
         )
-        .unwrap();
+        .map_err(|_| BytecheckError::Composite)?;
 
-        //TODO:
         CoreOracle::verify(
             key.composite.p1_key(),
             core_instance,
             GuardedProof::empty(),
             transcript,
         )
-        .unwrap();
+        .map_err(|_| BytecheckError::Core)?;
 
-        //TODO:
-        let instance = CommittedOracle::verify(
+        let Ok(instance) = CommittedOracle::verify(
             key.composite.p2_key(),
             committed_instance,
             GuardedProof::empty(),
             transcript,
-        )
-        .unwrap();
+        );
 
         Ok(instance)
     }
