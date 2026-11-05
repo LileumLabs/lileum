@@ -2,12 +2,14 @@ use crate::extensions::{
     Extension, ExtensionRelation, NoFolding,
     aggregation::SingleCommitAggregation,
     bytecheck::sumcheck::{
-        BytecheckEvals, BytecheckOracle, committed_oracle_instance, core_oracle_instance,
+        BytecheckEvals, BytecheckOracle, build_oracle, committed_oracle_instance,
+        core_oracle_instance,
     },
 };
 use ::sumcheck::{
     MultiPoint, SumcheckInstance, SumcheckReduction,
     oracles::{
+        Oracle,
         composite::{CompositeOracle, CompositeOracleInstance, ProverEvals},
         core::CoreOracle,
     },
@@ -104,10 +106,23 @@ impl<F: Field, C: CommitmentScheme<F>> ExtensionRelation<F, C, (), Vec<F>, Vec<b
 }
 
 #[derive(Clone, Debug)]
+pub struct Structure<C> {
+    selectors: Vec<bool>,
+    pcs: C,
+}
+
+impl<C> Structure<C> {
+    pub fn vars(&self) -> usize {
+        assert!(self.selectors.len().is_power_of_two());
+        self.selectors.len().ilog2() as usize
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct ByteCheckRel2<F, C>(PhantomData<(F, C)>);
 
 impl<F: Field, C: CommitmentScheme<F>> Relation for ByteCheckRel2<F, C> {
-    type Structure = Vec<bool>;
+    type Structure = Structure<C>;
 
     type Instance = C::Commitment;
 
@@ -174,6 +189,7 @@ where
 pub struct BytecheckReduction2;
 
 mod sumcheck {
+    use alloc::rc::Rc;
     use alloc::vec;
     use alloc::vec::{IntoIter, Vec};
     use ark_ff::Field;
@@ -376,6 +392,28 @@ mod sumcheck {
 
         CommittedOracleInstance::new(commits)
     }
+
+    pub fn build_oracle<F: Field, C: CommitmentScheme<F>>(
+        selectors: &[bool],
+        pcs: C,
+    ) -> BytecheckOracle<F, C> {
+        assert!(selectors.len().is_power_of_two());
+        let mles: Vec<BytecheckEvals<F>> = selectors
+            .iter()
+            .enumerate()
+            .map(|(i, _s)| BytecheckEvals {
+                //TODO: add selector
+                table: if i < 256 { F::from(i as u8) } else { F::ZERO },
+                ..Default::default()
+            })
+            .collect();
+        let mles = Rc::new(mles);
+
+        let builder1 = ();
+        let builder2 = pcs;
+
+        BytecheckOracle::new((), mles, builder1, builder2)
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -398,7 +436,7 @@ pub struct ProverKey<F: Field, C: CommitmentScheme<F>> {
     selector: Vec<bool>,
     pcs: C,
     vars: usize,
-    structure: Vec<BytecheckEvals<F>>,
+    oracle: BytecheckOracle<F, C>,
     sumcheck: sumcheck::ProverKey<F, C>,
     composite: sumcheck::CompositeVerifierKey<F, C>,
     committed: commit::oracle::ProverKey<F, BytecheckEvals<()>, C>,
@@ -436,12 +474,51 @@ where
             )
     }
 
-    fn verifier_key(_structure: &Vec<bool>) -> Self::VerifierKey {
-        todo!()
+    fn verifier_key(structure: &Structure<C>) -> Self::VerifierKey {
+        let oracle = build_oracle(&structure.selectors, structure.pcs.clone());
+
+        let sumcheck = SumcheckReduction::verifier_key(&oracle);
+
+        let composite = CompositeOracle::verifier_key(&oracle);
+
+        let vars = structure.vars();
+
+        VerifierKey {
+            sumcheck,
+            composite,
+            vars,
+        }
     }
 
-    fn key_pair(_structure: &Vec<bool>) -> (Self::VerifierKey, Self::ProverKey) {
-        todo!()
+    fn key_pair(structure: &Structure<C>) -> (Self::VerifierKey, Self::ProverKey) {
+        let Structure { selectors, pcs } = structure.clone();
+        let oracle = build_oracle(&structure.selectors, structure.pcs.clone());
+
+        let (sumcheck_verifier, sumcheck) = SumcheckReduction::key_pair(&oracle);
+
+        let composite = CompositeOracle::verifier_key(&oracle);
+
+        let vars = structure.vars();
+
+        let verifier = VerifierKey {
+            sumcheck: sumcheck_verifier,
+            composite: composite.clone(),
+            vars,
+        };
+
+        let (_, committed) = CommittedOracle::key_pair(&oracle.inner_oracles().1);
+
+        let prover_key = ProverKey {
+            selector: selectors,
+            pcs,
+            vars,
+            oracle,
+            sumcheck,
+            composite,
+            committed,
+        };
+
+        (verifier, prover_key)
     }
 
     fn params(_key: &Self::VerifierKey) -> Self::Params {}
@@ -511,7 +588,7 @@ where
 
         let (instance, witness) = {
             let evals = BytecheckEvals::witness(
-                &key.structure,
+                &key.oracle.structure(),
                 &witness,
                 &counts,
                 [lookup_challenge, sumcheck_challenge],
