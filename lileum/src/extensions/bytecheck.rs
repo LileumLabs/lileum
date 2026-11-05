@@ -12,8 +12,9 @@ use ::sumcheck::{
         core::CoreOracle,
     },
 };
+use alloc::vec;
 use alloc::vec::Vec;
-use ark_ff::{BigInteger, Field, PrimeField};
+use ark_ff::{BigInteger, Field, PrimeField, batch_inversion};
 use ark_serialize::CanonicalSerialize;
 use commit::{CommitmentScheme, OpenInstance, OpeningRelation, oracle::CommittedOracle};
 use core::marker::PhantomData;
@@ -207,6 +208,20 @@ mod sumcheck {
         z_eq: V,
     }
 
+    impl<F: Field> BytecheckEvals<F> {
+        pub fn witness(
+            structure: &[Self],
+            lookups: &[F],
+            counts: &[F],
+            challenges: [F; 2],
+            inverses: [&[F]; 2],
+            z_eq: MultiPoint<F>,
+        ) -> Vec<BytecheckEvals<F>> {
+            let _ = (structure, lookups, counts, challenges, inverses, z_eq);
+            todo!()
+        }
+    }
+
     impl<V: Debug + Clone + CanonicalSerialize> CanonicalSerialize for BytecheckEvals<V> {
         fn serialize_with_mode<W: ark_serialize::Write>(
             &self,
@@ -316,7 +331,7 @@ mod sumcheck {
         CompositeOracle<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;
 
     pub type VerifierKey<F, C> = sumcheck::SumcheckVerifierKey<F, BytecheckOracle<F, C>>;
-    // pub type ProverKey<F, C> = sumcheck::SumcheckVerifierKey<F, BytecheckOracle<F, C>>;
+    pub type ProverKey<F, C> = sumcheck::ProverKey<F, BytecheckOracle<F, C>>;
     pub type Proof<F> = Vec<SumcheckMessage<F>>;
 
     pub type CompositeVerifierKey<F, C, SF = BytecheckEvals<()>> =
@@ -378,12 +393,22 @@ pub struct VerifierKey<F: Field, C: CommitmentScheme<F>> {
     composite: sumcheck::CompositeVerifierKey<F, C>,
 }
 
+pub struct ProverKey<F: Field, C: CommitmentScheme<F>> {
+    selector: Vec<bool>,
+    pcs: C,
+    vars: usize,
+    structure: Vec<BytecheckEvals<F>>,
+    sumcheck: sumcheck::ProverKey<F, C>,
+    composite: sumcheck::CompositeVerifierKey<F, C>,
+    committed: commit::oracle::ProverKey<F, BytecheckEvals<()>, C>,
+}
+
 impl<F, C> Reduction<F, ByteCheckRel2<F, C>, OpeningRelation<F, C>> for BytecheckReduction2
 where
     F: Field,
     C: CommitmentScheme<F>,
 {
-    type ProverKey = ();
+    type ProverKey = ProverKey<F, C>;
 
     type VerifierKey = VerifierKey<F, C>;
 
@@ -422,12 +447,133 @@ where
     fn params(_key: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
-        _key: &Self::ProverKey,
-        _instance: C::Commitment,
-        _witness: Vec<F>,
-        _transcript: &mut Transcript<F, S>,
+        key: &Self::ProverKey,
+        instance: C::Commitment,
+        witness: Vec<F>,
+        transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
-        todo!()
+        let domain_size = 1 << key.vars;
+        let byte_witness: Vec<u8> = key
+            .selector
+            .iter()
+            .zip(&witness)
+            .map(|(s, w)| {
+                if *s {
+                    assert!(w >= &F::from(u8::MIN));
+                    assert!(w <= &F::from(u8::MAX));
+                    let v = w.to_base_prime_field_elements().next().unwrap();
+                    v.into_bigint().to_bytes_le()[0]
+                } else {
+                    0
+                }
+            })
+            .collect();
+
+        let mut counts = vec![F::ZERO; 256];
+
+        for byte in &byte_witness {
+            counts[*byte as usize] += F::ONE;
+        }
+
+        counts.resize(domain_size, F::ZERO);
+        //NOTE: suboptimal, make use of commit_small_set.
+        let counts_commit = key.pcs.commit_mle(&counts);
+
+        let [lookup_challenge] = transcript.send_message(&counts_commit, &());
+
+        let mut inv_denoms: Vec<F> = (0..=255u8)
+            .map(|table| lookup_challenge + F::from(table))
+            .collect();
+        batch_inversion(inv_denoms.as_mut_slice());
+
+        let mut inv_l = inv_denoms.clone();
+        for (inv, count) in inv_l.iter_mut().zip(&counts[0..256]) {
+            *inv *= count;
+        }
+        inv_l.resize(domain_size, F::ZERO);
+        let inv_l = inv_l;
+
+        let inv_r: Vec<F> = byte_witness
+            .iter()
+            .map(|i| inv_denoms[*i as usize])
+            .collect();
+
+        //NOTE: suboptimal, make use of commit_smalle_set.
+        let inv_l_commit = key.pcs.commit_mle(&inv_l);
+
+        let set: [F; 256] = inv_r[0..256].try_into().unwrap();
+        let inv_r_commit = key.pcs.commit_small_set(&byte_witness, set);
+
+        let inv_commits = [inv_l_commit, inv_r_commit];
+        let [sumcheck_challenge] = transcript.send_message(&inv_commits, &());
+
+        let zerocheck_point = MultiPoint::new(transcript.point());
+
+        let (instance, witness) = {
+            let evals = BytecheckEvals::witness(
+                &key.structure,
+                &witness,
+                &counts,
+                [lookup_challenge, sumcheck_challenge],
+                [&inv_l, &inv_r],
+                zerocheck_point.clone(),
+            );
+
+            let core_instance = core_oracle_instance(
+                key.vars,
+                lookup_challenge,
+                sumcheck_challenge,
+                zerocheck_point,
+            );
+            let committed_instance = committed_oracle_instance::<F, C>(
+                instance,
+                counts_commit.clone(),
+                inv_commits.clone(),
+            );
+
+            let oracle_instance = CompositeOracleInstance {
+                oracle1_instance: core_instance,
+                oracle2_instance: committed_instance,
+            };
+
+            let instance = SumcheckInstance::new(F::zero(), oracle_instance);
+            (instance, evals)
+        };
+
+        let ProverOutput {
+            instance,
+            witness,
+            proof: sumcheck_proof,
+        } = SumcheckReduction::prove(&key.sumcheck, instance, witness, transcript);
+
+        let ProverOutput {
+            instance: (core_instance, committed_instance),
+            witness,
+            proof: composite,
+        } = CompositeOracle::prove(&key.composite, instance, witness, transcript);
+
+        let _ = CoreOracle::prove(&(), core_instance, witness.clone(), transcript);
+
+        let ProverOutput {
+            instance,
+            witness,
+            proof: (),
+        } = CommittedOracle::prove(&key.committed, committed_instance, witness, transcript);
+
+        let [left_inverse, right_inverse] = inv_commits;
+        let proof = Proof {
+            counts_commit,
+            left_inverse,
+            right_inverse,
+            sumcheck: sumcheck_proof,
+            composite,
+        };
+
+        ProverOutput {
+            instance,
+            witness,
+            proof,
+        }
     }
 
     fn verify<S: Duplex<F>>(
