@@ -12,7 +12,10 @@ pub trait LcsExtension<F: Field>: Debug + Default {
     type Structure: Clone;
     type Witness;
 
-    fn process_structure(builder: Self::StructureBuilder) -> Self::Structure;
+    fn process_structure<R: Fn(Var<WitnessIndex>) -> usize>(
+        builder: Self::StructureBuilder,
+        var_reader: R,
+    ) -> Self::Structure;
     fn process_witness(builder: Self::WitnessBuilder) -> Self::Witness;
 
     /// Records the application of a constraint during structure
@@ -56,7 +59,7 @@ impl<F: Field> LcsExtension<F> for () {
     type Witness = ();
     type WitnessBuilder = ();
 
-    fn process_structure(_: ()) -> Self::Structure {}
+    fn process_structure<R>(_: (), _: R) -> Self::Structure {}
 
     fn process_witness(_: ()) -> Self::Witness {}
 

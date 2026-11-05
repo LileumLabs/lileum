@@ -44,7 +44,10 @@ impl<F: Field> LcsExtension<F> for ByteCheck {
     // type Witness = ();
     type Witness = Vec<F>;
 
-    fn process_structure(_builder: Self::StructureBuilder) -> Self::Structure {
+    fn process_structure<R: Fn(Var<WitnessIndex>) -> usize>(
+        _builder: Self::StructureBuilder,
+        _var_reader: R,
+    ) -> Self::Structure {
         todo!()
     }
 

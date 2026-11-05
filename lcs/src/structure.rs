@@ -258,7 +258,7 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> StructureBuilder<F, MAX_
         let trace_len = self.vars.len();
         assert_eq!(trace_len, self.next);
 
-        let extended = E::process_structure(extension_builder);
+        let extended = E::process_structure(extension_builder, |var| var.0.0);
         LcsStructure {
             input_len: public_io_len,
             io_matrices,
