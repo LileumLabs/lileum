@@ -391,6 +391,7 @@ pub struct Proof<F: Field, C: CommitmentScheme<F>> {
 pub struct VerifierKey<F: Field, C: CommitmentScheme<F>> {
     sumcheck: sumcheck::VerifierKey<F, C>,
     composite: sumcheck::CompositeVerifierKey<F, C>,
+    vars: usize,
 }
 
 pub struct ProverKey<F: Field, C: CommitmentScheme<F>> {
@@ -423,11 +424,10 @@ where
         builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
         //TODO:
-        let vars = 3;
         builder
             .round::<F, C::Commitment, 1>(&())
             .round::<F, [C::Commitment; 2], 1>(&())
-            .point::<F>(vars)
+            .point::<F>(key.vars)
             .subprotocol::<SumcheckReduction<F, BytecheckOracle<F, C>>, F, _, _>(&key.sumcheck)
             .subprotocol::<CompositeOracle<F, _, _, _>, _, _, _>(&key.composite)
             .subprotocol::<CoreOracle<F, BytecheckEvals<()>>, _, _, _>(key.composite.p1_key())
@@ -596,8 +596,7 @@ where
         // assert sum f' == sum count / (table + chall )
         // assert f' * (lookup + chall) == 1
 
-        //TODO:
-        let vars = 3;
+        let vars = key.vars;
         //TODO:
         let (counts, [lookup_challenge]) = transcript
             .receive_message(|proof| proof.counts_commit.clone(), &proof, &())
