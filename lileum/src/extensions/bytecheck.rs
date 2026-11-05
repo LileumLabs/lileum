@@ -433,7 +433,7 @@ pub struct VerifierKey<F: Field, C: CommitmentScheme<F>> {
 }
 
 pub struct ProverKey<F: Field, C: CommitmentScheme<F>> {
-    selector: Vec<bool>,
+    selectors: Vec<bool>,
     pcs: C,
     vars: usize,
     oracle: BytecheckOracle<F, C>,
@@ -516,7 +516,7 @@ where
         let (_, committed) = CommittedOracle::key_pair(&oracle.inner_oracles().1);
 
         let prover_key = ProverKey {
-            selector: selectors,
+            selectors,
             pcs,
             vars,
             oracle,
@@ -538,7 +538,7 @@ where
     ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
         let domain_size = 1 << key.vars;
         let byte_witness: Vec<u8> = key
-            .selector
+            .selectors
             .iter()
             .zip(&witness)
             .map(|(s, w)| {
