@@ -52,7 +52,8 @@ impl<F: Field> LcsExtension<F> for ByteCheck {
     }
 
     fn process_witness(_builder: Self::WitnessBuilder) -> Self::Witness {
-        todo!()
+        // to satisfy bounds, better change to () later.
+        vec![]
     }
 
     fn record_constraint<const N: usize>(
