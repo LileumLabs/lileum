@@ -779,9 +779,7 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for ByteCheck {
         Structure { selectors, pcs }
     }
 
-    fn commit_witness(_pcs: &C, _witness: &Self::Witness) -> Self::Instance {
-        todo!()
-    }
+    fn commit_witness(_pcs: &C, _witness: &Self::Witness) -> Self::Instance {}
 
     type Reduction1 = BytecheckReduction1;
 
