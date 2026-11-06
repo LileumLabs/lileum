@@ -131,11 +131,29 @@ impl<F: Field, C: CommitmentScheme<F>> Relation for ByteCheckRel2<F, C> {
     type Witness = Vec<F>;
 
     fn check(
-        _structure: &Self::Structure,
-        _instance: &Self::Instance,
-        _witness: &Self::Witness,
+        structure: &Self::Structure,
+        instance: &Self::Instance,
+        witness: &Self::Witness,
     ) -> bool {
-        todo!()
+        let Structure { selectors, pcs } = structure;
+
+        assert_eq!(instance, &pcs.commit_mle(witness));
+
+        if selectors.len() != witness.len() {
+            return false;
+        }
+
+        for (w, s) in witness.iter().zip(selectors) {
+            if *s {
+                let ge = *w >= F::from(u8::MIN);
+                let le = *w <= F::from(u8::MAX);
+                if !(ge && le) {
+                    return false;
+                }
+            }
+        }
+
+        true
     }
 }
 
