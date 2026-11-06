@@ -189,20 +189,24 @@ where
 
     fn prove<S: Duplex<F>>(
         _key: &Self::ProverKey,
-        _instance: (C::Commitment, ()),
-        _witness: (Vec<F>, Vec<F>),
+        instance: (C::Commitment, ()),
+        witness: (Vec<F>, Vec<F>),
         _transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<ByteCheckRel2<F, C>, Self::Proof> {
-        todo!()
+        ProverOutput {
+            instance: instance.0,
+            witness: witness.0,
+            proof: (),
+        }
     }
 
     fn verify<S: Duplex<F>>(
         _key: &Self::VerifierKey,
-        _instance: (C::Commitment, ()),
+        instance: (C::Commitment, ()),
         _proof: GuardedProof<Self::Proof>,
         _transcript: &mut VerifierTranscript<F, S>,
     ) -> Result<C::Commitment, Self::Error> {
-        todo!()
+        Ok(instance.0)
     }
 }
 
