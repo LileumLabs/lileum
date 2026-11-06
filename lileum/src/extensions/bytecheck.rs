@@ -223,6 +223,7 @@ mod sumcheck {
     use commit::oracle::{CommittedNature, CommittedOracle, CommittedOracleInstance};
     use core::fmt::Debug;
     use sumcheck::SumcheckMessage;
+    use sumcheck::eq::eq;
     use sumcheck::oracles::composite::CompositeReductionKey;
     use sumcheck::oracles::core::SmallFunctions;
     use sumcheck::{
@@ -258,8 +259,21 @@ mod sumcheck {
             inverses: [&[F]; 2],
             z_eq: MultiPoint<F>,
         ) -> Vec<BytecheckEvals<F>> {
-            let _ = (structure, lookups, counts, challenges, inverses, z_eq);
-            todo!()
+            let mut witness = structure.to_vec();
+
+            let z_eq = eq(&z_eq);
+
+            for (i, witness) in witness.iter_mut().enumerate() {
+                witness.lookup = lookups[i];
+                witness.counts = counts[i];
+                witness.lookup_challenge = challenges[0];
+                witness.sumcheck_challenge = challenges[1];
+                witness.inverse_left = inverses[0][i];
+                witness.inverse_right = inverses[1][i];
+                witness.z_eq = z_eq[i];
+            }
+
+            witness
         }
     }
 
