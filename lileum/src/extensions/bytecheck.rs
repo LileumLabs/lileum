@@ -770,12 +770,13 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for ByteCheck {
 
     type R3 = OpeningRelation<F, C>;
 
-    fn derive_structure(
-        _vars: usize,
-        _pcs: &C,
-        _r1_structure: &Self::Structure,
-    ) -> <Self::R2 as Relation>::Structure {
-        todo!()
+    fn derive_structure(vars: usize, pcs: &C, r1_structure: &Self::Structure) -> Structure<C> {
+        let mut selectors = vec![false; 1 << vars];
+        for selector in r1_structure {
+            selectors[*selector] = true;
+        }
+        let pcs = pcs.clone();
+        Structure { selectors, pcs }
     }
 
     fn commit_witness(_pcs: &C, _witness: &Self::Witness) -> Self::Instance {
