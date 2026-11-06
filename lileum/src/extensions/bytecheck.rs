@@ -38,17 +38,17 @@ impl<F: Field> LcsExtension<F> for ByteCheck {
 
     type WitnessBuilder = (Self::StructureBuilder, Vec<u8>);
 
-    type Structure = Vec<bool>;
+    type Structure = Vec<usize>;
 
     // too constrained to be this for now
     // type Witness = ();
     type Witness = Vec<F>;
 
     fn process_structure<R: Fn(Var<WitnessIndex>) -> usize>(
-        _builder: Self::StructureBuilder,
-        _var_reader: R,
+        builder: Self::StructureBuilder,
+        var_reader: R,
     ) -> Self::Structure {
-        todo!()
+        builder.into_iter().map(var_reader).collect()
     }
 
     fn process_witness(_builder: Self::WitnessBuilder) -> Self::Witness {
@@ -78,7 +78,7 @@ impl<F: Field> LcsExtension<F> for ByteCheck {
 pub struct ByteCheckRel1<F, C>(PhantomData<(F, C)>);
 
 impl<F: Field, C: CommitmentScheme<F>> Relation for ByteCheckRel1<F, C> {
-    type Structure = Vec<bool>;
+    type Structure = Vec<usize>;
 
     type Instance = (C::Commitment, ());
 
@@ -89,13 +89,12 @@ impl<F: Field, C: CommitmentScheme<F>> Relation for ByteCheckRel1<F, C> {
         if structure.len() != witness.0.len() {
             return false;
         }
-        for (w, constrained) in witness.0.iter().zip(structure) {
-            if *constrained {
-                let ge = *w >= F::from(u8::MIN);
-                let le = *w <= F::from(u8::MAX);
-                if !(ge && le) {
-                    return false;
-                }
+        for i in structure {
+            let w = witness.0[*i];
+            let ge = w >= F::from(u8::MIN);
+            let le = w <= F::from(u8::MAX);
+            if !(ge && le) {
+                return false;
             }
         }
         true
@@ -103,7 +102,7 @@ impl<F: Field, C: CommitmentScheme<F>> Relation for ByteCheckRel1<F, C> {
 }
 
 //TODO: maybe better for the generics to be S, I, W
-impl<F: Field, C: CommitmentScheme<F>> ExtensionRelation<F, C, (), Vec<F>, Vec<bool>>
+impl<F: Field, C: CommitmentScheme<F>> ExtensionRelation<F, C, (), Vec<F>, Vec<usize>>
     for ByteCheckRel1<F, C>
 {
 }
@@ -161,9 +160,9 @@ where
         builder
     }
 
-    fn verifier_key(_structure: &Vec<bool>) -> Self::VerifierKey {}
+    fn verifier_key(_structure: &Vec<usize>) -> Self::VerifierKey {}
 
-    fn key_pair(_structure: &Vec<bool>) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(_structure: &Vec<usize>) -> (Self::VerifierKey, Self::ProverKey) {
         ((), ())
     }
 
