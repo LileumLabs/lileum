@@ -222,8 +222,10 @@ mod sumcheck {
     use commit::CommitmentScheme;
     use commit::oracle::{CommittedNature, CommittedOracle, CommittedOracleInstance};
     use core::fmt::Debug;
+    use core::iter::repeat;
     use sumcheck::SumcheckMessage;
     use sumcheck::eq::eq;
+    use sumcheck::evals::eval_simple_mle;
     use sumcheck::oracles::composite::CompositeReductionKey;
     use sumcheck::oracles::core::SmallFunctions;
     use sumcheck::{
@@ -378,7 +380,28 @@ mod sumcheck {
 
     impl<F: Field> SmallFunctions<F> for BytecheckEvals<()> {
         fn small_functions() -> Self::Mles<Option<sumcheck::oracles::core::Func<F>>> {
-            todo!()
+            let table = |coeff: &[F], point: &MultiPoint<F>| {
+                assert!(coeff.is_empty());
+                let vars = point.vars();
+                let mle: Vec<F> = (0..=u8::MAX)
+                    .into_iter()
+                    .chain(repeat(0))
+                    .take(1 << vars)
+                    .map(F::from)
+                    .collect();
+                eval_simple_mle(&mle, point)
+            };
+
+            BytecheckEvals {
+                lookup: None,
+                table: Some(table),
+                counts: None,
+                lookup_challenge: None,
+                sumcheck_challenge: None,
+                inverse_left: None,
+                inverse_right: None,
+                z_eq: Some(|vars, point| MultiPoint::new(vars.to_vec()).eval_as_eq(point)),
+            }
         }
     }
 
