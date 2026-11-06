@@ -42,7 +42,10 @@ where
     type R2: Relation<Witness = Self::Witness> + Clone + Debug;
     type R3: Relation + Clone + Debug;
 
-    fn derive_structure(r1_structure: &Self::Structure) -> <Self::R2 as Relation>::Structure;
+    fn derive_structure(
+        vars: usize,
+        r1_structure: &Self::Structure,
+    ) -> <Self::R2 as Relation>::Structure;
 
     fn commit_witness(pcs: &C, witness: &Self::Witness) -> Self::Instance;
 

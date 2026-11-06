@@ -752,7 +752,10 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for ByteCheck {
 
     type R3 = OpeningRelation<F, C>;
 
-    fn derive_structure(_r1_structure: &Self::Structure) -> <Self::R2 as Relation>::Structure {
+    fn derive_structure(
+        _vars: usize,
+        _r1_structure: &Self::Structure,
+    ) -> <Self::R2 as Relation>::Structure {
         todo!()
     }
 

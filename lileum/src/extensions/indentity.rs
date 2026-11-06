@@ -95,7 +95,7 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for () {
 
     type R3 = ();
 
-    fn derive_structure(_: &()) {}
+    fn derive_structure(_: usize, _: &()) {}
 
     fn commit_witness(_: &C, _: &()) {}
 
