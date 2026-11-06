@@ -146,7 +146,7 @@ where
         );
         let oracle = CompositeOracle::new(data, mles, builder1, builder2);
 
-        let extended = E::derive_structure(lcs_structure.vars(), &lcs_structure.extended);
+        let extended = E::derive_structure(lcs_structure.vars(), &pcs, &lcs_structure.extended);
         let aggregation = E::AgregationScheme::structure(pcs.clone());
 
         FlcsStructure {

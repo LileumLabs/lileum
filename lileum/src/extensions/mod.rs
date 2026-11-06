@@ -44,6 +44,7 @@ where
 
     fn derive_structure(
         vars: usize,
+        pcs: &C,
         r1_structure: &Self::Structure,
     ) -> <Self::R2 as Relation>::Structure;
 
