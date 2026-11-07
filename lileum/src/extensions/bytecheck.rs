@@ -241,6 +241,7 @@ mod sumcheck {
 
     #[derive(Debug, Clone, Default, EvalsCore)]
     pub struct BytecheckEvals<V: Debug + Clone> {
+        selector: V,
         lookup: V,
         table: V,
         counts: V,
@@ -286,6 +287,7 @@ mod sumcheck {
             compress: ark_serialize::Compress,
         ) -> Result<(), ark_serialize::SerializationError> {
             let Self {
+                selector,
                 lookup,
                 table,
                 counts,
@@ -295,6 +297,7 @@ mod sumcheck {
                 inverse_right,
                 z_eq,
             } = self;
+            selector.serialize_with_mode(&mut writer, compress)?;
             lookup.serialize_with_mode(&mut writer, compress)?;
             table.serialize_with_mode(&mut writer, compress)?;
             counts.serialize_with_mode(&mut writer, compress)?;
@@ -307,6 +310,7 @@ mod sumcheck {
 
         fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
             let Self {
+                selector,
                 lookup,
                 table,
                 counts,
@@ -316,7 +320,8 @@ mod sumcheck {
                 inverse_right,
                 z_eq,
             } = self;
-            lookup.serialized_size(compress)
+            selector.serialized_size(compress)
+                + lookup.serialized_size(compress)
                 + table.serialized_size(compress)
                 + counts.serialized_size(compress)
                 + lookup_challenge.serialized_size(compress)
@@ -336,6 +341,7 @@ mod sumcheck {
             let chall = Either::Left(CoreNature::Challenge);
             let committed = Either::Right(CommittedNature::Witness);
             BytecheckEvals {
+                selector: Either::Right(CommittedNature::Structure),
                 lookup: committed,
                 table: Either::Left(CoreNature::SmallStructure),
                 counts: committed,
@@ -353,6 +359,7 @@ mod sumcheck {
             // inv_r == 1 / (lookup + chall) === inv_r * (lookup + chall) == 1
             // sum inv_l == sum inv_r
             let BytecheckEvals {
+                selector,
                 lookup,
                 table,
                 counts,
@@ -365,7 +372,7 @@ mod sumcheck {
             // inv_l * (table + chall) - m = 0
             let check1 = inverse_left.clone() * (table + &lookup_challenge) - counts;
             // inv_r * (lookup + chall) - 1 == 0
-            let check2 = inverse_right.clone() * (lookup + &lookup_challenge) - F::one();
+            let check2 = inverse_right.clone() * (lookup * selector + &lookup_challenge) - F::one();
 
             // sum inv_l == sum inv_r
             let check3 = inverse_left - inverse_right;
@@ -393,6 +400,7 @@ mod sumcheck {
             };
 
             BytecheckEvals {
+                selector: None,
                 lookup: None,
                 table: Some(table),
                 counts: None,
@@ -442,6 +450,7 @@ mod sumcheck {
     {
         let [inverse_left, inverse_right] = inverses.map(Some);
         let commits = BytecheckEvals {
+            selector: None,
             lookup: lookup.into(),
             table: None,
             counts: counts.into(),
@@ -463,8 +472,8 @@ mod sumcheck {
         let mles: Vec<BytecheckEvals<F>> = selectors
             .iter()
             .enumerate()
-            .map(|(i, _s)| BytecheckEvals {
-                //TODO: add selector
+            .map(|(i, s)| BytecheckEvals {
+                selector: if *s { F::ONE } else { F::ZERO },
                 table: if i < 256 { F::from(i as u8) } else { F::ZERO },
                 ..Default::default()
             })
