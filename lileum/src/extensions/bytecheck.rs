@@ -214,27 +214,26 @@ where
 pub struct BytecheckReduction2;
 
 mod sumcheck {
-    use alloc::rc::Rc;
     use alloc::vec;
-    use alloc::vec::{IntoIter, Vec};
+    use alloc::{
+        rc::Rc,
+        vec::{IntoIter, Vec},
+    };
     use ark_ff::Field;
     use ark_serialize::CanonicalSerialize;
-    use commit::CommitmentScheme;
-    use commit::oracle::{CommittedNature, CommittedOracle, CommittedOracleInstance};
-    use core::fmt::Debug;
-    use core::iter::repeat;
-    use sumcheck::SumcheckMessage;
-    use sumcheck::eq::eq;
-    use sumcheck::evals::eval_simple_mle;
-    use sumcheck::oracles::composite::CompositeReductionKey;
-    use sumcheck::oracles::core::SmallFunctions;
+    use commit::{
+        CommitmentScheme,
+        oracle::{CommittedNature, CommittedOracle, CommittedOracleInstance},
+    };
+    use core::{fmt::Debug, iter::repeat};
     use sumcheck::{
-        MultiPoint, Var,
-        evals::{Evals, EvalsCore},
+        MultiPoint, SumcheckMessage, Var,
+        eq::eq,
+        evals::{Evals, EvalsCore, eval_simple_mle},
         oracles::{
             SumcheckFunction,
-            composite::{CompositeOracle, Either},
-            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance},
+            composite::{CompositeOracle, CompositeReductionKey, Either},
+            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, SmallFunctions},
         },
     };
     use sumcheck_derive::EvalsCore;
