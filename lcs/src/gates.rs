@@ -1,6 +1,7 @@
 use crate::{
     circuit::Var,
     constraint_system::{ConstraintSystem, Constraints, Gate, Val},
+    extensions::LcsExtension,
 };
 use ark_ff::Field;
 
@@ -215,7 +216,7 @@ impl Gate<1, 1, 0> for Binary {
 */
 
 /// Trait providing easier use of standard gates, implemented for any `ConstraintSystem`.
-pub trait StandardGates<F, V> {
+pub trait StandardGates<F, V, E = ()> {
     /// Makes use of `Add2`
     fn add(&mut self, a: Var<V>, b: Var<V>) -> Var<V>;
     /// Makes use of `AddN<IO,I>``
@@ -238,11 +239,12 @@ pub trait StandardGates<F, V> {
     fn pow<const EXP: u8>(&mut self, x: Var<V>) -> Var<V>;
 }
 
-impl<F, V, T> StandardGates<F, V> for T
+impl<F, V, E, T> StandardGates<F, V, E> for T
 where
     F: Field,
-    T: ConstraintSystem<F, V>,
     V: Val,
+    E: LcsExtension<F>,
+    T: ConstraintSystem<F, V, E>,
 {
     fn add(&mut self, a: Var<V>, b: Var<V>) -> Var<V> {
         let [res] = self.execute::<Add2, 3, 2, 1>([a, b]);
