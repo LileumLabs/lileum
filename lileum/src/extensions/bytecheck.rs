@@ -838,3 +838,75 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for ByteCheck {
 
     type FoldingScheme = NoFolding;
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{CircuitKey, Proof, extensions::ByteCheck, relations::ClcsInstance};
+    use ark_ff::{Field, One, PrimeField, Zero};
+    use ark_vesta::{Fr, Projective, VestaConfig};
+    use commit::CommitmentScheme;
+    use commit::ipa::IpaCommitmentScheme;
+    use hash_to_curve::svdw::SvdwMap;
+    use lcs::{
+        circuit::{Circuit, Var},
+        constraint_system::{ConstraintSystem, Val},
+        gates::StandardGates,
+    };
+
+    /// Commitment scheme for [Fr].
+    pub type FrScheme = IpaCommitmentScheme<Fr, Projective, SvdwMap<VestaConfig>>;
+
+    type Permutation<F> = sponge::poseidon2::PoseidonDefault<F>;
+    type Sponge<F> = sponge::sponge::Sponge<F, Permutation<F>, 1, 2, 3>;
+
+    struct MyCircuit;
+
+    const N: usize = 999;
+
+    impl<F: Field> Circuit<F, 2, 1, 0, ByteCheck> for MyCircuit {
+        type PrivateInput = ();
+        type PrivateOutput = ();
+
+        fn circuit<V: Val, C: ConstraintSystem<F, V, ByteCheck>>(
+            cs: &mut C,
+            public_input: [Var<V>; 2],
+        ) -> ([Var<V>; 1], [Var<V>; 0]) {
+            let [_, res] = (0..N).fold(public_input, |last_two, i| {
+                let [a, b] = last_two;
+                let c = cs.add(a, b.clone());
+                if i < 14 {
+                    cs.apply_ex_constraint([c.clone()], ());
+                }
+                [b, c]
+            });
+
+            ([res], [])
+        }
+
+        fn handle_output([]: [F; 0]) -> Self::PrivateOutput {}
+    }
+
+    fn bytecheck_test()
+    where
+        Fr: PrimeField,
+        FrScheme: CommitmentScheme<Fr>,
+    {
+        let circuit_key: CircuitKey<Fr, Sponge<Fr>, MyCircuit, FrScheme, 3, 5, 5, ByteCheck> =
+            CircuitKey::new();
+
+        let inputs = [Fr::zero(), Fr::one()];
+
+        let (instance, proof, _output) = circuit_key.prove_from_inputs(inputs);
+        let instance: ClcsInstance<Fr, FrScheme, 3, ByteCheck> = instance;
+        let proof: Proof<Fr, FrScheme, 5, ByteCheck> = proof;
+
+        assert_eq!(instance.public_inputs()[0], Fr::zero());
+        assert_eq!(instance.public_inputs()[1], Fr::one());
+        assert!(circuit_key.verify(instance, proof));
+    }
+
+    #[test]
+    fn bytecheck() {
+        bytecheck_test();
+    }
+}
