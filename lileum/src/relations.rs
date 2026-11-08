@@ -31,7 +31,12 @@ pub struct ClcsInstance<F: Field, C: CommitmentScheme<F>, const I: usize, E: Ext
     pub(crate) extended_instance: E::Instance,
 }
 
-impl<F: Field, C: CommitmentScheme<F>, const I: usize> ClcsInstance<F, C, I> {
+impl<F, C, E, const I: usize> ClcsInstance<F, C, I, E>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    E: Extension<F, C>,
+{
     pub fn public_inputs(&self) -> &[F; I] {
         &self.public_inputs
     }
