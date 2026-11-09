@@ -1,7 +1,7 @@
 use crate::{
     extensions::{Extension, FoldableExtension},
     reductions::{
-        FlcsArgument, FlcsFoldingScheme, ToFlcsVerifier,
+        FlcsArgument, FlcsFoldingScheme, ToFlcsProver, ToFlcsVerifier,
         flcs::{self, folding},
     },
     relations::{ClcsInstance, ClcsStructure, FlcsInstance, FlcsRelation},
@@ -32,7 +32,9 @@ pub struct CircuitKey<
     E: Extension<F, CS> = (),
 > {
     _circuit: PhantomData<C>,
-    to_flcs: ToFlcsVerifier<F, D, CS, I, IO, S, E>,
+    #[allow(dead_code)]
+    to_flcs_prover: ToFlcsProver<F, D, CS, I, IO, S, E>,
+    to_flcs_verifier: ToFlcsVerifier<F, D, CS, I, IO, S, E>,
     flcs_prover: Prover<F, D, FlcsRelation<F, CS, I, IO, S, E>, (), FlcsArgument>,
     flcs_verifier: Verifier<F, D, FlcsRelation<F, CS, I, IO, S, E>, (), FlcsArgument>,
     folding_prover: Option<FoldingProver<F, D, FlcsRelation<F, CS, I, IO, S, E>>>,
@@ -74,7 +76,9 @@ where
         let structure = ClcsStructure { lcs_structure, pcs };
         let flcs_structure = structure.to_flcs();
 
-        let to_flcs = Verifier::new(&structure);
+        let to_flcs_prover = Prover::new(&structure);
+
+        let to_flcs_verifier = Verifier::new(&structure);
 
         let flcs_prover = Prover::new(&flcs_structure);
 
@@ -85,7 +89,8 @@ where
         let folding_verifier = None;
 
         Self {
-            to_flcs,
+            to_flcs_prover,
+            to_flcs_verifier,
             flcs_prover,
             flcs_verifier,
             folding_prover,
@@ -102,7 +107,7 @@ where
     ) -> Proof<F, CS, IO, E> {
         let instance = match instance.into() {
             Instance::Lcs(lcs_instance) => {
-                let Ok(instance) = self.to_flcs.verify(lcs_instance, ());
+                let Ok(instance) = self.to_flcs_verifier.verify(lcs_instance, ());
                 instance
             }
             Instance::Flcs(flcs_instance) => flcs_instance,
@@ -124,7 +129,7 @@ where
     ) -> bool {
         let instance = match instance.into() {
             Instance::Lcs(lcs_instance) => {
-                let Ok(instance) = self.to_flcs.verify(lcs_instance, ());
+                let Ok(instance) = self.to_flcs_verifier.verify(lcs_instance, ());
                 instance
             }
             Instance::Flcs(flcs_instance) => flcs_instance,
@@ -207,7 +212,9 @@ where
         let structure = ClcsStructure { lcs_structure, pcs };
         let flcs_structure = structure.to_flcs();
 
-        let to_flcs = Verifier::new(&structure);
+        let to_flcs_prover = Prover::new(&structure);
+
+        let to_flcs_verifier = Verifier::new(&structure);
 
         let flcs_prover = Prover::new(&flcs_structure);
 
@@ -218,7 +225,8 @@ where
         let folding_verifier = Verifier::new(&flcs_structure).into();
 
         Self {
-            to_flcs,
+            to_flcs_prover,
+            to_flcs_verifier,
             flcs_prover,
             flcs_verifier,
             folding_prover,
@@ -241,7 +249,7 @@ where
     ) {
         let instances = [instance1.into(), instance2.into()].map(|instance| match instance {
             Instance::Lcs(instance) => {
-                let Ok(instance) = self.to_flcs.verify(instance, ());
+                let Ok(instance) = self.to_flcs_verifier.verify(instance, ());
                 instance
             }
             Instance::Flcs(flcs_instance) => flcs_instance,
@@ -271,7 +279,7 @@ where
     ) -> Option<FlcsInstance<F, CS, IO, S, I, E>> {
         let instances = [instance1.into(), instance2.into()].map(|instance| match instance {
             Instance::Lcs(instance) => {
-                let Ok(instance) = self.to_flcs.verify(instance, ());
+                let Ok(instance) = self.to_flcs_verifier.verify(instance, ());
                 instance
             }
             Instance::Flcs(flcs_instance) => flcs_instance,
