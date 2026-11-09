@@ -105,12 +105,20 @@ where
         instance: impl Into<Instance<F, CS, IO, S, I, E>>,
         witness: Witness<F, E>,
     ) -> Proof<F, CS, IO, E> {
-        let instance = match instance.into() {
+        let (instance, witness) = match instance.into() {
             Instance::Lcs(lcs_instance) => {
-                let Ok(instance) = self.to_flcs_verifier.verify(lcs_instance, ());
-                instance
+                let Witness(witness, witness_ext) = witness;
+                let ProverOutput {
+                    instance,
+                    witness: (witness, witness_ext),
+                    proof: (),
+                } = self
+                    .to_flcs_prover
+                    .prove(lcs_instance, (witness, witness_ext));
+                let witness = Witness(witness, witness_ext);
+                (instance, witness)
             }
-            Instance::Flcs(flcs_instance) => flcs_instance,
+            Instance::Flcs(flcs_instance) => (flcs_instance, witness),
         };
         let Witness(w, w_ext) = witness;
         let ProverOutput {
