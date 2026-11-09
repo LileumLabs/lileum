@@ -20,7 +20,7 @@ where
     C: CommitmentScheme<F>,
     R: Relation,
 {
-    type Structure = (C, R::Structure);
+    type Structure = (C, usize, R::Structure);
 
     type Instance = (OpenInstance<F, C>, R::Instance);
 
@@ -34,7 +34,7 @@ where
         if !OpeningRelation::check(&structure.0, &instance.0, &witness.0) {
             return false;
         }
-        if !R::check(&structure.1, &instance.1, &witness.1) {
+        if !R::check(&structure.2, &instance.1, &witness.1) {
             return false;
         }
         true
@@ -96,9 +96,9 @@ impl<F: Field, C: CommitmentScheme<F>>
         builder
     }
 
-    fn verifier_key(_: &(C, ())) -> Self::VerifierKey {}
+    fn verifier_key(_: &(C, usize, ())) -> Self::VerifierKey {}
 
-    fn key_pair(_: &(C, ())) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(_: &(C, usize, ())) -> (Self::VerifierKey, Self::ProverKey) {
         ((), ())
     }
 
@@ -156,18 +156,14 @@ impl<F: Field, C: CommitmentScheme<F>>
         MultipointBatching::transcript_pattern(key, builder)
     }
 
-    fn verifier_key(structure: &(C, C)) -> Self::VerifierKey {
-        let (pcs, _) = structure;
-        //TODO:
-        let vars = 3;
-        MultipointBatching::verifier_key(&(pcs.clone(), vars))
+    fn verifier_key(structure: &(C, usize, C)) -> Self::VerifierKey {
+        let (pcs, vars, _) = structure;
+        MultipointBatching::verifier_key(&(pcs.clone(), *vars))
     }
 
-    fn key_pair(structure: &(C, C)) -> (Self::VerifierKey, Self::ProverKey) {
-        let (pcs, _) = structure;
-        //TODO:
-        let vars = 3;
-        MultipointBatching::key_pair(&(pcs.clone(), vars))
+    fn key_pair(structure: &(C, usize, C)) -> (Self::VerifierKey, Self::ProverKey) {
+        let (pcs, vars, _) = structure;
+        MultipointBatching::key_pair(&(pcs.clone(), *vars))
     }
 
     fn params(_key: &Self::VerifierKey) -> Self::Params {}

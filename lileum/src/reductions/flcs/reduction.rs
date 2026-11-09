@@ -172,7 +172,8 @@ where
         let batching2 = MultipointBatching::verifier_key(&batching_structure);
 
         let extended = E::Reduction2::verifier_key(extended);
-        let aggregation = E::AgregationScheme::verifier_key(&(pcs.clone(), aggregation.clone()));
+        let aggregation =
+            E::AgregationScheme::verifier_key(&(pcs.clone(), vars, aggregation.clone()));
 
         VerifierKey {
             sumcheck_key,
@@ -233,7 +234,8 @@ where
         let (_, batching2) = MultipointBatching::key_pair(&batching_structure);
 
         let (_, extended) = E::Reduction2::key_pair(extended);
-        let (_, aggregation) = E::AgregationScheme::key_pair(&(pcs.clone(), aggregation.clone()));
+        let (_, aggregation) =
+            E::AgregationScheme::key_pair(&(pcs.clone(), vars, aggregation.clone()));
 
         let prover_key = ProverKey {
             sumcheck,
