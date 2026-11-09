@@ -892,7 +892,7 @@ mod test {
         FrScheme: CommitmentScheme<Fr>,
     {
         let circuit_key: CircuitKey<Fr, Sponge<Fr>, MyCircuit, FrScheme, 3, 5, 5, ByteCheck> =
-            CircuitKey::new();
+            CircuitKey::new_no_folding();
 
         let inputs = [Fr::zero(), Fr::one()];
 

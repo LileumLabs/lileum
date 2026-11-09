@@ -35,8 +35,8 @@ pub struct CircuitKey<
     to_flcs: ToFlcsVerifier<F, D, CS, I, IO, S, E>,
     flcs_prover: Prover<F, D, FlcsRelation<F, CS, I, IO, S, E>, (), FlcsArgument>,
     flcs_verifier: Verifier<F, D, FlcsRelation<F, CS, I, IO, S, E>, (), FlcsArgument>,
-    folding_prover: FoldingProver<F, D, FlcsRelation<F, CS, I, IO, S, E>>,
-    folding_verifier: FoldingVerifier<F, D, FlcsRelation<F, CS, I, IO, S, E>>,
+    folding_prover: Option<FoldingProver<F, D, FlcsRelation<F, CS, I, IO, S, E>>>,
+    folding_verifier: Option<FoldingVerifier<F, D, FlcsRelation<F, CS, I, IO, S, E>>>,
     pcs: CS,
 }
 
@@ -62,7 +62,7 @@ where
     CS: CommitmentScheme<F>,
     E: Extension<F, CS>,
 {
-    pub fn new<const IN: usize, const OUT: usize, const PRIV_OUT: usize>() -> Self
+    pub fn new_no_folding<const IN: usize, const OUT: usize, const PRIV_OUT: usize>() -> Self
     where
         C: Circuit<F, IN, OUT, PRIV_OUT, E>,
         CS: 'static,
@@ -80,9 +80,9 @@ where
 
         let flcs_verifier = Verifier::new(&flcs_structure);
 
-        let folding_prover = Prover::new(&flcs_structure);
+        let folding_prover = None;
 
-        let folding_verifier = Verifier::new(&flcs_structure);
+        let folding_verifier = None;
 
         Self {
             to_flcs,
@@ -195,6 +195,39 @@ where
     CS: CommitmentScheme<F>,
     E: FoldableExtension<F, CS>,
 {
+    pub fn new<const IN: usize, const OUT: usize, const PRIV_OUT: usize>() -> Self
+    where
+        C: Circuit<F, IN, OUT, PRIV_OUT, E>,
+        CS: 'static,
+    {
+        let lcs_structure: LcsStructure<F, IO, S, E> = C::structure();
+        let vars = lcs_structure.vars();
+
+        let pcs = CS::new(vars);
+        let structure = ClcsStructure { lcs_structure, pcs };
+        let flcs_structure = structure.to_flcs();
+
+        let to_flcs = Verifier::new(&structure);
+
+        let flcs_prover = Prover::new(&flcs_structure);
+
+        let flcs_verifier = Verifier::new(&flcs_structure);
+
+        let folding_prover = Prover::new(&flcs_structure).into();
+
+        let folding_verifier = Verifier::new(&flcs_structure).into();
+
+        Self {
+            to_flcs,
+            flcs_prover,
+            flcs_verifier,
+            folding_prover,
+            folding_verifier,
+            pcs: structure.pcs.clone(),
+            _circuit: PhantomData,
+        }
+    }
+
     #[allow(clippy::complexity)]
     pub fn fold_prove(
         &self,
@@ -219,6 +252,8 @@ where
             proof,
         } = self
             .folding_prover
+            .as_ref()
+            .unwrap()
             .prove(instances, witnesses.map(|w| (w.0, w.1)));
 
         (
@@ -241,7 +276,11 @@ where
             }
             Instance::Flcs(flcs_instance) => flcs_instance,
         });
-        self.folding_verifier.verify(instances, proof.0).ok()
+        self.folding_verifier
+            .as_ref()
+            .unwrap()
+            .verify(instances, proof.0)
+            .ok()
     }
 }
 
