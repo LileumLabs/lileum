@@ -874,7 +874,7 @@ mod test {
             let [_, res] = (0..N).fold(public_input, |last_two, i| {
                 let [a, b] = last_two;
                 let c = cs.add(a, b.clone());
-                if i < 14 {
+                if i < 12 {
                     cs.apply_ex_constraint([c.clone()], ());
                 }
                 [b, c]
