@@ -655,7 +655,7 @@ where
         //NOTE: suboptimal, make use of commit_smalle_set.
         let inv_l_commit = key.pcs.commit_mle(&inv_l);
 
-        let set: [F; 256] = inv_r[0..256].try_into().unwrap();
+        let set: [F; 256] = inv_denoms.try_into().unwrap();
         let inv_r_commit = key.pcs.commit_small_set(&byte_witness, set);
 
         let inv_commits = [inv_l_commit, inv_r_commit];
