@@ -1,7 +1,6 @@
 use ark_ff::Field;
 use reduction::{Argument, Prover, Relation, Verifier};
 use sponge::sponge::Duplex;
-use std::ops::{Add, Mul, Sub};
 
 /// This type will implement Relation, ROWS has been made a constant
 /// for readability, but it could be done more flexible too.
@@ -14,6 +13,7 @@ pub enum Exp<T> {
     Sub(Box<(Self, Self)>),
     Mul(Box<(Self, Self)>),
     Var(T),
+    Const(i64),
 }
 
 impl<A> Exp<A> {
@@ -25,17 +25,19 @@ impl<A> Exp<A> {
             Sub(x) => Sub(Box::new(map_subexprs(x))),
             Mul(x) => Mul(Box::new(map_subexprs(x))),
             Var(x) => Var(f(x)),
+            Const(x) => Const(*x),
         }
     }
 }
 
-impl<T: Add<Output = T> + Sub<Output = T> + Mul<Output = T>> Exp<T> {
-    fn eval(self) -> T {
+impl Exp<i64> {
+    fn eval(self) -> i64 {
         match self {
             Exp::Add(x) => x.0.eval() + x.1.eval(),
             Exp::Sub(x) => x.0.eval() - x.1.eval(),
             Exp::Mul(x) => x.0.eval() * x.1.eval(),
             Exp::Var(x) => x,
+            Exp::Const(x) => x,
         }
     }
 }
