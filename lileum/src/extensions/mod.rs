@@ -38,6 +38,15 @@ where
 {
     type Instance: Clone + Message<F, Params = (), Error = NoError>;
 
+    // R1: Relation over the lileum instance-witness + the extension's
+    // instance-witness.
+    // R2: Most flexible, source of the main reduction.
+    // R3: An OpeningRelation or something that can be aggreggated into it.
+    // Reduction1 : R1 -> R2. Lightweight, intended to rearrange R1 into
+    // the more flixible R2.
+    // Reduction2 : R2 -> R3. The bulk of the work, with the most flexibility.
+    // FoldingScheme : R2 x R2 -> R2. Optional.
+    // AgregationScheme : R3 x OpeningRelation -> OpeningRelation.
     type R1: ExtensionRelation<F, C, Self::Instance, Self::Witness, Self::Structure>;
     type R2: Relation<Witness = Self::Witness> + Clone + Debug;
     type R3: Relation + Clone + Debug;
@@ -79,6 +88,7 @@ where
         >;
 }
 
+/// To be implemented by extensions that support folding.
 pub trait FoldableExtension<F, C>: Extension<F, C>
 where
     F: Field,
