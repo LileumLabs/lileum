@@ -765,9 +765,6 @@ where
             let core_instance =
                 core_oracle_instance(vars, lookup_challenge, sumcheck_challenge, zerocheck_point);
             let committed_instance = committed_oracle_instance::<F, C>(instance, counts, inverses);
-            // let committed_instance
-            // let coefficients = coreor
-            // let core_oracle_isntance = CoreOracleInstance::new(coefficients, vars);
             let oracle_instance = CompositeOracleInstance {
                 oracle1_instance: core_instance,
                 oracle2_instance: committed_instance,
