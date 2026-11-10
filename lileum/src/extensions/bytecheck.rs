@@ -102,7 +102,6 @@ impl<F: Field, C: CommitmentScheme<F>> Relation for ByteCheckRel1<F, C> {
     }
 }
 
-//TODO: maybe better for the generics to be S, I, W
 impl<F: Field, C: CommitmentScheme<F>> ExtensionRelation<F, C, (), Vec<F>, Vec<usize>>
     for ByteCheckRel1<F, C>
 {
