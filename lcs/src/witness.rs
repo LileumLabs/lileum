@@ -1,6 +1,7 @@
 use crate::{
     circuit::Var,
     constraint_system::{ConstraintSystem, Gate, Val, WitnessReader},
+    extensions::LcsExtension,
     matrix::Matrix,
 };
 use alloc::{collections::BTreeSet, vec::Vec};
@@ -37,16 +38,17 @@ impl<F: Field> Mul for Fi<F> {
 
 impl<F: Field> Val for Fi<F> {}
 
-pub struct WitnessGenerator<F: Field, const IO: usize> {
+pub struct WitnessGenerator<F: Field, const IO: usize, E: LcsExtension<F> = ()> {
     witness: Vec<Fi<F>>,
     constants: BTreeSet<F>,
     check: bool,
+    extended_witness: E::WitnessBuilder,
 }
 
 #[derive(Clone, Debug)]
-pub struct Witness<F: Field>(pub Vec<F>);
+pub struct Witness<F: Field, E: LcsExtension<F> = ()>(pub Vec<F>, pub E::Witness);
 
-impl<F: Field> Witness<F> {
+impl<F: Field, E: LcsExtension<F>> Witness<F, E> {
     /// Pad with 0s to the next power of 2.
     pub fn pad_to_power(&mut self) {
         let len = self.0.len().next_power_of_two();
@@ -54,7 +56,9 @@ impl<F: Field> Witness<F> {
     }
 }
 
-impl<F: Field, const MAX_IO: usize> ConstraintSystem<F, Fi<F>> for WitnessGenerator<F, MAX_IO> {
+impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> ConstraintSystem<F, Fi<F>, E>
+    for WitnessGenerator<F, MAX_IO, E>
+{
     fn execute<G, const IO: usize, const I: usize, const O: usize>(
         &mut self,
         i: [Var<Fi<F>>; I],
@@ -103,6 +107,15 @@ impl<F: Field, const MAX_IO: usize> ConstraintSystem<F, Fi<F>> for WitnessGenera
             Var(Fi(value))
         }
     }
+
+    fn apply_ex_constraint<const N: usize>(
+        &mut self,
+        vars: [Var<Fi<F>>; N],
+        constraint: E::Constraint,
+    ) {
+        let vars = vars.map(|x| x.0.0);
+        E::compute_constraint(&mut self.extended_witness, vars, constraint);
+    }
 }
 
 pub struct VarReader<const IO: usize>;
@@ -115,13 +128,14 @@ impl<'a, F: Field, const IO: usize> WitnessReader<'a, F, Fi<F>> for VarReader<IO
     }
 }
 
-impl<F: Field, const MAX_IO: usize> WitnessGenerator<F, MAX_IO> {
+impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> WitnessGenerator<F, MAX_IO, E> {
     fn new(check: bool) -> Self {
         let witness = Vec::new();
         Self {
             witness,
             check,
             constants: BTreeSet::default(),
+            extended_witness: E::WitnessBuilder::default(),
         }
     }
 
@@ -144,8 +158,9 @@ impl<F: Field, const MAX_IO: usize> WitnessGenerator<F, MAX_IO> {
         }
     }
 
-    pub fn witness(self) -> Witness<F> {
-        Witness(self.witness.into_iter().map(|x| x.0).collect())
+    pub fn witness(self) -> Witness<F, E> {
+        let wit_ext = E::process_witness(self.extended_witness);
+        Witness(self.witness.into_iter().map(|x| x.0).collect(), wit_ext)
     }
 }
 

@@ -1,5 +1,6 @@
 use crate::{
     constraint_system::{ConstraintSystem, Val},
+    extensions::LcsExtension,
     structure::{LcsStructure, StructureBuilder},
     witness::{Witness, WitnessGenerator, unwrap_output},
 };
@@ -20,14 +21,18 @@ impl<F> Var<F> {
 /// Circuit definition, with generics for field, public inputs, and public and private outputs.
 /// Private outputs being just a convenience to take value produced in the circuit out.
 /// `Self::PrivateOutput` is to be generated from the private outputs when possible.
-pub trait Circuit<F: Field, const IN: usize = 0, const OUT: usize = 0, const PRIV_OUT: usize = 0> {
+pub trait Circuit<F, const IN: usize = 0, const OUT: usize = 0, const PRIV_OUT: usize = 0, E = ()>
+where
+    F: Field,
+    E: LcsExtension<F>,
+{
     ///() if you don't care
     /// TODO: not currently usable.
     type PrivateInput;
     ///() if you don't care
     type PrivateOutput;
 
-    fn circuit<V: Val, C: ConstraintSystem<F, V>>(
+    fn circuit<V: Val, C: ConstraintSystem<F, V, E>>(
         cs: &mut C,
         public_input: [Var<V>; IN],
     ) -> ([Var<V>; OUT], [Var<V>; PRIV_OUT]);
@@ -36,14 +41,15 @@ pub trait Circuit<F: Field, const IN: usize = 0, const OUT: usize = 0, const PRI
 
 pub trait BuildStructure<
     F: Field,
+    E: LcsExtension<F>,
     const IN: usize,
     const OUT: usize,
     const PRIV_OUT: usize,
     const IO: usize,
->: Circuit<F, IN, OUT, PRIV_OUT>
+>: Circuit<F, IN, OUT, PRIV_OUT, E>
 {
-    fn structure<const S: usize>() -> LcsStructure<F, IO, S> {
-        let (mut cs, public_input) = StructureBuilder::<F, IO>::with_inputs::<IN>();
+    fn structure<const S: usize>() -> LcsStructure<F, IO, S, E> {
+        let (mut cs, public_input) = StructureBuilder::<F, IO, E>::with_inputs::<IN>();
         cs.reserve_outputs::<OUT>();
         let (public_out, private_out) = Self::circuit(&mut cs, public_input.map(Var));
         //unnecessary for this
@@ -54,7 +60,7 @@ pub trait BuildStructure<
     }
 
     fn profile() -> CircuitProfile {
-        let (mut cs, public_input) = StructureBuilder::<F, IO>::with_inputs::<IN>();
+        let (mut cs, public_input) = StructureBuilder::<F, IO, E>::with_inputs::<IN>();
         cs.reserve_outputs::<OUT>();
         let (public_out, _) = Self::circuit(&mut cs, public_input.map(Var));
         cs.link_outputs::<IN, OUT>(public_out.map(Var::unwrap));
@@ -85,18 +91,27 @@ impl Display for CircuitProfile {
     }
 }
 
-impl<T, F: Field, const IN: usize, const OUT: usize, const PRIV_OUT: usize, const IO: usize>
-    BuildStructure<F, IN, OUT, PRIV_OUT, IO> for T
+impl<T, F, E, const IN: usize, const OUT: usize, const PRIV_OUT: usize, const IO: usize>
+    BuildStructure<F, E, IN, OUT, PRIV_OUT, IO> for T
 where
-    T: Circuit<F, IN, OUT, PRIV_OUT>,
+    T: Circuit<F, IN, OUT, PRIV_OUT, E>,
+    F: Field,
+    E: LcsExtension<F>,
 {
 }
 
-pub trait Prove<F: Field, const IN: usize, const OUT: usize, const PRIV_OUT: usize, const IO: usize>:
-    Circuit<F, IN, OUT, PRIV_OUT>
+pub trait Prove<
+    F: Field,
+    const IN: usize,
+    const OUT: usize,
+    const PRIV_OUT: usize,
+    const IO: usize,
+    E: LcsExtension<F> = (),
+>: Circuit<F, IN, OUT, PRIV_OUT, E>
 {
-    fn witness(inputs: [F; IN], check: bool) -> (Witness<F>, Self::PrivateOutput) {
-        let (mut cs, public_input) = WitnessGenerator::<F, IO>::with_io::<IN, OUT>(check, inputs);
+    fn witness(inputs: [F; IN], check: bool) -> (Witness<F, E>, Self::PrivateOutput) {
+        let (mut cs, public_input) =
+            WitnessGenerator::<F, IO, E>::with_io::<IN, OUT>(check, inputs);
         let (public_out, private_out) = Self::circuit(&mut cs, public_input.map(Var));
         let private_out = unwrap_output(private_out.map(Var::unwrap));
 
@@ -105,9 +120,16 @@ pub trait Prove<F: Field, const IN: usize, const OUT: usize, const PRIV_OUT: usi
     }
 }
 
-impl<T, F: Field, const IN: usize, const OUT: usize, const PRIV_OUT: usize, const IO: usize>
-    Prove<F, IN, OUT, PRIV_OUT, IO> for T
+impl<
+    T,
+    F: Field,
+    E: LcsExtension<F>,
+    const IN: usize,
+    const OUT: usize,
+    const PRIV_OUT: usize,
+    const IO: usize,
+> Prove<F, IN, OUT, PRIV_OUT, IO, E> for T
 where
-    T: Circuit<F, IN, OUT, PRIV_OUT>,
+    T: Circuit<F, IN, OUT, PRIV_OUT, E>,
 {
 }

@@ -1,4 +1,4 @@
-use crate::{circuit::Var, gates::Constant, structure::Exp};
+use crate::{circuit::Var, extensions::LcsExtension, gates::Constant, structure::Exp};
 use alloc::{boxed::Box, collections::BTreeMap, vec::Vec};
 use ark_ff::Field;
 use core::{
@@ -11,7 +11,7 @@ pub trait WitnessReader<'a, F, V> {
     fn read(&self, var: &Var<V>) -> F;
 }
 
-pub trait ConstraintSystem<F: Field, V> {
+pub trait ConstraintSystem<F: Field, V, E: LcsExtension<F> = ()> {
     fn execute<G, const IO: usize, const I: usize, const O: usize>(
         &mut self,
         i: [Var<V>; I],
@@ -37,6 +37,12 @@ pub trait ConstraintSystem<F: Field, V> {
     /// Multiple calls with the same constant value will allocate
     /// a single variable.
     fn constant(&mut self, value: F) -> Var<V>;
+
+    /// Apply an extended constraint, while the method allows for an
+    /// arbitrary number of variables, it is up to each extension
+    /// how many variables are supported, even depending on the specific
+    /// constraint.
+    fn apply_ex_constraint<const N: usize>(&mut self, vars: [Var<V>; N], constraint: E::Constraint);
 }
 
 pub trait Val:

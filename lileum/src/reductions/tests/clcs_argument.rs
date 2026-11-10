@@ -15,7 +15,7 @@ where
     C: CommitmentScheme<F>,
 {
     let lcs_structure: LcsStructure<F, 4, 5> =
-        <HashChain<N> as BuildStructure<F, 1, 1, 1, 4>>::structure();
+        <HashChain<N> as BuildStructure<F, (), 1, 1, 1, 4>>::structure();
 
     let pcs = C::new(lcs_structure.vars());
     let structure = ClcsStructure { lcs_structure, pcs };
@@ -28,6 +28,7 @@ where
 
     let input = F::from(8u8);
     let (instance, witness) = commit_witness::<F, C, N>(&structure.pcs, [input]);
+    let witness = (witness, ());
 
     assert!(ClcsRelation::<F, C, 2, 4, 5>::check(
         &structure, &instance, &witness

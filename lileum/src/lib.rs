@@ -5,6 +5,7 @@ extern crate std;
 
 mod circuit_key;
 pub mod circuits;
+pub mod extensions;
 mod oracles;
 pub mod reductions;
 pub mod relations;
