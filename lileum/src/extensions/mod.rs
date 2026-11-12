@@ -1,3 +1,4 @@
+use crate::extensions::aggregation::{AggregationProof, AggregationVerifierKey, sealed::Aggregate};
 use alloc::vec::Vec;
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
@@ -11,10 +12,11 @@ use reduction::{
 
 pub mod aggregation;
 mod bytecheck;
+mod dataset;
 mod indentity;
 
-use crate::extensions::aggregation::{AggregationProof, AggregationVerifierKey, sealed::Aggregate};
 pub use bytecheck::ByteCheck;
+pub use dataset::Dataset;
 
 pub trait ExtensionRelation<F, C, I = (), W = (), S = ()>:
     Relation<Instance = (C::Commitment, I), Witness = (Vec<F>, W), Structure = S>
