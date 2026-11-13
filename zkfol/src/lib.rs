@@ -116,6 +116,7 @@ pub struct ZkFolStructure<const ROWS: usize = 100> {
     pub sets: Vec<Vec<i64>>,
     pub membership_constraints: Vec<SetMembershipConstraint<ROWS>>,
     pub memory_operations: Vec<MemoryOperation<ROWS>>,
+    pub sign_constraints: Vec<Cell<ROWS>>,
 }
 
 impl<const ROWS: usize> Relation for ZkFol<ROWS> {
@@ -142,6 +143,7 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
             sets,
             membership_constraints,
             memory_operations,
+            sign_constraints,
         } = structure;
 
         // Check that the witness has the expected number of columns.
@@ -269,6 +271,20 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
             }
         }
 
+        // Enforces that selected cells are naturals.
+        for constraint in sign_constraints {
+            let bound = &constraint.column < columns;
+
+            if bound {
+                let value = witness[constraint.column][constraint.row.0];
+                if value < 0 {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
         true
     }
 }
@@ -314,6 +330,7 @@ where
         sets: vec![],
         membership_constraints: vec![],
         memory_operations: vec![],
+        sign_constraints: vec![],
     };
 
     // We can now instanciate a prover and verifier for this structure.
