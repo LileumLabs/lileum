@@ -43,7 +43,7 @@ impl Exp<i64> {
 }
 
 /// An index to a particular row.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Index<const ROWS: usize>(usize);
 
 impl<const ROWS: usize> Index<ROWS> {
@@ -53,7 +53,7 @@ impl<const ROWS: usize> Index<ROWS> {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Cell<const ROWS: usize> {
     row: Index<ROWS>,
     column: usize,
@@ -95,6 +95,18 @@ pub struct SetMembershipConstraint<const ROWS: usize> {
     pub set: usize,
 }
 
+// The constraint should be understood as reading the value from some
+// address, copying such value into some cell of the table, and then
+// writting a value from another cell to that same address.
+// From this it is possible to only read, only write, read and then write,
+// and also use the same cell for both operands if there is any use for it.
+#[derive(Clone, Debug, Default)]
+pub struct MemoryOperation<const ROWS: usize> {
+    pub memory_address: usize,
+    pub read_to: Option<Cell<ROWS>>,
+    pub write_from: Option<Cell<ROWS>>,
+}
+
 #[derive(Clone, Debug)]
 pub struct ZkFolStructure<const ROWS: usize = 100> {
     pub arithmetic_constraints: Vec<Exp<Index<ROWS>>>,
@@ -103,6 +115,7 @@ pub struct ZkFolStructure<const ROWS: usize = 100> {
     pub columns: usize,
     pub sets: Vec<Vec<i64>>,
     pub membership_constraints: Vec<SetMembershipConstraint<ROWS>>,
+    pub memory_operations: Vec<MemoryOperation<ROWS>>,
 }
 
 impl<const ROWS: usize> Relation for ZkFol<ROWS> {
@@ -128,6 +141,7 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
             reads,
             sets,
             membership_constraints,
+            memory_operations,
         } = structure;
 
         // Check that the witness has the expected number of columns.
@@ -217,6 +231,44 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
             }
         }
 
+        // Memory is initialized as 0s.
+        let mut memory = vec![0; columns * ROWS];
+
+        for operation in memory_operations {
+            let MemoryOperation {
+                memory_address,
+                read_to,
+                write_from,
+            } = operation;
+
+            // Address out of bounds.
+            if *memory_address >= *columns * ROWS {
+                return false;
+            }
+
+            let bound1 = read_to.map(|c| &c.column < columns).unwrap_or(true);
+            let bound2 = write_from.map(|c| &c.column < columns).unwrap_or(true);
+
+            if !(bound1 && bound2) {
+                return false;
+            }
+
+            // Read.
+            if let Some(addr) = read_to {
+                let value = witness[addr.column][addr.row.0];
+
+                if value != memory[*memory_address] {
+                    return false;
+                }
+            }
+
+            // Write.
+            if let Some(addr) = write_from {
+                let value = witness[addr.column][addr.row.0];
+                memory[*memory_address] = value;
+            }
+        }
+
         true
     }
 }
@@ -261,6 +313,7 @@ where
         columns: 3,
         sets: vec![],
         membership_constraints: vec![],
+        memory_operations: vec![],
     };
 
     // We can now instanciate a prover and verifier for this structure.
