@@ -87,12 +87,22 @@ pub struct ReadLookup<const ROWS: usize> {
     pub to: Cell<ROWS>,
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct SetMembershipConstraint<const ROWS: usize> {
+    // The location of the element.
+    pub element: Cell<ROWS>,
+    // The index of the set in which we want to check membership.
+    pub set: usize,
+}
+
 #[derive(Clone, Debug)]
 pub struct ZkFolStructure<const ROWS: usize = 100> {
     pub arithmetic_constraints: Vec<Exp<Index<ROWS>>>,
     pub copy_constraints: Vec<CopyConstraint<ROWS>>,
     pub reads: Vec<ReadLookup<ROWS>>,
     pub columns: usize,
+    pub sets: Vec<Vec<i64>>,
+    pub membership_constraints: Vec<SetMembershipConstraint<ROWS>>,
 }
 
 impl<const ROWS: usize> Relation for ZkFol<ROWS> {
@@ -116,10 +126,18 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
             copy_constraints,
             columns,
             reads,
+            sets,
+            membership_constraints,
         } = structure;
 
         // Check that the witness has the expected number of columns.
         if witness.len() <= *columns {
+            return false;
+        }
+
+        // To make implementing the reduction easier, but not a fundamental
+        // restriction.
+        if sets.iter().fold(0, |acc, set| acc + set.len()) > columns * ROWS {
             return false;
         }
 
@@ -180,6 +198,25 @@ impl<const ROWS: usize> Relation for ZkFol<ROWS> {
             }
         }
 
+        for constraint in membership_constraints {
+            let SetMembershipConstraint { element, set } = constraint;
+            let bound = &element.column < columns;
+
+            if !bound {
+                return false;
+            }
+
+            let element = &witness[element.column][element.row.0];
+
+            if let Some(set) = sets.get(*set) {
+                if !set.contains(element) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
         true
     }
 }
@@ -222,6 +259,8 @@ where
         }],
         reads: vec![],
         columns: 3,
+        sets: vec![],
+        membership_constraints: vec![],
     };
 
     // We can now instanciate a prover and verifier for this structure.
