@@ -12,6 +12,10 @@ pub trait LcsExtension<F: Field>: Debug + Default {
     type Structure: Clone;
     type Witness;
 
+    // An additional instance-witness brought from outside the circuit.
+    type ExternalInstance;
+    type ExternalWitness;
+
     fn process_structure<R: Fn(Var<WitnessIndex>) -> usize>(
         builder: Self::StructureBuilder,
         var_reader: R,
@@ -33,6 +37,21 @@ pub trait LcsExtension<F: Field>: Debug + Default {
         vars: [F; N],
         constraint: Self::Constraint,
     );
+
+    /// More general version of compute_constraint which allows access
+    /// to external instance and witness for extensions that make use of
+    /// them.
+    fn compute_constraint_ex<const N: usize>(
+        witness: &mut Self::WitnessBuilder,
+        vars: [F; N],
+        constraint: Self::Constraint,
+        external_instance: &Self::ExternalInstance,
+        external_witness: &Self::ExternalWitness,
+    ) {
+        let _ = external_instance;
+        let _ = external_witness;
+        Self::compute_constraint(witness, vars, constraint);
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -57,6 +76,8 @@ impl<F: Field> LcsExtension<F> for () {
     type StructureBuilder = ();
     type Structure = ();
     type Witness = ();
+    type ExternalInstance = ();
+    type ExternalWitness = ();
     type WitnessBuilder = ();
 
     fn process_structure<R>(_: (), _: R) -> Self::Structure {}

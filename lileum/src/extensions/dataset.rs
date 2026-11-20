@@ -16,6 +16,10 @@ impl<F: Field> LcsExtension<F> for Dataset {
 
     type Witness = ();
 
+    type ExternalInstance = ();
+
+    type ExternalWitness = ();
+
     fn process_structure<R: Fn(Var<WitnessIndex>) -> usize>(
         _builder: Self::StructureBuilder,
         _var_reader: R,

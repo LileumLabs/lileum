@@ -11,6 +11,7 @@ use commit::CommitmentScheme;
 use core::marker::PhantomData;
 use lcs::{
     circuit::{BuildStructure, Circuit, Prove},
+    extensions::LcsExtension,
     structure::LcsStructure,
     witness::Witness,
 };
@@ -157,10 +158,11 @@ where
     ) -> (ClcsInstance<F, CS, I, E>, Witness<F, E>, C::PrivateOutput)
     where
         C: Circuit<F, IN, OUT, PRIV_OUT, E>,
+        E: LcsExtension<F, ExternalInstance = (), ExternalWitness = ()>,
     {
         assert_eq!(I, IN + OUT);
         let (mut witness, output) =
-            <C as Prove<F, IN, OUT, PRIV_OUT, IO, E>>::witness(inputs, true);
+            <C as Prove<F, IN, OUT, PRIV_OUT, IO, E>>::witness(inputs, true, ((), ()));
         witness.pad_to_power();
         let witness_commit = self.pcs.commit_mle(&witness.0);
 
@@ -192,6 +194,7 @@ where
     )
     where
         C: Circuit<F, IN, OUT, PRIV_OUT, E>,
+        E: LcsExtension<F, ExternalInstance = (), ExternalWitness = ()>,
     {
         let (instance, witness, output) = self.commit_witness(inputs);
 
