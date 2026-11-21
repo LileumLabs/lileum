@@ -327,7 +327,7 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> ConstraintSystem<F, Witn
         vars: [Var<WitnessIndex>; N],
         constraint: E::Constraint,
     ) {
-        E::record_constraint(&mut self.extension_builder, vars, constraint);
+        E::record_constraint(&mut self.extension_builder, |v| v.0.0, vars, constraint);
     }
 }
 

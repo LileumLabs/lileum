@@ -31,8 +31,9 @@ impl<F: Field> LcsExtension<F> for Dataset {
         todo!()
     }
 
-    fn record_constraint<const N: usize>(
+    fn record_constraint<const N: usize, R: Fn(Var<WitnessIndex>) -> usize>(
         _builder: &mut Self::StructureBuilder,
+        _var_reader: R,
         _vars: [Var<WitnessIndex>; N],
         _constraint: Self::Constraint,
     ) {

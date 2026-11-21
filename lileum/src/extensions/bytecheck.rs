@@ -59,8 +59,9 @@ impl<F: Field> LcsExtension<F> for ByteCheck {
         vec![]
     }
 
-    fn record_constraint<const N: usize>(
+    fn record_constraint<const N: usize, R>(
         builder: &mut Self::StructureBuilder,
+        _: R,
         vars: [Var<WitnessIndex>; N],
         _: (),
     ) {

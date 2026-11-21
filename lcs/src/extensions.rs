@@ -24,8 +24,9 @@ pub trait LcsExtension<F: Field>: Debug + Default {
 
     /// Records the application of a constraint during structure
     /// generation.
-    fn record_constraint<const N: usize>(
+    fn record_constraint<const N: usize, R: Fn(Var<WitnessIndex>) -> usize>(
         builder: &mut Self::StructureBuilder,
+        var_reader: R,
         vars: [Var<WitnessIndex>; N],
         constraint: Self::Constraint,
     );
@@ -84,7 +85,8 @@ impl<F: Field> LcsExtension<F> for () {
 
     fn process_witness(_: ()) -> Self::Witness {}
 
-    fn record_constraint<const N: usize>(_: &mut (), _: [Var<WitnessIndex>; N], _: Never) {}
+    fn record_constraint<const N: usize, R>(_: &mut (), _: R, _: [Var<WitnessIndex>; N], _: Never) {
+    }
 
     fn compute_constraint<const N: usize>(_: &mut (), _: [F; N], _: Never) {}
 }
