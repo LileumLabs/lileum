@@ -111,11 +111,22 @@ where
     type Witness = (Vec<F>, Vec<F>);
 
     fn check(
-        _structure: &Self::Structure,
+        structure: &Self::Structure,
         _instance: &Self::Instance,
-        _witness: &Self::Witness,
+        witness: &Self::Witness,
     ) -> bool {
-        todo!()
+        let (trace, dataset) = witness;
+
+        for (i, w) in trace.iter().enumerate() {
+            let lookup = structure.get(&i).map(|i| dataset[*i]);
+            if let Some(x) = lookup
+                && *w != x
+            {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
