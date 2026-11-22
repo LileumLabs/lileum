@@ -1,9 +1,16 @@
-use alloc::collections::BTreeMap;
-use alloc::vec::Vec;
+use crate::extensions::{
+    Extension, ExtensionRelation, NoFolding, aggregation::SingleCommitAggregation,
+};
+use alloc::{collections::BTreeMap, vec::Vec};
 use ark_ff::Field;
-use commit::CommitmentScheme;
+use commit::{CommitmentScheme, OpeningRelation};
 use core::marker::PhantomData;
 use lcs::{circuit::Var, extensions::LcsExtension, structure::WitnessIndex};
+use reduction::{
+    GuardedProof, NoError, ProverOutput, Reduction, Relation, Transcript, TranscriptBuilder,
+    VerifierTranscript,
+};
+use sponge::sponge::Duplex;
 
 /// An extension which allows to lookup values from an externally committed table.
 #[derive(Clone, Debug)]
@@ -87,4 +94,198 @@ impl<F: Field, C: CommitmentScheme<F>> LcsExtension<F> for Dataset<F, C> {
 
         assert_eq!(var, external_witness[constraint])
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct DatasetRel1<F, C>(PhantomData<(F, C)>);
+
+impl<F, C> Relation for DatasetRel1<F, C>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    type Structure = BTreeMap<usize, usize>;
+
+    type Instance = (C::Commitment, C::Commitment);
+
+    type Witness = (Vec<F>, Vec<F>);
+
+    fn check(
+        _structure: &Self::Structure,
+        _instance: &Self::Instance,
+        _witness: &Self::Witness,
+    ) -> bool {
+        todo!()
+    }
+}
+
+impl<F, C> ExtensionRelation<F, C, C::Commitment, Vec<F>, BTreeMap<usize, usize>>
+    for DatasetRel1<F, C>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+}
+
+#[derive(Clone, Debug)]
+pub struct DatasetRel2<F, C>(PhantomData<(F, C)>);
+
+impl<F, C> Relation for DatasetRel2<F, C> {
+    type Structure = ();
+
+    type Instance = ();
+
+    type Witness = Vec<F>;
+
+    fn check(
+        _structure: &Self::Structure,
+        _instance: &Self::Instance,
+        _witness: &Self::Witness,
+    ) -> bool {
+        todo!()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct DatasetReduction1;
+
+#[derive(Clone, Debug)]
+pub struct DatasetReduction2;
+
+impl<F, C> Reduction<F, DatasetRel1<F, C>, DatasetRel2<F, C>> for DatasetReduction1
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    type ProverKey = ();
+
+    type VerifierKey = ();
+
+    type Proof = ();
+
+    type Error = NoError;
+
+    type Params = ();
+
+    fn transcript_pattern(
+        _key: &Self::VerifierKey,
+        _builder: TranscriptBuilder,
+    ) -> TranscriptBuilder {
+        todo!()
+    }
+
+    fn verifier_key(_structure: &BTreeMap<usize, usize>) -> Self::VerifierKey {
+        todo!()
+    }
+
+    fn key_pair(_structure: &BTreeMap<usize, usize>) -> (Self::VerifierKey, Self::ProverKey) {
+        todo!()
+    }
+
+    fn params(_key: &Self::VerifierKey) -> Self::Params {
+        todo!()
+    }
+
+    fn prove<S: Duplex<F>>(
+        _key: &Self::ProverKey,
+        _instance: (C::Commitment, C::Commitment),
+        _witness: (Vec<F>, Vec<F>),
+        _transcript: &mut Transcript<F, S>,
+    ) -> ProverOutput<DatasetRel2<F, C>, Self::Proof> {
+        todo!()
+    }
+
+    fn verify<S: Duplex<F>>(
+        _key: &Self::VerifierKey,
+        _instance: (C::Commitment, C::Commitment),
+        _proof: GuardedProof<Self::Proof>,
+        _transcript: &mut VerifierTranscript<F, S>,
+    ) -> Result<<DatasetRel2<F, C> as Relation>::Instance, Self::Error> {
+        todo!()
+    }
+}
+
+impl<F, C> Reduction<F, DatasetRel2<F, C>, OpeningRelation<F, C>> for DatasetReduction2
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    type ProverKey = ();
+
+    type VerifierKey = ();
+
+    type Proof = ();
+
+    type Error = ();
+
+    type Params = ();
+
+    fn transcript_pattern(
+        _key: &Self::VerifierKey,
+        _builder: TranscriptBuilder,
+    ) -> TranscriptBuilder {
+        todo!()
+    }
+
+    fn verifier_key(_structure: &<DatasetRel2<F, C> as Relation>::Structure) -> Self::VerifierKey {
+        todo!()
+    }
+
+    fn key_pair(
+        _structure: &<DatasetRel2<F, C> as Relation>::Structure,
+    ) -> (Self::VerifierKey, Self::ProverKey) {
+        todo!()
+    }
+
+    fn params(_key: &Self::VerifierKey) -> Self::Params {
+        todo!()
+    }
+
+    fn prove<S: Duplex<F>>(
+        _key: &Self::ProverKey,
+        _instance: <DatasetRel2<F, C> as Relation>::Instance,
+        _witness: <DatasetRel2<F, C> as Relation>::Witness,
+        _transcript: &mut Transcript<F, S>,
+    ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
+        todo!()
+    }
+
+    fn verify<S: Duplex<F>>(
+        _key: &Self::VerifierKey,
+        _instance: <DatasetRel2<F, C> as Relation>::Instance,
+        _proof: GuardedProof<Self::Proof>,
+        _transcript: &mut VerifierTranscript<F, S>,
+    ) -> Result<<OpeningRelation<F, C> as Relation>::Instance, Self::Error> {
+        todo!()
+    }
+}
+
+impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for Dataset<F, C> {
+    type Instance = C::Commitment;
+
+    type R1 = DatasetRel1<F, C>;
+
+    type R2 = DatasetRel2<F, C>;
+
+    type R3 = OpeningRelation<F, C>;
+
+    fn derive_structure(
+        _vars: usize,
+        _pcs: &C,
+        _r1_structure: &Self::Structure,
+    ) -> <Self::R2 as reduction::Relation>::Structure {
+        todo!()
+    }
+
+    fn commit_witness(_pcs: &C, _witness: &Self::Witness) -> Self::Instance {
+        todo!()
+    }
+
+    type Reduction1 = DatasetReduction1;
+
+    type Reduction2 = DatasetReduction2;
+
+    type AgregationScheme = SingleCommitAggregation;
+
+    type FoldingScheme = NoFolding;
 }
