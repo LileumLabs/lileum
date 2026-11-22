@@ -20,7 +20,16 @@ pub trait LcsExtension<F: Field>: Debug + Default {
         builder: Self::StructureBuilder,
         var_reader: R,
     ) -> Self::Structure;
+
     fn process_witness(builder: Self::WitnessBuilder) -> Self::Witness;
+    fn process_witness_ex(
+        builder: Self::WitnessBuilder,
+        external_instance: Self::ExternalInstance,
+        external_witness: Self::ExternalWitness,
+    ) -> Self::Witness {
+        let _ = (external_instance, external_witness);
+        Self::process_witness(builder)
+    }
 
     /// Records the application of a constraint during structure
     /// generation.

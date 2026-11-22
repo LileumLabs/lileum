@@ -171,8 +171,15 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> WitnessGenerator<F, MAX_
     }
 
     pub fn witness(self) -> Witness<F, E> {
-        let wit_ext = E::process_witness(self.extended_witness);
-        Witness(self.witness.into_iter().map(|x| x.0).collect(), wit_ext)
+        let Self {
+            witness,
+            extended_witness,
+            extenal_instance,
+            extenal_witness,
+            ..
+        } = self;
+        let wit_ext = E::process_witness_ex(extended_witness, extenal_instance, extenal_witness);
+        Witness(witness.into_iter().map(|x| x.0).collect(), wit_ext)
     }
 }
 

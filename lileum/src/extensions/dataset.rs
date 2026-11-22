@@ -24,7 +24,7 @@ impl<F: Field, C: CommitmentScheme<F>> LcsExtension<F> for Dataset<F, C> {
 
     type Structure = BTreeMap<usize, usize>;
 
-    type Witness = ();
+    type Witness = Vec<F>;
 
     type ExternalInstance = C::Commitment;
 
@@ -38,8 +38,15 @@ impl<F: Field, C: CommitmentScheme<F>> LcsExtension<F> for Dataset<F, C> {
     }
 
     fn process_witness(_builder: Self::WitnessBuilder) -> Self::Witness {
-        //TODO: this needs access to external witness.
-        todo!()
+        panic!("Shouldn't be called, this extension uses _ex");
+    }
+
+    fn process_witness_ex(
+        _builder: Self::WitnessBuilder,
+        _external_instance: Self::ExternalInstance,
+        external_witness: Self::ExternalWitness,
+    ) -> Self::Witness {
+        external_witness
     }
 
     fn record_constraint<const N: usize, R: Fn(Var<WitnessIndex>) -> usize>(
