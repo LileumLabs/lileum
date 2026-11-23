@@ -8,7 +8,7 @@
 //!
 //! For more customization, [circuit_key::CircuitKey] should be used.
 
-use crate::circuit_key;
+use crate::circuit_key::{self, InstanceWitness};
 pub use crate::{circuits, relations::ClcsInstance, relations::FlcsInstance};
 pub use ark_ff::{Field, PrimeField};
 pub use circuit_key::FoldingProof;
@@ -65,7 +65,13 @@ where
         LcsWitness<F>,
         FoldingProof<F, CS, C>,
     ) {
-        self.inner.fold_prove(instance1, instance2, witnesses)
+        let [w1, w2] = witnesses;
+        let pairs = [(instance1.into(), w1), (instance2.into(), w2)].map(|(ins, wit)| match ins {
+            Instance::Lcs(instance) => InstanceWitness::Lcs(instance, wit),
+            Instance::Flcs(instance) => InstanceWitness::Flcs(instance, wit),
+        });
+        let [pair1, pair2] = pairs;
+        self.inner.fold_prove(pair1, pair2)
     }
 
     /// Verifier side of `Self::fold`, takes 2 instances and a proof and returns a
@@ -107,7 +113,8 @@ where
 
     /// Proves (instance, witness) pair.
     pub fn prove(&self, instance: ClcsInstance<F, CS, I>, witness: LcsWitness<F>) -> Proof<F, CS> {
-        self.inner.prove(instance, witness)
+        let pair = InstanceWitness::Lcs(instance, witness);
+        self.inner.prove(pair)
     }
 
     pub fn verify(&self, instance: ClcsInstance<F, CS, I>, proof: Proof<F, CS>) -> bool {

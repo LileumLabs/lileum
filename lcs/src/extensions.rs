@@ -10,7 +10,7 @@ pub trait LcsExtension<F: Field>: Debug + Default {
     type WitnessBuilder: Default;
 
     type Structure: Clone;
-    type Witness;
+    type Witness: Clone + Debug;
 
     // An additional instance-witness brought from outside the circuit.
     type ExternalInstance;
