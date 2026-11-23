@@ -8,7 +8,10 @@
 //!
 //! For more customization, [circuit_key::CircuitKey] should be used.
 
-use crate::circuit_key::{self, InstanceWitness};
+use crate::{
+    circuit_key::{self, InstanceWitness},
+    relations::FlcsWitness,
+};
 pub use crate::{circuits, relations::ClcsInstance, relations::FlcsInstance};
 pub use ark_ff::{Field, PrimeField};
 pub use circuit_key::FoldingProof;
@@ -55,22 +58,16 @@ where
     /// Folds 2 instance-witness pairs into a single instance-witness pair.
     /// Returns (instance, witness, proof).
     /// Each instance may be a `FoldableLcsInstance` or an `LcsInstance`.
+    #[allow(clippy::complexity)]
     pub fn fold(
         &self,
-        instance1: impl Into<Instance<F, CS, IO, S, I>>,
-        instance2: impl Into<Instance<F, CS, IO, S, I>>,
-        witnesses: [LcsWitness<F>; 2],
+        pair1: impl Into<InstanceWitness<F, CS, IO, S, I>>,
+        pair2: impl Into<InstanceWitness<F, CS, IO, S, I>>,
     ) -> (
         FlcsInstance<F, CS, IO, S, I>,
-        LcsWitness<F>,
+        FlcsWitness<F, CS>,
         FoldingProof<F, CS, C>,
     ) {
-        let [w1, w2] = witnesses;
-        let pairs = [(instance1.into(), w1), (instance2.into(), w2)].map(|(ins, wit)| match ins {
-            Instance::Lcs(instance) => InstanceWitness::Lcs(instance, wit),
-            Instance::Flcs(instance) => InstanceWitness::Flcs(instance, wit),
-        });
-        let [pair1, pair2] = pairs;
         self.inner.fold_prove(pair1, pair2)
     }
 

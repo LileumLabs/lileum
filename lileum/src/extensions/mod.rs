@@ -50,7 +50,7 @@ where
     // FoldingScheme : R2 x R2 -> R2. Optional.
     // AgregationScheme : R3 x OpeningRelation -> OpeningRelation.
     type R1: ExtensionRelation<F, C, Self::Instance, Self::Witness, Self::Structure>;
-    type R2: Relation<Witness = Self::Witness> + Clone + Debug;
+    type R2: Relation<Witness: Clone + Debug> + Clone + Debug;
     type R3: Relation + Clone + Debug;
 
     fn derive_structure(

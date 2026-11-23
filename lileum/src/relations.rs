@@ -215,6 +215,13 @@ where
     C: CommitmentScheme<F>,
     E: Extension<F, C>;
 
+#[derive(Clone, Debug)]
+pub struct FlcsWitness<F, C, E = ()>(pub Vec<F>, pub <E::R2 as Relation>::Witness)
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    E: Extension<F, C>;
+
 impl<F, C, E, const IO: usize, const S: usize, const I: usize> Message<F>
     for FlcsInstance<F, C, IO, S, I, E>
 where

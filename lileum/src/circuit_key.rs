@@ -4,7 +4,7 @@ use crate::{
         FlcsArgument, FlcsFoldingScheme, ToFlcsProver, ToFlcsVerifier,
         flcs::{self, folding},
     },
-    relations::{ClcsInstance, ClcsStructure, FlcsInstance, FlcsRelation},
+    relations::{ClcsInstance, ClcsStructure, FlcsInstance, FlcsRelation, FlcsWitness},
 };
 use ark_ff::Field;
 use commit::CommitmentScheme;
@@ -116,13 +116,13 @@ where
                     proof: (),
                 } = self.to_flcs_prover.prove(instance, witness);
 
-                let witness = LcsWitness(witness, witness_ext);
+                let witness = FlcsWitness(witness, witness_ext);
                 (instance, witness)
             }
             InstanceWitness::Flcs(instance, witness) => (instance, witness),
         };
 
-        let LcsWitness(w, w_ext) = witness;
+        let FlcsWitness(w, w_ext) = witness;
         let ProverOutput {
             instance: (),
             witness: (),
@@ -261,7 +261,7 @@ where
         pair2: impl Into<InstanceWitness<F, CS, IO, S, I, E>>,
     ) -> (
         FlcsInstance<F, CS, IO, S, I, E>,
-        LcsWitness<F, E>,
+        FlcsWitness<F, CS, E>,
         FoldingProof<F, CS, C, E>,
     ) {
         let pairs = [pair1.into(), pair2.into()].map(|pair| match pair.into() {
@@ -275,14 +275,14 @@ where
                     proof: (),
                 } = self.to_flcs_prover.prove(instance, witness);
 
-                let witness = LcsWitness(witness, witness_ext);
+                let witness = FlcsWitness(witness, witness_ext);
                 (instance, witness)
             }
             InstanceWitness::Flcs(instance, witness) => (instance, witness),
         });
         let [(instance1, witness1), (instance2, witness2)] = pairs;
         let instance = [instance1, instance2];
-        let witness = [witness1, witness2].map(|LcsWitness(w, wex)| (w, wex));
+        let witness = [witness1, witness2].map(|FlcsWitness(w, wex)| (w, wex));
 
         let ProverOutput {
             instance,
@@ -296,7 +296,7 @@ where
 
         (
             instance,
-            LcsWitness(witness.0, witness.1),
+            FlcsWitness(witness.0, witness.1),
             FoldingProof(proof, PhantomData),
         )
     }
@@ -364,7 +364,7 @@ where
     E: Extension<F, C>,
 {
     Lcs(ClcsInstance<F, C, I, E>, LcsWitness<F, E>),
-    Flcs(FlcsInstance<F, C, IO, S, I, E>, LcsWitness<F, E>),
+    Flcs(FlcsInstance<F, C, IO, S, I, E>, FlcsWitness<F, C, E>),
 }
 
 impl<F, C, const IO: usize, const S: usize, const I: usize, E>
@@ -381,13 +381,14 @@ where
 }
 
 impl<F, C, const IO: usize, const S: usize, const I: usize, E>
-    From<(FlcsInstance<F, C, IO, S, I, E>, LcsWitness<F, E>)> for InstanceWitness<F, C, IO, S, I, E>
+    From<(FlcsInstance<F, C, IO, S, I, E>, FlcsWitness<F, C, E>)>
+    for InstanceWitness<F, C, IO, S, I, E>
 where
     F: Field,
     C: CommitmentScheme<F>,
     E: Extension<F, C>,
 {
-    fn from(value: (FlcsInstance<F, C, IO, S, I, E>, LcsWitness<F, E>)) -> Self {
+    fn from(value: (FlcsInstance<F, C, IO, S, I, E>, FlcsWitness<F, C, E>)) -> Self {
         let (instance, witness) = value;
         Self::Flcs(instance, witness)
     }
