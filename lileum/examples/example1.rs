@@ -77,7 +77,7 @@ fn main() {
     // basically a vector of the values of all variables.
     let (instance, witness, _output) = circuit_key.commit_witness(inputs);
     let instance: ClcsInstance<Fr, FrScheme, 0> = instance;
-    let witness: Witness<Fr> = witness;
+    let witness: LcsWitness<Fr> = witness;
 
     // Now, we want to prove that the (instance,witness) pair satisfies the constraints
     // of the circuit.

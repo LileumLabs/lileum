@@ -19,7 +19,7 @@ pub use lcs::{
     circuit::{Circuit, Var},
     constraint_system::{ConstraintSystem, Val},
     gates::{self, StandardGates},
-    witness::Witness,
+    witness::LcsWitness,
 };
 
 const IO: usize = 5;
@@ -59,10 +59,10 @@ where
         &self,
         instance1: impl Into<Instance<F, CS, IO, S, I>>,
         instance2: impl Into<Instance<F, CS, IO, S, I>>,
-        witnesses: [Witness<F>; 2],
+        witnesses: [LcsWitness<F>; 2],
     ) -> (
         FlcsInstance<F, CS, IO, S, I>,
-        Witness<F>,
+        LcsWitness<F>,
         FoldingProof<F, CS, C>,
     ) {
         self.inner.fold_prove(instance1, instance2, witnesses)
@@ -98,7 +98,7 @@ where
     pub fn commit_witness<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
         &self,
         inputs: [F; IN],
-    ) -> (ClcsInstance<F, CS, I>, Witness<F>, C::PrivateOutput)
+    ) -> (ClcsInstance<F, CS, I>, LcsWitness<F>, C::PrivateOutput)
     where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
     {
@@ -106,7 +106,7 @@ where
     }
 
     /// Proves (instance, witness) pair.
-    pub fn prove(&self, instance: ClcsInstance<F, CS, I>, witness: Witness<F>) -> Proof<F, CS> {
+    pub fn prove(&self, instance: ClcsInstance<F, CS, I>, witness: LcsWitness<F>) -> Proof<F, CS> {
         self.inner.prove(instance, witness)
     }
 

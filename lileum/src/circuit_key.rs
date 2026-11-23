@@ -13,7 +13,7 @@ use lcs::{
     circuit::{BuildStructure, Circuit, Prove},
     extensions::LcsExtension,
     structure::LcsStructure,
-    witness::Witness,
+    witness::LcsWitness,
 };
 use reduction::{FoldingRelation, Prover, ProverOutput, Verifier};
 use sponge::sponge::Duplex;
@@ -104,11 +104,11 @@ where
     pub fn prove(
         &self,
         instance: impl Into<Instance<F, CS, IO, S, I, E>>,
-        witness: Witness<F, E>,
+        witness: LcsWitness<F, E>,
     ) -> Proof<F, CS, IO, E> {
         let (instance, witness) = match instance.into() {
             Instance::Lcs(lcs_instance) => {
-                let Witness(witness, witness_ext) = witness;
+                let LcsWitness(witness, witness_ext) = witness;
                 let ProverOutput {
                     instance,
                     witness: (witness, witness_ext),
@@ -116,12 +116,12 @@ where
                 } = self
                     .to_flcs_prover
                     .prove(lcs_instance, (witness, witness_ext));
-                let witness = Witness(witness, witness_ext);
+                let witness = LcsWitness(witness, witness_ext);
                 (instance, witness)
             }
             Instance::Flcs(flcs_instance) => (flcs_instance, witness),
         };
-        let Witness(w, w_ext) = witness;
+        let LcsWitness(w, w_ext) = witness;
         let ProverOutput {
             instance: (),
             witness: (),
@@ -155,7 +155,11 @@ where
     pub fn commit_witness<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
         &self,
         inputs: [F; IN],
-    ) -> (ClcsInstance<F, CS, I, E>, Witness<F, E>, C::PrivateOutput)
+    ) -> (
+        ClcsInstance<F, CS, I, E>,
+        LcsWitness<F, E>,
+        C::PrivateOutput,
+    )
     where
         C: Circuit<F, IN, OUT, PRIV_OUT, E>,
         E: LcsExtension<F, ExternalInstance = (), ExternalWitness = ()>,
@@ -252,10 +256,10 @@ where
         &self,
         instance1: impl Into<Instance<F, CS, IO, S, I, E>>,
         instance2: impl Into<Instance<F, CS, IO, S, I, E>>,
-        witnesses: [Witness<F, E>; 2],
+        witnesses: [LcsWitness<F, E>; 2],
     ) -> (
         FlcsInstance<F, CS, IO, S, I, E>,
-        Witness<F, E>,
+        LcsWitness<F, E>,
         FoldingProof<F, CS, C, E>,
     ) {
         let instances = [instance1.into(), instance2.into()].map(|instance| match instance {
@@ -277,7 +281,7 @@ where
 
         (
             instance,
-            Witness(witness.0, witness.1),
+            LcsWitness(witness.0, witness.1),
             FoldingProof(proof, PhantomData),
         )
     }

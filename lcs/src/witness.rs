@@ -48,9 +48,9 @@ pub struct WitnessGenerator<F: Field, const IO: usize, E: LcsExtension<F> = ()> 
 }
 
 #[derive(Clone, Debug)]
-pub struct Witness<F: Field, E: LcsExtension<F> = ()>(pub Vec<F>, pub E::Witness);
+pub struct LcsWitness<F: Field, E: LcsExtension<F> = ()>(pub Vec<F>, pub E::Witness);
 
-impl<F: Field, E: LcsExtension<F>> Witness<F, E> {
+impl<F: Field, E: LcsExtension<F>> LcsWitness<F, E> {
     /// Pad with 0s to the next power of 2.
     pub fn pad_to_power(&mut self) {
         let len = self.0.len().next_power_of_two();
@@ -170,7 +170,7 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> WitnessGenerator<F, MAX_
         }
     }
 
-    pub fn witness(self) -> Witness<F, E> {
+    pub fn witness(self) -> LcsWitness<F, E> {
         let Self {
             witness,
             extended_witness,
@@ -179,7 +179,7 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> WitnessGenerator<F, MAX_
             ..
         } = self;
         let wit_ext = E::process_witness_ex(extended_witness, extenal_instance, extenal_witness);
-        Witness(witness.into_iter().map(|x| x.0).collect(), wit_ext)
+        LcsWitness(witness.into_iter().map(|x| x.0).collect(), wit_ext)
     }
 }
 
