@@ -141,19 +141,51 @@ where
 #[derive(Clone, Debug)]
 pub struct DatasetRel2<F, C>(PhantomData<(F, C)>);
 
-impl<F, C> Relation for DatasetRel2<F, C> {
-    type Structure = ();
+pub struct Structure<C> {
+    pcs: C,
+    vars: usize,
+    lookups: Vec<Option<usize>>,
+}
 
-    type Instance = ();
+impl<F, C> Relation for DatasetRel2<F, C>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+{
+    type Structure = Structure<C>;
 
-    type Witness = Vec<F>;
+    type Instance = [C::Commitment; 2];
+
+    type Witness = [Vec<F>; 2];
 
     fn check(
-        _structure: &Self::Structure,
-        _instance: &Self::Instance,
-        _witness: &Self::Witness,
+        structure: &Self::Structure,
+        instance: &Self::Instance,
+        witness: &Self::Witness,
     ) -> bool {
-        todo!()
+        let Structure { pcs, vars, lookups } = structure;
+        let [trace_commit, data_commit] = instance;
+        let [trace, data] = witness;
+        assert_eq!(trace.len(), 1 << vars);
+        assert_eq!(data.len(), 1 << vars);
+
+        if &pcs.commit_mle(trace) != trace_commit {
+            return false;
+        }
+
+        if &pcs.commit_mle(data) != data_commit {
+            return false;
+        }
+
+        for (lookup, w) in lookups.iter().zip(trace) {
+            if let Some(addr) = lookup
+                && data[*addr] != *w
+            {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
