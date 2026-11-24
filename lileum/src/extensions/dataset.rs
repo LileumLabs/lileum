@@ -212,39 +212,44 @@ where
 
     fn transcript_pattern(
         _key: &Self::VerifierKey,
-        _builder: TranscriptBuilder,
+        builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
-        todo!()
+        builder
     }
 
-    fn verifier_key(_structure: &BTreeMap<usize, usize>) -> Self::VerifierKey {
-        todo!()
-    }
+    fn verifier_key(_structure: &BTreeMap<usize, usize>) -> Self::VerifierKey {}
 
     fn key_pair(_structure: &BTreeMap<usize, usize>) -> (Self::VerifierKey, Self::ProverKey) {
-        todo!()
+        ((), ())
     }
 
-    fn params(_key: &Self::VerifierKey) -> Self::Params {
-        todo!()
-    }
+    fn params(_key: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         _key: &Self::ProverKey,
-        _instance: (C::Commitment, C::Commitment),
-        _witness: (Vec<F>, Vec<F>),
+        instance: (C::Commitment, C::Commitment),
+        witness: (Vec<F>, Vec<F>),
         _transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<DatasetRel2<F, C>, Self::Proof> {
-        todo!()
+        let (w, d) = instance;
+        let instance = [w, d];
+        let (w, d) = witness;
+        let witness = [w, d];
+        ProverOutput {
+            instance,
+            witness,
+            proof: (),
+        }
     }
 
     fn verify<S: Duplex<F>>(
         _key: &Self::VerifierKey,
-        _instance: (C::Commitment, C::Commitment),
+        instance: (C::Commitment, C::Commitment),
         _proof: GuardedProof<Self::Proof>,
         _transcript: &mut VerifierTranscript<F, S>,
-    ) -> Result<<DatasetRel2<F, C> as Relation>::Instance, Self::Error> {
-        todo!()
+    ) -> Result<[C::Commitment; 2], Self::Error> {
+        let (w, d) = instance;
+        Ok([w, d])
     }
 }
 
