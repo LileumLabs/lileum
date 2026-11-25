@@ -280,7 +280,7 @@ mod sumcheck {
         oracles::{
             SumcheckFunction,
             composite::{CompositeOracle, CompositeReductionKey, Either},
-            core::{CoreNature, CoreOracle, CoreOracleInstance, SmallFunctions},
+            core::{Coeffs, CoreNature, CoreOracle, CoreOracleInstance, SmallFunctions},
         },
     };
     use sumcheck_derive::EvalsCore;
@@ -365,7 +365,20 @@ mod sumcheck {
         type Data = ();
 
         fn natures() -> Self::Mles<Self::Natures> {
-            todo!()
+            let chall = Either::Left(CoreNature::Challenge);
+            let committed = Either::Right(CommittedNature::Witness);
+            let structure = Either::Right(CommittedNature::Structure);
+            DatasetEvals {
+                selector: structure,
+                trace: committed,
+                data: committed,
+                counts: structure,
+                lookup_challenge: chall,
+                sumcheck_challenge: chall,
+                inverse_left: committed,
+                inverse_right: committed,
+                z_eq: Either::Left(CoreNature::SmallInstance(Coeffs::PerVariable)),
+            }
         }
 
         fn function<V: Var<F> + Debug>(_: &(), evals: &Self::Mles<V>) -> V {
@@ -419,7 +432,6 @@ mod sumcheck {
     pub fn committed_oracle_instance<F, C>(
         trace: C::Commitment,
         data: C::Commitment,
-        counts: C::Commitment,
         inverses: [C::Commitment; 2],
     ) -> CommittedOracleInstance<F, C, DatasetEvals<()>>
     where
@@ -431,7 +443,7 @@ mod sumcheck {
             selector: None,
             trace: trace.into(),
             data: data.into(),
-            counts: counts.into(),
+            counts: None,
             lookup_challenge: None,
             sumcheck_challenge: None,
             inverse_left,
@@ -452,7 +464,6 @@ pub struct VerifierKey<F: Field, C: CommitmentScheme<F>> {
 
 #[derive(Clone, Debug)]
 pub struct Proof<F: Field, C: CommitmentScheme<F>> {
-    counts_commit: C::Commitment,
     inverses: [C::Commitment; 2],
     sumcheck: sumcheck::Proof<F>,
     prover_evals: ProverEvals<F>,
@@ -509,8 +520,7 @@ where
     ) -> Result<OpenInstance<F, C>, Self::Error> {
         let [trace, data] = instance;
 
-        let Ok((counts, [lookup_challenge])) =
-            transcript.receive_message(|proof| proof.counts_commit.clone(), &proof, &());
+        let Ok(((), [lookup_challenge])) = transcript.receive_message(|_| (), &proof, &());
 
         let Ok((inverses, [sumcheck_challenge])) =
             transcript.receive_message(|proof| proof.inverses.clone(), &proof, &());
@@ -520,8 +530,7 @@ where
             let zerocheck_point = MultiPoint::new(transcript.point());
             let core_instance =
                 core_oracle_instance(vars, lookup_challenge, sumcheck_challenge, zerocheck_point);
-            let committed_instance =
-                committed_oracle_instance::<F, C>(trace, data, counts, inverses);
+            let committed_instance = committed_oracle_instance::<F, C>(trace, data, inverses);
             let oracle_instance = CompositeOracleInstance {
                 oracle1_instance: core_instance,
                 oracle2_instance: committed_instance,
