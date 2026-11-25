@@ -1,9 +1,19 @@
 use crate::extensions::{
-    Extension, ExtensionRelation, NoFolding, aggregation::SingleCommitAggregation,
+    Extension, ExtensionRelation, NoFolding,
+    aggregation::SingleCommitAggregation,
+    dataset::sumcheck::{DatasetOracle, committed_oracle_instance, core_oracle_instance},
+};
+use ::sumcheck::{
+    MultiPoint, SumcheckInstance, SumcheckReduction,
+    oracles::{
+        composite::{CompositeOracle, CompositeOracleInstance, ProverEvals},
+        core::CoreOracle,
+    },
 };
 use alloc::{collections::BTreeMap, vec::Vec};
 use ark_ff::Field;
-use commit::{CommitmentScheme, OpeningRelation};
+use ark_serialize::CanonicalSerialize;
+use commit::{CommitmentScheme, OpenInstance, OpeningRelation, oracle::CommittedOracle};
 use core::marker::PhantomData;
 use lcs::{circuit::Var, extensions::LcsExtension, structure::WitnessIndex};
 use reduction::{
@@ -253,6 +263,201 @@ where
     }
 }
 
+mod sumcheck {
+
+    use alloc::vec;
+    use alloc::vec::{IntoIter, Vec};
+    use ark_ff::Field;
+    use ark_serialize::CanonicalSerialize;
+    use commit::{
+        CommitmentScheme,
+        oracle::{CommittedNature, CommittedOracle, CommittedOracleInstance},
+    };
+    use core::fmt::Debug;
+    use sumcheck::{
+        MultiPoint, SumcheckMessage, Var,
+        evals::{Evals, EvalsCore},
+        oracles::{
+            SumcheckFunction,
+            composite::{CompositeOracle, CompositeReductionKey, Either},
+            core::{CoreNature, CoreOracle, CoreOracleInstance, SmallFunctions},
+        },
+    };
+    use sumcheck_derive::EvalsCore;
+
+    #[derive(Debug, Clone, Default, EvalsCore)]
+    pub struct DatasetEvals<V: Debug + Clone> {
+        selector: V,
+        trace: V,
+        data: V,
+        counts: V,
+        lookup_challenge: V,
+        sumcheck_challenge: V,
+        inverse_left: V,
+        inverse_right: V,
+        z_eq: V,
+    }
+
+    impl<V: Debug + Clone + CanonicalSerialize> CanonicalSerialize for DatasetEvals<V> {
+        fn serialize_with_mode<W: ark_serialize::Write>(
+            &self,
+            mut writer: W,
+            compress: ark_serialize::Compress,
+        ) -> Result<(), ark_serialize::SerializationError> {
+            let Self {
+                selector,
+                trace,
+                data,
+                counts,
+                lookup_challenge,
+                sumcheck_challenge,
+                inverse_left,
+                inverse_right,
+                z_eq,
+            } = self;
+            selector.serialize_with_mode(&mut writer, compress)?;
+            trace.serialize_with_mode(&mut writer, compress)?;
+            data.serialize_with_mode(&mut writer, compress)?;
+            counts.serialize_with_mode(&mut writer, compress)?;
+            lookup_challenge.serialize_with_mode(&mut writer, compress)?;
+            sumcheck_challenge.serialize_with_mode(&mut writer, compress)?;
+            inverse_left.serialize_with_mode(&mut writer, compress)?;
+            inverse_right.serialize_with_mode(&mut writer, compress)?;
+            z_eq.serialize_with_mode(writer, compress)
+        }
+
+        fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
+            let Self {
+                selector,
+                trace,
+                data,
+                counts,
+                lookup_challenge,
+                sumcheck_challenge,
+                inverse_left,
+                inverse_right,
+                z_eq,
+            } = self;
+            selector.serialized_size(compress)
+                + trace.serialized_size(compress)
+                + data.serialized_size(compress)
+                + counts.serialized_size(compress)
+                + lookup_challenge.serialized_size(compress)
+                + sumcheck_challenge.serialized_size(compress)
+                + inverse_left.serialized_size(compress)
+                + inverse_right.serialized_size(compress)
+                + z_eq.serialized_size(compress)
+        }
+    }
+
+    impl<F: Field> SmallFunctions<F> for DatasetEvals<()> {
+        fn small_functions() -> Self::Mles<Option<sumcheck::oracles::core::Func<F>>> {
+            DatasetEvals {
+                z_eq: Some(|vars, point| MultiPoint::new(vars.to_vec()).eval_as_eq(point)),
+                ..Default::default()
+            }
+        }
+    }
+
+    impl<F: Field> SumcheckFunction<F> for DatasetEvals<()> {
+        type Natures = Either<CoreNature, CommittedNature>;
+
+        type Data = ();
+
+        fn natures() -> Self::Mles<Self::Natures> {
+            todo!()
+        }
+
+        fn function<V: Var<F> + Debug>(_: &(), evals: &Self::Mles<V>) -> V {
+            let DatasetEvals {
+                selector,
+                trace,
+                data,
+                counts,
+                lookup_challenge,
+                sumcheck_challenge,
+                inverse_left,
+                inverse_right,
+                z_eq,
+            } = evals.clone();
+
+            let check1 = inverse_left.clone() * (trace + &lookup_challenge) - counts;
+            let check2 = inverse_right.clone() * (data * selector + &lookup_challenge) - F::one();
+            let check3 = inverse_left - inverse_right;
+
+            let batched = check1 * &z_eq;
+            let batched = batched * &sumcheck_challenge + check2 * z_eq;
+            batched * sumcheck_challenge + check3
+        }
+    }
+
+    pub type DatasetOracle<F, C, SF = DatasetEvals<()>> =
+        CompositeOracle<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;
+
+    pub type VerifierKey<F, C> = sumcheck::SumcheckVerifierKey<F, DatasetOracle<F, C>>;
+    pub type Proof<F> = Vec<SumcheckMessage<F>>;
+
+    pub type CompositeVerifierKey<F, C, SF = DatasetEvals<()>> =
+        CompositeReductionKey<F, SF, CoreOracle<F, SF>, CommittedOracle<F, C, SF>>;
+
+    pub fn core_oracle_instance<F: Field>(
+        vars: usize,
+        chall1: F,
+        chall2: F,
+        chall3: MultiPoint<F>,
+    ) -> CoreOracleInstance<F, DatasetEvals<()>> {
+        assert_eq!(chall3.vars(), vars);
+        let coefficients = DatasetEvals {
+            lookup_challenge: vec![chall1],
+            sumcheck_challenge: vec![chall2],
+            z_eq: chall3.inner(),
+            ..Default::default()
+        };
+        CoreOracleInstance::new(&coefficients, vars)
+    }
+
+    pub fn committed_oracle_instance<F, C>(
+        trace: C::Commitment,
+        data: C::Commitment,
+        counts: C::Commitment,
+        inverses: [C::Commitment; 2],
+    ) -> CommittedOracleInstance<F, C, DatasetEvals<()>>
+    where
+        F: Field,
+        C: CommitmentScheme<F>,
+    {
+        let [inverse_left, inverse_right] = inverses.map(Some);
+        let commits = DatasetEvals {
+            selector: None,
+            trace: trace.into(),
+            data: data.into(),
+            counts: counts.into(),
+            lookup_challenge: None,
+            sumcheck_challenge: None,
+            inverse_left,
+            inverse_right,
+            z_eq: None,
+        };
+
+        CommittedOracleInstance::new(commits)
+    }
+}
+
+#[derive(Clone, Debug, CanonicalSerialize)]
+pub struct VerifierKey<F: Field, C: CommitmentScheme<F>> {
+    sumcheck: sumcheck::VerifierKey<F, C>,
+    composite: sumcheck::CompositeVerifierKey<F, C>,
+    vars: usize,
+}
+
+#[derive(Clone, Debug)]
+pub struct Proof<F: Field, C: CommitmentScheme<F>> {
+    counts_commit: C::Commitment,
+    inverses: [C::Commitment; 2],
+    sumcheck: sumcheck::Proof<F>,
+    prover_evals: ProverEvals<F>,
+}
+
 impl<F, C> Reduction<F, DatasetRel2<F, C>, OpeningRelation<F, C>> for DatasetReduction2
 where
     F: Field,
@@ -260,9 +465,9 @@ where
 {
     type ProverKey = ();
 
-    type VerifierKey = ();
+    type VerifierKey = VerifierKey<F, C>;
 
-    type Proof = ();
+    type Proof = Proof<F, C>;
 
     type Error = ();
 
@@ -275,13 +480,11 @@ where
         todo!()
     }
 
-    fn verifier_key(_structure: &<DatasetRel2<F, C> as Relation>::Structure) -> Self::VerifierKey {
+    fn verifier_key(_structure: &Structure<C>) -> Self::VerifierKey {
         todo!()
     }
 
-    fn key_pair(
-        _structure: &<DatasetRel2<F, C> as Relation>::Structure,
-    ) -> (Self::VerifierKey, Self::ProverKey) {
+    fn key_pair(_structure: &Structure<C>) -> (Self::VerifierKey, Self::ProverKey) {
         todo!()
     }
 
@@ -291,20 +494,74 @@ where
 
     fn prove<S: Duplex<F>>(
         _key: &Self::ProverKey,
-        _instance: <DatasetRel2<F, C> as Relation>::Instance,
-        _witness: <DatasetRel2<F, C> as Relation>::Witness,
+        _instance: [C::Commitment; 2],
+        _witness: [Vec<F>; 2],
         _transcript: &mut Transcript<F, S>,
     ) -> ProverOutput<OpeningRelation<F, C>, Self::Proof> {
         todo!()
     }
 
     fn verify<S: Duplex<F>>(
-        _key: &Self::VerifierKey,
-        _instance: <DatasetRel2<F, C> as Relation>::Instance,
-        _proof: GuardedProof<Self::Proof>,
-        _transcript: &mut VerifierTranscript<F, S>,
-    ) -> Result<<OpeningRelation<F, C> as Relation>::Instance, Self::Error> {
-        todo!()
+        key: &Self::VerifierKey,
+        instance: [C::Commitment; 2],
+        proof: GuardedProof<Self::Proof>,
+        transcript: &mut VerifierTranscript<F, S>,
+    ) -> Result<OpenInstance<F, C>, Self::Error> {
+        let [trace, data] = instance;
+
+        let Ok((counts, [lookup_challenge])) =
+            transcript.receive_message(|proof| proof.counts_commit.clone(), &proof, &());
+
+        let Ok((inverses, [sumcheck_challenge])) =
+            transcript.receive_message(|proof| proof.inverses.clone(), &proof, &());
+
+        let sumcheck_instance: SumcheckInstance<F, DatasetOracle<F, C>> = {
+            let vars = key.vars;
+            let zerocheck_point = MultiPoint::new(transcript.point());
+            let core_instance =
+                core_oracle_instance(vars, lookup_challenge, sumcheck_challenge, zerocheck_point);
+            let committed_instance =
+                committed_oracle_instance::<F, C>(trace, data, counts, inverses);
+            let oracle_instance = CompositeOracleInstance {
+                oracle1_instance: core_instance,
+                oracle2_instance: committed_instance,
+            };
+            SumcheckInstance::new(F::zero(), oracle_instance)
+        };
+
+        //TODO: handle
+        let instance = SumcheckReduction::verify(
+            &key.sumcheck,
+            sumcheck_instance,
+            proof.clone().map(|proof| proof.sumcheck),
+            transcript,
+        )
+        .unwrap();
+
+        let (core_instance, committed_instance) = CompositeOracle::verify(
+            &key.composite,
+            instance,
+            proof.map(|proof| proof.prover_evals),
+            transcript,
+        )
+        .unwrap();
+
+        let () = CoreOracle::verify(
+            key.composite.p1_key(),
+            core_instance,
+            GuardedProof::empty(),
+            transcript,
+        )
+        .unwrap();
+
+        let Ok(open_instance) = CommittedOracle::verify(
+            key.composite.p2_key(),
+            committed_instance,
+            GuardedProof::empty(),
+            transcript,
+        );
+
+        Ok(open_instance)
     }
 }
 
