@@ -1,7 +1,9 @@
 use crate::extensions::{
     Extension, ExtensionRelation, NoFolding,
     aggregation::SingleCommitAggregation,
-    dataset::sumcheck::{DatasetOracle, committed_oracle_instance, core_oracle_instance},
+    dataset::sumcheck::{
+        DatasetEvals, DatasetOracle, committed_oracle_instance, core_oracle_instance,
+    },
 };
 use ::sumcheck::{
     MultiPoint, SumcheckInstance, SumcheckReduction,
@@ -485,10 +487,17 @@ where
     type Params = ();
 
     fn transcript_pattern(
-        _key: &Self::VerifierKey,
-        _builder: TranscriptBuilder,
+        key: &Self::VerifierKey,
+        builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
-        todo!()
+        builder
+            .round::<F, (), 1>(&())
+            .round::<F, [C::Commitment; 2], 1>(&())
+            .point::<F>(key.vars)
+            .subprotocol::<SumcheckReduction<F, DatasetOracle<F, C>>, _, _, _>(&key.sumcheck)
+            .subprotocol::<CompositeOracle<F, _, _, _>, _, _, _>(&key.composite)
+            .subprotocol::<CoreOracle<F, DatasetEvals<()>>, _, _, _>(key.composite.p1_key())
+            .subprotocol::<CommittedOracle<F, C, DatasetEvals<()>>, _, _, _>(key.composite.p2_key())
     }
 
     fn verifier_key(_structure: &Structure<C>) -> Self::VerifierKey {
