@@ -278,6 +278,8 @@ mod sumcheck {
         oracle::{CommittedNature, CommittedOracle, CommittedOracleInstance},
     };
     use core::fmt::Debug;
+    use core::iter::repeat;
+    use sumcheck::evals::eval_simple_mle;
     use sumcheck::{
         MultiPoint, SumcheckMessage, Var,
         evals::{Evals, EvalsCore},
@@ -292,10 +294,13 @@ mod sumcheck {
     #[derive(Debug, Clone, Default, EvalsCore)]
     pub struct DatasetEvals<V: Debug + Clone> {
         pub selector: V,
+        pub address: V,
+        pub indices: V,
         pub trace: V,
         pub data: V,
         pub counts: V,
         pub lookup_challenge: V,
+        pub compression_challenge: V,
         pub sumcheck_challenge: V,
         pub inverse_left: V,
         pub inverse_right: V,
@@ -310,20 +315,26 @@ mod sumcheck {
         ) -> Result<(), ark_serialize::SerializationError> {
             let Self {
                 selector,
+                address,
+                indices,
                 trace,
                 data,
                 counts,
                 lookup_challenge,
+                compression_challenge,
                 sumcheck_challenge,
                 inverse_left,
                 inverse_right,
                 z_eq,
             } = self;
             selector.serialize_with_mode(&mut writer, compress)?;
+            address.serialize_with_mode(&mut writer, compress)?;
+            indices.serialize_with_mode(&mut writer, compress)?;
             trace.serialize_with_mode(&mut writer, compress)?;
             data.serialize_with_mode(&mut writer, compress)?;
             counts.serialize_with_mode(&mut writer, compress)?;
             lookup_challenge.serialize_with_mode(&mut writer, compress)?;
+            compression_challenge.serialize_with_mode(&mut writer, compress)?;
             sumcheck_challenge.serialize_with_mode(&mut writer, compress)?;
             inverse_left.serialize_with_mode(&mut writer, compress)?;
             inverse_right.serialize_with_mode(&mut writer, compress)?;
@@ -333,20 +344,26 @@ mod sumcheck {
         fn serialized_size(&self, compress: ark_serialize::Compress) -> usize {
             let Self {
                 selector,
+                address,
+                indices,
                 trace,
                 data,
                 counts,
                 lookup_challenge,
+                compression_challenge,
                 sumcheck_challenge,
                 inverse_left,
                 inverse_right,
                 z_eq,
             } = self;
             selector.serialized_size(compress)
+                + address.serialized_size(compress)
+                + indices.serialized_size(compress)
                 + trace.serialized_size(compress)
                 + data.serialized_size(compress)
                 + counts.serialized_size(compress)
                 + lookup_challenge.serialized_size(compress)
+                + compression_challenge.serialized_size(compress)
                 + sumcheck_challenge.serialized_size(compress)
                 + inverse_left.serialized_size(compress)
                 + inverse_right.serialized_size(compress)
@@ -356,8 +373,21 @@ mod sumcheck {
 
     impl<F: Field> SmallFunctions<F> for DatasetEvals<()> {
         fn small_functions() -> Self::Mles<Option<sumcheck::oracles::core::Func<F>>> {
+            let indices = |coeff: &[F], point: &MultiPoint<F>| {
+                assert!(coeff.is_empty());
+                let vars = point.vars();
+                let mle: Vec<F> = (0..=u8::MAX)
+                    .into_iter()
+                    .chain(repeat(0))
+                    .take(1 << vars)
+                    .map(F::from)
+                    .collect();
+                //TODO: make O(log n)
+                eval_simple_mle(&mle, point)
+            };
             DatasetEvals {
                 z_eq: Some(|vars, point| MultiPoint::new(vars.to_vec()).eval_as_eq(point)),
+                indices: Some(indices),
                 ..Default::default()
             }
         }
@@ -374,10 +404,13 @@ mod sumcheck {
             let structure = Either::Right(CommittedNature::Structure);
             DatasetEvals {
                 selector: structure,
+                address: structure,
+                indices: Either::Left(CoreNature::SmallStructure),
                 trace: committed,
                 data: committed,
                 counts: structure,
                 lookup_challenge: chall,
+                compression_challenge: chall,
                 sumcheck_challenge: chall,
                 inverse_left: committed,
                 inverse_right: committed,
@@ -388,18 +421,24 @@ mod sumcheck {
         fn function<V: Var<F> + Debug>(_: &(), evals: &Self::Mles<V>) -> V {
             let DatasetEvals {
                 selector,
+                address,
+                indices,
                 trace,
                 data,
                 counts,
                 lookup_challenge,
+                compression_challenge,
                 sumcheck_challenge,
                 inverse_left,
                 inverse_right,
                 z_eq,
             } = evals.clone();
 
-            let check1 = inverse_left.clone() * (trace + &lookup_challenge) - counts;
-            let check2 = inverse_right.clone() * (data * selector + &lookup_challenge) - F::one();
+            let lookup = address * &compression_challenge + trace * selector;
+            let table = indices * &compression_challenge + data;
+
+            let check1 = inverse_left.clone() * (lookup + &lookup_challenge) - counts;
+            let check2 = inverse_right.clone() * (table + &lookup_challenge) - F::one();
             let check3 = inverse_left - inverse_right;
 
             let batched = check1 * &z_eq;
@@ -420,15 +459,18 @@ mod sumcheck {
 
     pub fn core_oracle_instance<F: Field>(
         vars: usize,
-        chall1: F,
-        chall2: F,
-        chall3: MultiPoint<F>,
+        challenges: [F; 3],
+        zerocheck_point: MultiPoint<F>,
     ) -> CoreOracleInstance<F, DatasetEvals<()>> {
-        assert_eq!(chall3.vars(), vars);
+        assert_eq!(zerocheck_point.vars(), vars);
+
+        let [lookup_challenge, compression_challenge, sumcheck_challenge] =
+            challenges.map(|x| vec![x]);
         let coefficients = DatasetEvals {
-            lookup_challenge: vec![chall1],
-            sumcheck_challenge: vec![chall2],
-            z_eq: chall3.inner(),
+            lookup_challenge,
+            compression_challenge,
+            sumcheck_challenge,
+            z_eq: zerocheck_point.inner(),
             ..Default::default()
         };
         CoreOracleInstance::new(&coefficients, vars)
@@ -446,10 +488,13 @@ mod sumcheck {
         let [inverse_left, inverse_right] = inverses.map(Some);
         let commits = DatasetEvals {
             selector: None,
+            address: None,
+            indices: None,
             trace: trace.into(),
             data: data.into(),
             counts: None,
             lookup_challenge: None,
+            compression_challenge: None,
             sumcheck_challenge: None,
             inverse_left,
             inverse_right,
@@ -489,6 +534,7 @@ impl<F: Field, C: CommitmentScheme<F>> ProverKey<F, C> {
         mut trace: Vec<F>,
         mut data: Vec<F>,
         lookup_challenge: F,
+        compression_challenge: F,
     ) -> (Vec<DatasetEvals<F>>, [C::Commitment; 2]) {
         let mut witness = self.oracle.structure().to_vec();
         assert_eq!(trace.len(), data.len());
@@ -499,8 +545,11 @@ impl<F: Field, C: CommitmentScheme<F>> ProverKey<F, C> {
             witness.data = *data;
             witness.lookup_challenge = lookup_challenge;
 
-            *trace = *trace * witness.selector + lookup_challenge;
-            *data += lookup_challenge;
+            let lookup = witness.address * compression_challenge + *trace * witness.selector;
+            let table = witness.indices * compression_challenge + *data;
+
+            *trace = lookup;
+            *data = table;
         }
 
         let mut inverses = [trace, data].map(|mut vec| {
@@ -553,7 +602,7 @@ where
         builder: TranscriptBuilder,
     ) -> TranscriptBuilder {
         builder
-            .round::<F, (), 1>(&())
+            .round::<F, (), 2>(&())
             .round::<F, [C::Commitment; 2], 1>(&())
             .point::<F>(key.vars)
             .subprotocol::<SumcheckReduction<F, DatasetOracle<F, C>>, _, _, _>(&key.sumcheck)
@@ -584,9 +633,9 @@ where
         let [trace_commit, data_commit] = instance;
         let [trace, data] = witness;
 
-        let [lookup_challenge] = transcript.send_message(&(), &());
+        let [lookup_challenge, compression_challenge] = transcript.send_message(&(), &());
 
-        let (witness, inverses) = key.witness(trace, data, lookup_challenge);
+        let (witness, inverses) = key.witness(trace, data, lookup_challenge, compression_challenge);
 
         let [sumcheck_challenge] = transcript.send_message(&inverses, &());
 
@@ -595,8 +644,8 @@ where
 
             let witness = key.set_witness_challenges(witness, sumcheck_challenge, &zerocheck_point);
 
-            let core_instance =
-                core_oracle_instance(vars, lookup_challenge, sumcheck_challenge, zerocheck_point);
+            let challenges = [lookup_challenge, compression_challenge, sumcheck_challenge];
+            let core_instance = core_oracle_instance(vars, challenges, zerocheck_point);
 
             let committed_instance =
                 committed_oracle_instance::<F, C>(trace_commit, data_commit, inverses.clone());
@@ -656,14 +705,14 @@ where
 
         let Ok(((), [lookup_challenge])) = transcript.receive_message(|_| (), &proof, &());
 
-        let Ok((inverses, [sumcheck_challenge])) =
+        let Ok((inverses, [compression_challenge, sumcheck_challenge])) =
             transcript.receive_message(|proof| proof.inverses.clone(), &proof, &());
 
         let sumcheck_instance: SumcheckInstance<F, DatasetOracle<F, C>> = {
             let vars = key.vars;
             let zerocheck_point = MultiPoint::new(transcript.point());
-            let core_instance =
-                core_oracle_instance(vars, lookup_challenge, sumcheck_challenge, zerocheck_point);
+            let challenges = [lookup_challenge, compression_challenge, sumcheck_challenge];
+            let core_instance = core_oracle_instance(vars, challenges, zerocheck_point);
             let committed_instance = committed_oracle_instance::<F, C>(trace, data, inverses);
             let oracle_instance = CompositeOracleInstance {
                 oracle1_instance: core_instance,
