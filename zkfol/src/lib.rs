@@ -22,13 +22,6 @@ fn out_of_bounds<const N: usize>(addresses: [Address; N], witness_len: usize) ->
     !addresses.into_iter().all(|address| address < witness_len)
 }
 
-/// An equality assertion between 2 arbitrary cells.
-#[derive(Clone, Debug, Default)]
-pub struct CopyConstraint {
-    pub from: Address,
-    pub to: Address,
-}
-
 /// A dynamic address read lookup, similar to
 /// CopyConstraint but 1 address is taken from
 /// the witness instead of being fixed.
@@ -100,7 +93,6 @@ impl Gate {
 pub struct ZkFolStructure {
     pub witness_len: usize,
     pub arithmetic_constraints: Vec<Gate>,
-    pub copy_constraints: Vec<CopyConstraint>,
     pub reads: Vec<ReadLookup>,
     pub sets: Vec<Vec<i64>>,
     pub membership_constraints: Vec<SetMembershipConstraint>,
@@ -126,7 +118,6 @@ impl Relation for ZkFol {
         let ZkFolStructure {
             witness_len,
             arithmetic_constraints,
-            copy_constraints,
             reads,
             sets,
             membership_constraints,
@@ -149,18 +140,6 @@ impl Relation for ZkFol {
             }
 
             if gate.eval(witness) != 0 {
-                return false;
-            }
-        }
-
-        // Enforce copy constraits between cells.
-        for constraint in copy_constraints {
-            let CopyConstraint { from, to } = *constraint;
-            if out_of_bounds([from, to], witness.len()) {
-                return false;
-            }
-
-            if witness[from] != witness[to] {
                 return false;
             }
         }
@@ -242,17 +221,21 @@ where
         ty: GateType::Add,
     };
 
-    let column_copy_constaint = |i| CopyConstraint {
-        from: i * rows,
+    let column_copy_constaint = |i| Gate {
+        a: i * rows,
         // next column, last row.
-        to: i * rows + rows + 2,
+        b: i * rows + rows + 2,
+        c: 0,
+        ty: GateType::Eq,
     };
 
     // We create the structure once.
     let structure: ZkFolStructure = ZkFolStructure {
         witness_len: rows * columns,
-        arithmetic_constraints: (0..columns).map(column_constraint).collect(),
-        copy_constraints: (0..columns).map(column_copy_constaint).collect(),
+        arithmetic_constraints: (0..columns)
+            .map(column_constraint)
+            .chain((0..columns).map(column_copy_constaint))
+            .collect(),
         reads: vec![],
         sets: vec![],
         membership_constraints: vec![],
