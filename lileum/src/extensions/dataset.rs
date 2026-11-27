@@ -834,16 +834,17 @@ impl<F: Field, C: CommitmentScheme<F>> Extension<F, C> for Dataset<F, C> {
 
     type R3 = OpeningRelation<F, C>;
 
-    fn derive_structure(
-        _vars: usize,
-        _pcs: &C,
-        _r1_structure: &Self::Structure,
-    ) -> <Self::R2 as reduction::Relation>::Structure {
-        todo!()
+    fn derive_structure(vars: usize, pcs: &C, r1_structure: &Self::Structure) -> Structure<C> {
+        let pcs = pcs.clone();
+        let lookups = (0usize..(1 << vars))
+            .map(|i| r1_structure.get(&i).cloned())
+            .collect();
+        Structure { pcs, vars, lookups }
     }
 
-    fn commit_witness(_pcs: &C, _witness: &Self::Witness) -> Self::Instance {
-        todo!()
+    fn commit_witness(pcs: &C, witness: &Self::Witness) -> Self::Instance {
+        assert!(witness[0].is_zero());
+        pcs.commit_mle(witness)
     }
 
     type Reduction1 = DatasetReduction1;
