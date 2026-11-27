@@ -104,10 +104,11 @@ where
             let key = CircuitKey::<Fr, Sponge, HashChain<N>, Scheme, 2, 4, 5>::new();
 
             let (instance, witness, _) = key.commit_witness([preimage]);
+            let pair = (instance, witness);
 
             bench_memory(b, || {
-                let witnesses = [witness.clone(), witness.clone()];
-                let _folded = key.fold_prove(instance.clone(), instance.clone(), witnesses);
+                let (pair1, pair2) = (pair.clone(), pair.clone());
+                let _folded = key.fold_prove(pair1, pair2);
             });
         },
     );
@@ -137,13 +138,14 @@ where
         |b, _| {
             let preimage = Fr::rand(rng);
             let key = CircuitKey::<Fr, Sponge, HashChain<N>, Scheme, 2, 4, 5>::new();
-            let (instance1, witness1, _) = key.commit_witness([preimage]);
+            let (instance, witness, _) = key.commit_witness([preimage]);
+            let pair1 = (instance, witness);
 
             bench_memory(b, || {
                 let preimage = Fr::rand(rng);
-                let (instance2, witness2, _) = key.commit_witness([preimage]);
-                let witnesses = [witness1.clone(), witness2];
-                let _folded = key.fold_prove(instance1.clone(), instance2, witnesses);
+                let (instance, witness, _) = key.commit_witness([preimage]);
+                let pair2 = (instance, witness);
+                let _folded = key.fold_prove(pair1.clone(), pair2);
             });
         },
     );

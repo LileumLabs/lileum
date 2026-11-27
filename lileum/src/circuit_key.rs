@@ -4,15 +4,16 @@ use crate::{
         FlcsArgument, FlcsFoldingScheme, ToFlcsProver, ToFlcsVerifier,
         flcs::{self, folding},
     },
-    relations::{ClcsInstance, ClcsStructure, FlcsInstance, FlcsRelation},
+    relations::{ClcsInstance, ClcsStructure, FlcsInstance, FlcsRelation, FlcsWitness},
 };
 use ark_ff::Field;
 use commit::CommitmentScheme;
 use core::marker::PhantomData;
 use lcs::{
     circuit::{BuildStructure, Circuit, Prove},
+    extensions::LcsExtension,
     structure::LcsStructure,
-    witness::Witness,
+    witness::LcsWitness,
 };
 use reduction::{FoldingRelation, Prover, ProverOutput, Verifier};
 use sponge::sponge::Duplex;
@@ -102,25 +103,26 @@ where
 
     pub fn prove(
         &self,
-        instance: impl Into<Instance<F, CS, IO, S, I, E>>,
-        witness: Witness<F, E>,
+        instance_witness_pair: impl Into<InstanceWitness<F, CS, IO, S, I, E>>,
     ) -> Proof<F, CS, IO, E> {
-        let (instance, witness) = match instance.into() {
-            Instance::Lcs(lcs_instance) => {
-                let Witness(witness, witness_ext) = witness;
+        let (instance, witness) = match instance_witness_pair.into() {
+            InstanceWitness::Lcs(instance, witness) => {
+                let LcsWitness(witness, witness_ext) = witness;
+                let witness = (witness, witness_ext);
+
                 let ProverOutput {
                     instance,
                     witness: (witness, witness_ext),
                     proof: (),
-                } = self
-                    .to_flcs_prover
-                    .prove(lcs_instance, (witness, witness_ext));
-                let witness = Witness(witness, witness_ext);
+                } = self.to_flcs_prover.prove(instance, witness);
+
+                let witness = FlcsWitness(witness, witness_ext);
                 (instance, witness)
             }
-            Instance::Flcs(flcs_instance) => (flcs_instance, witness),
+            InstanceWitness::Flcs(instance, witness) => (instance, witness),
         };
-        let Witness(w, w_ext) = witness;
+
+        let FlcsWitness(w, w_ext) = witness;
         let ProverOutput {
             instance: (),
             witness: (),
@@ -154,13 +156,18 @@ where
     pub fn commit_witness<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
         &self,
         inputs: [F; IN],
-    ) -> (ClcsInstance<F, CS, I, E>, Witness<F, E>, C::PrivateOutput)
+    ) -> (
+        ClcsInstance<F, CS, I, E>,
+        LcsWitness<F, E>,
+        C::PrivateOutput,
+    )
     where
         C: Circuit<F, IN, OUT, PRIV_OUT, E>,
+        E: LcsExtension<F, ExternalInstance = (), ExternalWitness = ()>,
     {
         assert_eq!(I, IN + OUT);
         let (mut witness, output) =
-            <C as Prove<F, IN, OUT, PRIV_OUT, IO, E>>::witness(inputs, true);
+            <C as Prove<F, IN, OUT, PRIV_OUT, IO, E>>::witness(inputs, true, ((), ()));
         witness.pad_to_power();
         let witness_commit = self.pcs.commit_mle(&witness.0);
 
@@ -192,10 +199,13 @@ where
     )
     where
         C: Circuit<F, IN, OUT, PRIV_OUT, E>,
+        E: LcsExtension<F, ExternalInstance = (), ExternalWitness = ()>,
     {
         let (instance, witness, output) = self.commit_witness(inputs);
 
-        let proof = self.prove(instance.clone(), witness);
+        let pair = InstanceWitness::Lcs(instance.clone(), witness);
+
+        let proof = self.prove(pair);
         (instance, proof, output)
     }
 }
@@ -247,21 +257,33 @@ where
     #[allow(clippy::complexity)]
     pub fn fold_prove(
         &self,
-        instance1: impl Into<Instance<F, CS, IO, S, I, E>>,
-        instance2: impl Into<Instance<F, CS, IO, S, I, E>>,
-        witnesses: [Witness<F, E>; 2],
+        pair1: impl Into<InstanceWitness<F, CS, IO, S, I, E>>,
+        pair2: impl Into<InstanceWitness<F, CS, IO, S, I, E>>,
     ) -> (
         FlcsInstance<F, CS, IO, S, I, E>,
-        Witness<F, E>,
+        FlcsWitness<F, CS, E>,
         FoldingProof<F, CS, C, E>,
     ) {
-        let instances = [instance1.into(), instance2.into()].map(|instance| match instance {
-            Instance::Lcs(instance) => {
-                let Ok(instance) = self.to_flcs_verifier.verify(instance, ());
-                instance
+        let pairs = [pair1.into(), pair2.into()].map(|pair| match pair.into() {
+            InstanceWitness::Lcs(instance, witness) => {
+                let LcsWitness(witness, witness_ext) = witness;
+                let witness = (witness, witness_ext);
+
+                let ProverOutput {
+                    instance,
+                    witness: (witness, witness_ext),
+                    proof: (),
+                } = self.to_flcs_prover.prove(instance, witness);
+
+                let witness = FlcsWitness(witness, witness_ext);
+                (instance, witness)
             }
-            Instance::Flcs(flcs_instance) => flcs_instance,
+            InstanceWitness::Flcs(instance, witness) => (instance, witness),
         });
+        let [(instance1, witness1), (instance2, witness2)] = pairs;
+        let instance = [instance1, instance2];
+        let witness = [witness1, witness2].map(|FlcsWitness(w, wex)| (w, wex));
+
         let ProverOutput {
             instance,
             witness,
@@ -270,11 +292,11 @@ where
             .folding_prover
             .as_ref()
             .unwrap()
-            .prove(instances, witnesses.map(|w| (w.0, w.1)));
+            .prove(instance, witness);
 
         (
             instance,
-            Witness(witness.0, witness.1),
+            FlcsWitness(witness.0, witness.1),
             FoldingProof(proof, PhantomData),
         )
     }
@@ -331,5 +353,43 @@ where
 {
     fn from(value: FlcsInstance<F, C, IO, S, I>) -> Self {
         Self::Flcs(value)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum InstanceWitness<F, C, const IO: usize, const S: usize, const I: usize, E = ()>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    E: Extension<F, C>,
+{
+    Lcs(ClcsInstance<F, C, I, E>, LcsWitness<F, E>),
+    Flcs(FlcsInstance<F, C, IO, S, I, E>, FlcsWitness<F, C, E>),
+}
+
+impl<F, C, const IO: usize, const S: usize, const I: usize, E>
+    From<(ClcsInstance<F, C, I, E>, LcsWitness<F, E>)> for InstanceWitness<F, C, IO, S, I, E>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    E: Extension<F, C>,
+{
+    fn from(value: (ClcsInstance<F, C, I, E>, LcsWitness<F, E>)) -> Self {
+        let (instance, witness) = value;
+        Self::Lcs(instance, witness)
+    }
+}
+
+impl<F, C, const IO: usize, const S: usize, const I: usize, E>
+    From<(FlcsInstance<F, C, IO, S, I, E>, FlcsWitness<F, C, E>)>
+    for InstanceWitness<F, C, IO, S, I, E>
+where
+    F: Field,
+    C: CommitmentScheme<F>,
+    E: Extension<F, C>,
+{
+    fn from(value: (FlcsInstance<F, C, IO, S, I, E>, FlcsWitness<F, C, E>)) -> Self {
+        let (instance, witness) = value;
+        Self::Flcs(instance, witness)
     }
 }

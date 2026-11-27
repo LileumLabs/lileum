@@ -10,18 +10,32 @@ pub trait LcsExtension<F: Field>: Debug + Default {
     type WitnessBuilder: Default;
 
     type Structure: Clone;
-    type Witness;
+    type Witness: Clone + Debug;
+
+    // An additional instance-witness brought from outside the circuit.
+    type ExternalInstance;
+    type ExternalWitness;
 
     fn process_structure<R: Fn(Var<WitnessIndex>) -> usize>(
         builder: Self::StructureBuilder,
         var_reader: R,
     ) -> Self::Structure;
+
     fn process_witness(builder: Self::WitnessBuilder) -> Self::Witness;
+    fn process_witness_ex(
+        builder: Self::WitnessBuilder,
+        external_instance: Self::ExternalInstance,
+        external_witness: Self::ExternalWitness,
+    ) -> Self::Witness {
+        let _ = (external_instance, external_witness);
+        Self::process_witness(builder)
+    }
 
     /// Records the application of a constraint during structure
     /// generation.
-    fn record_constraint<const N: usize>(
+    fn record_constraint<const N: usize, R: Fn(Var<WitnessIndex>) -> usize>(
         builder: &mut Self::StructureBuilder,
+        var_reader: R,
         vars: [Var<WitnessIndex>; N],
         constraint: Self::Constraint,
     );
@@ -33,6 +47,21 @@ pub trait LcsExtension<F: Field>: Debug + Default {
         vars: [F; N],
         constraint: Self::Constraint,
     );
+
+    /// More general version of compute_constraint which allows access
+    /// to external instance and witness for extensions that make use of
+    /// them.
+    fn compute_constraint_ex<const N: usize>(
+        witness: &mut Self::WitnessBuilder,
+        vars: [F; N],
+        constraint: Self::Constraint,
+        external_instance: &Self::ExternalInstance,
+        external_witness: &Self::ExternalWitness,
+    ) {
+        let _ = external_instance;
+        let _ = external_witness;
+        Self::compute_constraint(witness, vars, constraint);
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -57,13 +86,16 @@ impl<F: Field> LcsExtension<F> for () {
     type StructureBuilder = ();
     type Structure = ();
     type Witness = ();
+    type ExternalInstance = ();
+    type ExternalWitness = ();
     type WitnessBuilder = ();
 
     fn process_structure<R>(_: (), _: R) -> Self::Structure {}
 
     fn process_witness(_: ()) -> Self::Witness {}
 
-    fn record_constraint<const N: usize>(_: &mut (), _: [Var<WitnessIndex>; N], _: Never) {}
+    fn record_constraint<const N: usize, R>(_: &mut (), _: R, _: [Var<WitnessIndex>; N], _: Never) {
+    }
 
     fn compute_constraint<const N: usize>(_: &mut (), _: [F; N], _: Never) {}
 }

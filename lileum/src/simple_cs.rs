@@ -8,7 +8,10 @@
 //!
 //! For more customization, [circuit_key::CircuitKey] should be used.
 
-use crate::circuit_key;
+use crate::{
+    circuit_key::{self, InstanceWitness},
+    relations::FlcsWitness,
+};
 pub use crate::{circuits, relations::ClcsInstance, relations::FlcsInstance};
 pub use ark_ff::{Field, PrimeField};
 pub use circuit_key::FoldingProof;
@@ -19,7 +22,7 @@ pub use lcs::{
     circuit::{Circuit, Var},
     constraint_system::{ConstraintSystem, Val},
     gates::{self, StandardGates},
-    witness::Witness,
+    witness::LcsWitness,
 };
 
 const IO: usize = 5;
@@ -55,17 +58,17 @@ where
     /// Folds 2 instance-witness pairs into a single instance-witness pair.
     /// Returns (instance, witness, proof).
     /// Each instance may be a `FoldableLcsInstance` or an `LcsInstance`.
+    #[allow(clippy::complexity)]
     pub fn fold(
         &self,
-        instance1: impl Into<Instance<F, CS, IO, S, I>>,
-        instance2: impl Into<Instance<F, CS, IO, S, I>>,
-        witnesses: [Witness<F>; 2],
+        pair1: impl Into<InstanceWitness<F, CS, IO, S, I>>,
+        pair2: impl Into<InstanceWitness<F, CS, IO, S, I>>,
     ) -> (
         FlcsInstance<F, CS, IO, S, I>,
-        Witness<F>,
+        FlcsWitness<F, CS>,
         FoldingProof<F, CS, C>,
     ) {
-        self.inner.fold_prove(instance1, instance2, witnesses)
+        self.inner.fold_prove(pair1, pair2)
     }
 
     /// Verifier side of `Self::fold`, takes 2 instances and a proof and returns a
@@ -98,7 +101,7 @@ where
     pub fn commit_witness<const IN: usize, const OUT: usize, const PRIV_OUT: usize>(
         &self,
         inputs: [F; IN],
-    ) -> (ClcsInstance<F, CS, I>, Witness<F>, C::PrivateOutput)
+    ) -> (ClcsInstance<F, CS, I>, LcsWitness<F>, C::PrivateOutput)
     where
         C: Circuit<F, IN, OUT, PRIV_OUT>,
     {
@@ -106,8 +109,9 @@ where
     }
 
     /// Proves (instance, witness) pair.
-    pub fn prove(&self, instance: ClcsInstance<F, CS, I>, witness: Witness<F>) -> Proof<F, CS> {
-        self.inner.prove(instance, witness)
+    pub fn prove(&self, instance: ClcsInstance<F, CS, I>, witness: LcsWitness<F>) -> Proof<F, CS> {
+        let pair = InstanceWitness::Lcs(instance, witness);
+        self.inner.prove(pair)
     }
 
     pub fn verify(&self, instance: ClcsInstance<F, CS, I>, proof: Proof<F, CS>) -> bool {

@@ -43,12 +43,14 @@ pub struct WitnessGenerator<F: Field, const IO: usize, E: LcsExtension<F> = ()> 
     constants: BTreeSet<F>,
     check: bool,
     extended_witness: E::WitnessBuilder,
+    extenal_instance: E::ExternalInstance,
+    extenal_witness: E::ExternalWitness,
 }
 
 #[derive(Clone, Debug)]
-pub struct Witness<F: Field, E: LcsExtension<F> = ()>(pub Vec<F>, pub E::Witness);
+pub struct LcsWitness<F: Field, E: LcsExtension<F> = ()>(pub Vec<F>, pub E::Witness);
 
-impl<F: Field, E: LcsExtension<F>> Witness<F, E> {
+impl<F: Field, E: LcsExtension<F>> LcsWitness<F, E> {
     /// Pad with 0s to the next power of 2.
     pub fn pad_to_power(&mut self) {
         let len = self.0.len().next_power_of_two();
@@ -114,7 +116,13 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> ConstraintSystem<F, Fi<F
         constraint: E::Constraint,
     ) {
         let vars = vars.map(|x| x.0.0);
-        E::compute_constraint(&mut self.extended_witness, vars, constraint);
+        E::compute_constraint_ex(
+            &mut self.extended_witness,
+            vars,
+            constraint,
+            &self.extenal_instance,
+            &self.extenal_witness,
+        );
     }
 }
 
@@ -129,21 +137,25 @@ impl<'a, F: Field, const IO: usize> WitnessReader<'a, F, Fi<F>> for VarReader<IO
 }
 
 impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> WitnessGenerator<F, MAX_IO, E> {
-    fn new(check: bool) -> Self {
+    fn new(check: bool, external: (E::ExternalInstance, E::ExternalWitness)) -> Self {
         let witness = Vec::new();
+        let (extenal_instance, extenal_witness) = external;
         Self {
             witness,
             check,
             constants: BTreeSet::default(),
             extended_witness: E::WitnessBuilder::default(),
+            extenal_instance,
+            extenal_witness,
         }
     }
 
     pub fn with_io<const I: usize, const O: usize>(
         check: bool,
         inputs: [F; I],
+        external: (E::ExternalInstance, E::ExternalWitness),
     ) -> (Self, [Fi<F>; I]) {
-        let mut new = Self::new(check);
+        let mut new = Self::new(check, external);
         let input = inputs.map(|x| Fi(x));
         new.witness.extend(input.iter().cloned());
         //just fill with some arbitrary element, will later be replaced
@@ -158,9 +170,16 @@ impl<F: Field, E: LcsExtension<F>, const MAX_IO: usize> WitnessGenerator<F, MAX_
         }
     }
 
-    pub fn witness(self) -> Witness<F, E> {
-        let wit_ext = E::process_witness(self.extended_witness);
-        Witness(self.witness.into_iter().map(|x| x.0).collect(), wit_ext)
+    pub fn witness(self) -> LcsWitness<F, E> {
+        let Self {
+            witness,
+            extended_witness,
+            extenal_instance,
+            extenal_witness,
+            ..
+        } = self;
+        let wit_ext = E::process_witness_ex(extended_witness, extenal_instance, extenal_witness);
+        LcsWitness(witness.into_iter().map(|x| x.0).collect(), wit_ext)
     }
 }
 

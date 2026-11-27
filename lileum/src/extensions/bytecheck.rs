@@ -44,6 +44,9 @@ impl<F: Field> LcsExtension<F> for ByteCheck {
     // type Witness = ();
     type Witness = Vec<F>;
 
+    type ExternalInstance = ();
+    type ExternalWitness = ();
+
     fn process_structure<R: Fn(Var<WitnessIndex>) -> usize>(
         builder: Self::StructureBuilder,
         var_reader: R,
@@ -56,8 +59,9 @@ impl<F: Field> LcsExtension<F> for ByteCheck {
         vec![]
     }
 
-    fn record_constraint<const N: usize>(
+    fn record_constraint<const N: usize, R>(
         builder: &mut Self::StructureBuilder,
+        _: R,
         vars: [Var<WitnessIndex>; N],
         _: (),
     ) {

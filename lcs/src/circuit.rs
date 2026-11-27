@@ -2,7 +2,7 @@ use crate::{
     constraint_system::{ConstraintSystem, Val},
     extensions::LcsExtension,
     structure::{LcsStructure, StructureBuilder},
-    witness::{Witness, WitnessGenerator, unwrap_output},
+    witness::{LcsWitness, WitnessGenerator, unwrap_output},
 };
 use alloc::vec::Vec;
 use ark_ff::Field;
@@ -109,9 +109,13 @@ pub trait Prove<
     E: LcsExtension<F> = (),
 >: Circuit<F, IN, OUT, PRIV_OUT, E>
 {
-    fn witness(inputs: [F; IN], check: bool) -> (Witness<F, E>, Self::PrivateOutput) {
+    fn witness(
+        inputs: [F; IN],
+        check: bool,
+        external: (E::ExternalInstance, E::ExternalWitness),
+    ) -> (LcsWitness<F, E>, Self::PrivateOutput) {
         let (mut cs, public_input) =
-            WitnessGenerator::<F, IO, E>::with_io::<IN, OUT>(check, inputs);
+            WitnessGenerator::<F, IO, E>::with_io::<IN, OUT>(check, inputs, external);
         let (public_out, private_out) = Self::circuit(&mut cs, public_input.map(Var));
         let private_out = unwrap_output(private_out.map(Var::unwrap));
 

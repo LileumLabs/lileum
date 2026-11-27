@@ -1,3 +1,4 @@
+use crate::extensions::aggregation::{AggregationProof, AggregationVerifierKey, sealed::Aggregate};
 use alloc::vec::Vec;
 use ark_ff::Field;
 use ark_serialize::CanonicalSerialize;
@@ -11,10 +12,11 @@ use reduction::{
 
 pub mod aggregation;
 mod bytecheck;
+mod dataset;
 mod indentity;
 
-use crate::extensions::aggregation::{AggregationProof, AggregationVerifierKey, sealed::Aggregate};
 pub use bytecheck::ByteCheck;
+pub use dataset::Dataset;
 
 pub trait ExtensionRelation<F, C, I = (), W = (), S = ()>:
     Relation<Instance = (C::Commitment, I), Witness = (Vec<F>, W), Structure = S>
@@ -48,7 +50,7 @@ where
     // FoldingScheme : R2 x R2 -> R2. Optional.
     // AgregationScheme : R3 x OpeningRelation -> OpeningRelation.
     type R1: ExtensionRelation<F, C, Self::Instance, Self::Witness, Self::Structure>;
-    type R2: Relation<Witness = Self::Witness> + Clone + Debug;
+    type R2: Relation<Witness: Clone + Debug> + Clone + Debug;
     type R3: Relation + Clone + Debug;
 
     fn derive_structure(
