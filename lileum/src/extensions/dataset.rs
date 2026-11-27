@@ -662,13 +662,34 @@ where
         }
     }
 
-    fn key_pair(_structure: &Structure<C>) -> (Self::VerifierKey, Self::ProverKey) {
-        todo!()
+    fn key_pair(structure: &Structure<C>) -> (Self::VerifierKey, Self::ProverKey) {
+        let oracle = build_oracle(structure);
+
+        let vars = structure.vars;
+
+        let (sumcheck_verifier, sumcheck) = SumcheckReduction::key_pair(&oracle);
+
+        let (composite_verifier, composite) = CompositeOracle::key_pair(&oracle);
+
+        let verifier_key = VerifierKey {
+            sumcheck: sumcheck_verifier,
+            composite: composite_verifier,
+            vars,
+        };
+        let (_, committed) = CommittedOracle::key_pair(&oracle.inner_oracles().1);
+
+        let prover_key = ProverKey {
+            pcs: structure.pcs.clone(),
+            oracle,
+            sumcheck,
+            composite,
+            committed,
+            vars,
+        };
+        (verifier_key, prover_key)
     }
 
-    fn params(_key: &Self::VerifierKey) -> Self::Params {
-        todo!()
-    }
+    fn params(_key: &Self::VerifierKey) -> Self::Params {}
 
     fn prove<S: Duplex<F>>(
         key: &Self::ProverKey,
