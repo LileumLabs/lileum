@@ -2,7 +2,7 @@ use crate::extensions::{
     Extension, ExtensionRelation, NoFolding,
     aggregation::SingleCommitAggregation,
     dataset::sumcheck::{
-        DatasetEvals, DatasetOracle, committed_oracle_instance, core_oracle_instance,
+        DatasetEvals, DatasetOracle, build_oracle, committed_oracle_instance, core_oracle_instance,
     },
 };
 use ::sumcheck::{
@@ -269,20 +269,22 @@ where
 
 mod sumcheck {
 
+    use crate::extensions::dataset::Structure;
     use alloc::vec;
-    use alloc::vec::{IntoIter, Vec};
+    use alloc::{
+        rc::Rc,
+        vec::{IntoIter, Vec},
+    };
     use ark_ff::Field;
     use ark_serialize::CanonicalSerialize;
     use commit::{
         CommitmentScheme,
         oracle::{CommittedNature, CommittedOracle, CommittedOracleInstance},
     };
-    use core::fmt::Debug;
-    use core::iter::repeat;
-    use sumcheck::evals::eval_simple_mle;
+    use core::{fmt::Debug, iter::repeat};
     use sumcheck::{
         MultiPoint, SumcheckMessage, Var,
-        evals::{Evals, EvalsCore},
+        evals::{Evals, EvalsCore, eval_simple_mle},
         oracles::{
             SumcheckFunction,
             composite::{CompositeOracle, CompositeReductionKey, Either},
@@ -503,6 +505,39 @@ mod sumcheck {
 
         CommittedOracleInstance::new(commits)
     }
+
+    pub fn build_oracle<F: Field, C: CommitmentScheme<F>>(
+        structure: &Structure<C>,
+    ) -> DatasetOracle<F, C> {
+        let mut counts = vec![0u64; structure.vars];
+        let mles = structure.lookups.iter().enumerate().map(|(i, lookup)| {
+            let selector = if lookup.is_some() { F::ONE } else { F::ZERO };
+            let address = if let Some(addr) = lookup {
+                F::from(*addr as u64)
+            } else {
+                F::ZERO
+            };
+            counts[lookup.unwrap_or(0)] += 1;
+            let indices = F::from(i as u64);
+            DatasetEvals {
+                selector,
+                address,
+                indices,
+                counts: F::ZERO,
+                ..Default::default()
+            }
+        });
+        let mut mles: Vec<DatasetEvals<F>> = mles.collect();
+        for (evals, count) in mles.iter_mut().zip(counts) {
+            evals.counts = F::from(count);
+        }
+        let mles = Rc::new(mles);
+
+        let builder1 = ();
+        let builder2 = structure.pcs.clone();
+
+        DatasetOracle::new((), mles, builder1, builder2)
+    }
 }
 
 #[derive(Clone, Debug, CanonicalSerialize)]
@@ -611,8 +646,20 @@ where
             .subprotocol::<CommittedOracle<F, C, DatasetEvals<()>>, _, _, _>(key.composite.p2_key())
     }
 
-    fn verifier_key(_structure: &Structure<C>) -> Self::VerifierKey {
-        todo!()
+    fn verifier_key(structure: &Structure<C>) -> Self::VerifierKey {
+        let oracle = build_oracle(structure);
+
+        let sumcheck = SumcheckReduction::verifier_key(&oracle);
+
+        let composite = CompositeOracle::verifier_key(&oracle);
+
+        let vars = structure.vars;
+
+        VerifierKey {
+            sumcheck,
+            composite,
+            vars,
+        }
     }
 
     fn key_pair(_structure: &Structure<C>) -> (Self::VerifierKey, Self::ProverKey) {
