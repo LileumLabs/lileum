@@ -617,6 +617,13 @@ impl<F: Field, C: CommitmentScheme<F>> ProverKey<F, C> {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+pub enum DatasetError {
+    Sumcheck,
+    Composite,
+    Core,
+}
+
 impl<F, C> Reduction<F, DatasetRel2<F, C>, OpeningRelation<F, C>> for DatasetReduction2
 where
     F: Field,
@@ -628,7 +635,7 @@ where
 
     type Proof = Proof<F, C>;
 
-    type Error = ();
+    type Error = DatasetError;
 
     type Params = ();
 
@@ -789,14 +796,13 @@ where
             SumcheckInstance::new(F::zero(), oracle_instance)
         };
 
-        //TODO: handle
         let instance = SumcheckReduction::verify(
             &key.sumcheck,
             sumcheck_instance,
             proof.clone().map(|proof| proof.sumcheck),
             transcript,
         )
-        .unwrap();
+        .map_err(|_| DatasetError::Sumcheck)?;
 
         let (core_instance, committed_instance) = CompositeOracle::verify(
             &key.composite,
@@ -804,7 +810,7 @@ where
             proof.map(|proof| proof.prover_evals),
             transcript,
         )
-        .unwrap();
+        .map_err(|()| DatasetError::Composite)?;
 
         let () = CoreOracle::verify(
             key.composite.p1_key(),
@@ -812,7 +818,7 @@ where
             GuardedProof::empty(),
             transcript,
         )
-        .unwrap();
+        .map_err(|()| DatasetError::Core)?;
 
         let Ok(open_instance) = CommittedOracle::verify(
             key.composite.p2_key(),
